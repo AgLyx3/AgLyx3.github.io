@@ -352,7 +352,22 @@ header {
       background-color: #f1f1f1;
       text-decoration: none;
       color: black;
-      border-radius: 4px;
+      border-radius: 4px;     
+    }
+    @media screen and (max-width: 600px) {
+      .section-shortcut {
+        display: flex;
+        flex-wrap: wrap; /* Allow the tabs to wrap to the next line */
+        justify-content: center; /* Center the tabs in the container */
+        gap: 10px; /* Add space between tabs */
+      }
+    
+      .tab {
+        padding: 5px 10px; /* Adjust padding for smaller screens */
+        margin: 5px 0; /* Add vertical space between tabs */
+        width: 48%; /* Make the tabs take full width on small screens */
+        text-align: center; /* Center the text in the tabs */
+      }
     }
     
     .tab:hover {
