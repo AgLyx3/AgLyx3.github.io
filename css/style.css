@@ -307,7 +307,9 @@ header {
   margin: 0 auto; }
   @media screen and (max-width: 768px) {
     header {
-      padding: 2em 0; } }
+      padding: 2em 0; } 
+
+    }
   header .colorlib-navbar-brand {
     float: left; }
     header .colorlib-navbar-brand .colorlib-logo {
@@ -331,6 +333,35 @@ header {
       header .colorlib-navbar-brand .colorlib-logo:active, header .colorlib-navbar-brand .colorlib-logo:focus {
         outline: none;
         text-decoration: none; }
+    
+
+    .section-shortcut {
+      display: flex;
+      justify-content: flex-end; /* Align the tabs to the right */
+      padding-right: 20px; /* Optional: Add some padding to the right */
+    }
+    
+    .tabs {
+      display: flex;
+    }
+    
+    .tab {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 5px;
+      background-color: #f1f1f1;
+      text-decoration: none;
+      color: black;
+      border-radius: 4px;
+    }
+    
+    .tab:hover {
+      background-color: #ddd;
+    }
+    
+    .tab:active {
+      background-color: #ccc;
+    }
 
 #colorlib-services,
 #colorlib-contact,
