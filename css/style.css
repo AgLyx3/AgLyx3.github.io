@@ -11,6 +11,11 @@
 *	Edit this section
 *
 * ======================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: "Karla", Arial, sans-serif;
   line-height: 1.8;
