@@ -847,41 +847,45 @@ header {
       -webkit-transition: 0.3s;
       -o-transition: 0.3s;
       transition: 0.3s; }
-    .article .blog-img .link {
-      position: absolute;
-      bottom: 0;
-      left: 90%;
-      display: table;
-      width: 100%;
-      opacity: 0;
-      -webkit-transition: 0.7s;
-      -o-transition: 0.7s;
-      transition: 0.7s; }
-      .article .blog-img .link .read {
-        display: table-cell;
+      .article .blog-img .link {
+        position: absolute;
+        bottom: 0;
+        left: 50%; /* Adjust positioning */
+        transform: translate(-50%, 0); /* Center the link horizontally */
+        display: table;
+        width: auto; /* Set the width to auto for horizontal layout */
+        opacity: 0;
+        -webkit-transition: 0.7s;
+        -o-transition: 0.7s;
+        transition: 0.7s;
+        text-align: center; /* Center text horizontally */
+    }
+    
+    .article .blog-img .link .read {
+        display: inline-block; /* Set to inline-block to align horizontally */
         vertical-align: middle;
         font-family: "Karla", Arial, sans-serif;
         color: #fff;
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 5px;
-        -webkit-transform: rotate(-90deg);
-        -moz-transform: rotate(-90deg);
-        -ms-transform: rotate(-90deg);
-        -o-transform: rotate(-90deg);
-        transform: rotate(-90deg);
-        -webkit-transform-origin: 0;
-        -ms-transform-origin: 0;
-        transform-origin: 0;
-        position: relative; }
-        .article .blog-img .link .read:after {
-          position: absolute;
-          top: 10px;
-          left: -50px;
-          content: '';
-          background: #fff;
-          width: 40px;
-          height: 1px; }
+        transform: none; /* Remove the rotation */
+        position: relative;
+        padding: 10px; /* Add some padding around the text */
+        background-color: rgba(0, 0, 0, 0.7); /* Optional: Add a background */
+        border-radius: 3px; /* Optional: Add rounded corners */
+    }
+    
+    .article .blog-img .link .read:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 100%; /* Position after the text */
+        background: #fff;
+        width: 40px;
+        height: 1px;
+    }
+    
     .article .blog-img:hover .overlay {
       opacity: 1; }
     .article .blog-img:hover .link {
