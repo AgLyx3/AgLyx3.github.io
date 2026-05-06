@@ -1,0 +1,16 @@
+.DS_Store
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Local app data
+backend/data/app.db
+
+# Local tooling state
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

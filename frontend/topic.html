@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic · Yixin Li</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .topic-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+
+    .topic-header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .topic-title {
+      font-family: 'Epilogue', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .topic-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    /* ── Story board ───────────────────────────────────────────────── */
+    .board-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.1rem;
+    }
+
+    .board-count {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'Barlow', sans-serif;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      padding: 0.2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      width: fit-content;
+      background: rgba(247, 246, 242, 0.9);
+      gap: 0.15rem;
+    }
+
+    .mode-toggle button {
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-pill);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+
+    .mode-toggle button[aria-pressed="true"] {
+      background: rgba(17, 17, 16, 0.94);
+      color: #fff;
+    }
+
+    /* CSS columns — auto-calculates count from available width */
+    .story-board {
+      columns: 200px;
+      column-gap: 0.875rem;
+    }
+
+    .timeline-board {
+      display: block;
+    }
+
+    /* Board fades in as a unit — individual cards are always opacity:1 so hover is safe */
+    .story-board,
+    .timeline-board {
+      animation: boardIn 0.4s ease both;
+    }
+    @keyframes boardIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .story-card {
+      break-inside: avoid;
+      margin-bottom: 0.875rem;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .story-accent {
+      height: 3px;
+      background: linear-gradient(90deg, rgba(42,122,82,0.75) 0%, rgba(42,122,82,0.15) 100%);
+    }
+
+    .story-id {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: 'Barlow', sans-serif;
+      padding: 0.6rem 0.85rem 0;
+    }
+
+    .story-title {
+      font-family: 'Epilogue', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      padding: 0.2rem 0.85rem 0;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .story-summary {
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      padding: 0.4rem 0.85rem 0.6rem;
+      margin: 0;
+    }
+
+    .story-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0 0.85rem 0.7rem;
+    }
+
+    .rel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(42, 122, 82, 0.55);
+      flex-shrink: 0;
+    }
+
+    .rel-val {
+      font-size: 0.68rem;
+      font-family: 'Barlow', sans-serif;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Empty / status ────────────────────────────────────────────── */
+    .empty-board {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-family: 'Barlow', sans-serif;
+    }
+
+    .timeline-list {
+      position: relative;
+      min-height: 390px;
+      padding: 2.2rem 0 0.5rem;
+      overflow-x: auto;
+      overflow-y: visible;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(42, 122, 82, 0.38) transparent;
+    }
+
+    .timeline-track {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      min-width: fit-content;
+      padding: 0 1.6rem 0.4rem 0.4rem;
+      min-height: 340px;
+    }
+
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      left: 0.4rem;
+      right: 1.6rem;
+      top: 189px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(42, 122, 82, 0.08) 0%, rgba(42, 122, 82, 0.58) 16%, rgba(42, 122, 82, 0.58) 84%, rgba(42, 122, 82, 0.08) 100%);
+      pointer-events: none;
+    }
+
+    .timeline-item {
+      position: relative;
+      flex: 0 0 260px;
+      width: 260px;
+      padding-top: 1.55rem;
+      z-index: 1;
+      transition: transform 0.22s ease, z-index 0s linear, filter 0.22s ease;
+      filter: saturate(0.92);
+    }
+
+    .timeline-item + .timeline-item {
+      margin-left: -84px;
+    }
+
+    .timeline-item:nth-child(odd) {
+      margin-top: 0;
+    }
+
+    .timeline-item:nth-child(even) {
+      margin-top: 130px;
+    }
+
+    .timeline-item.is-top,
+    .timeline-item:hover,
+    .timeline-item:focus-within {
+      z-index: 20;
+      transform: translateY(-8px);
+      filter: saturate(1);
+    }
+
+    .timeline-item:nth-child(odd) .timeline-card {
+      transform: rotate(-1.4deg);
+    }
+
+    .timeline-item:nth-child(even) .timeline-card {
+      transform: rotate(1.2deg);
+    }
+
+    .timeline-item.is-top .timeline-card,
+    .timeline-item:hover .timeline-card,
+    .timeline-item:focus-within .timeline-card {
+      transform: rotate(0deg);
+      box-shadow: 0 18px 42px rgba(17, 17, 16, 0.12), 0 0 0 1px rgba(17, 17, 16, 0.06);
+      border-color: rgba(17, 17, 16, 0.18);
+    }
+
+    .timeline-date {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: 'Epilogue', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: rgba(42, 122, 82, 0.92);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .timeline-date::after {
+      content: '';
+      position: absolute;
+      left: 0.15rem;
+      top: 1.55rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--surface-solid);
+      border: 2px solid rgba(42, 122, 82, 0.82);
+      box-shadow: 0 0 0 5px rgba(42, 122, 82, 0.08);
+    }
+
+    .timeline-card {
+      position: relative;
+      margin-top: 2.55rem;
+      border: 1px solid rgba(17, 17, 16, 0.10);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(250, 249, 245, 0.92) 100%);
+      min-height: 126px;
+      padding: 1rem 1rem 1.05rem;
+      box-shadow: 0 10px 24px rgba(17, 17, 16, 0.08);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      transform-origin: center center;
+    }
+
+    .timeline-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(135deg, rgba(42, 122, 82, 0.07) 0%, rgba(42, 122, 82, 0.01) 42%, rgba(255,255,255,0) 100%);
+      pointer-events: none;
+    }
+
+    .timeline-card::after {
+      content: '';
+      position: absolute;
+      left: 16px;
+      top: -23px;
+      width: 1px;
+      height: 23px;
+      background: linear-gradient(180deg, rgba(42, 122, 82, 0.58) 0%, rgba(42, 122, 82, 0.18) 100%);
+    }
+
+    .timeline-label {
+      position: relative;
+      font-family: 'Epilogue', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.22;
+      letter-spacing: -0.025em;
+      padding-right: 1rem;
+    }
+
+    #topicStatus {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 1.25rem;
+      text-align: center;
+      font-family: 'Barlow', sans-serif;
+    }
+
+    /* ── Mobile: full-bleed Kanban board ──────────────────────────── */
+    @media (max-width: 700px) {
+      /* Outer wrap goes edge-to-edge */
+      .topic-wrap {
+        padding: 0;
+        max-width: 100%;
+      }
+
+      /* Header keeps its own breathing room */
+      .topic-header-card {
+        margin: 0 1.25rem 1.25rem;
+      }
+      .board-header {
+        padding: 0 1.25rem;
+        margin-bottom: 0.75rem;
+      }
+      #topicStatus { padding: 0 1.25rem; }
+      .board-header { align-items: flex-start; }
+
+      /* Board: flush 2-column grid, background shows through gaps as hairlines */
+      .story-board {
+        columns: 2;
+        column-gap: 2px;
+        background: rgba(17, 17, 16, 0.09);
+        padding-bottom: 3rem;
+      }
+
+      .timeline-board {
+        background: transparent;
+        padding-bottom: 0;
+      }
+
+      /* Cards: flat tiles, no radius, no individual border */
+      .story-card {
+        margin-bottom: 2px;
+        border-radius: 0;
+        border: none;
+        background: rgba(251, 250, 247, 0.97);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Top bar → left accent strip (saves height, reads better in columns) */
+      .story-accent { display: none; }
+      .story-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg,
+          rgba(42, 122, 82, 0.82) 0%,
+          rgba(42, 122, 82, 0.18) 100%);
+      }
+
+      /* Tighter, left-shifted padding to clear the 3px strip */
+      .story-id      { padding: 0.55rem 0.6rem 0 0.75rem; font-size: 0.6rem; }
+      .story-title   { padding: 0.15rem 0.6rem 0 0.75rem; font-size: 0.8rem; }
+      .story-summary { padding: 0.28rem 0.6rem 0.45rem 0.75rem; font-size: 0.72rem; }
+      .story-footer  { padding: 0 0.6rem 0.5rem 0.75rem; }
+
+      .timeline-list {
+        min-height: 0;
+        padding-top: 0.75rem;
+        overflow-x: visible;
+      }
+
+      .timeline-track {
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .timeline-track::before {
+        display: none;
+      }
+
+      .timeline-item {
+        position: relative;
+        width: auto;
+        flex: none;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        padding-top: 0;
+        transform: none !important;
+        filter: none;
+      }
+
+      .timeline-date {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 0.55rem;
+      }
+
+      .timeline-date::after {
+        display: none;
+      }
+
+      .timeline-card {
+        margin-top: 0;
+        transform: none !important;
+      }
+
+      .timeline-card::after {
+        display: none;
+      }
+    }
+
+    /* Keep 2 columns even on very small phones */
+    @media (max-width: 420px) {
+      .story-board { columns: 2; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../index.html">Yixin Li</a>
+    <nav class="top-nav" aria-label="Primary">
+      <a href="../index.html">About</a>
+      <a href="chat.html">Chat</a>
+      <a href="graph.html">Memory</a>
+    </nav>
+  </header>
+
+  <div class="topic-wrap">
+    <div class="card topic-header-card">
+      <div>
+        <h1 class="topic-title" id="topicTitleEl">Topic</h1>
+        <p class="topic-meta" id="topicMetaEl"></p>
+      </div>
+      <a href="graph.html" class="button button-secondary">
+        <svg viewBox="0 0 24 24" aria-hidden="true" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to Graph
+      </a>
+    </div>
+
+    <div class="board-header">
+      <p class="section-label" style="margin-bottom:0">Experiences</p>
+      <span class="board-count" id="boardCount"></span>
+    </div>
+    <div id="storyBoard" class="story-board" role="list" aria-label="Connected experiences"></div>
+    <p id="topicStatus" role="status" aria-live="polite"></p>
+  </div>
+
+  <script>
+  (function () {
+    var BASE = (window.APP_CONFIG && window.APP_CONFIG.backendBaseUrl) ||
+      localStorage.getItem('backendBaseUrl') || 'http://localhost:8000';
+
+    var params    = new URLSearchParams(location.search);
+    var topicId   = params.get('id')   || '';
+    var topicName = params.get('name') || 'Topic';
+
+    document.title = topicName + ' · Yixin Li';
+    document.getElementById('topicTitleEl').textContent = topicName;
+
+    var boardEl   = document.getElementById('storyBoard');
+    var statusEl  = document.getElementById('topicStatus');
+    var countEl   = document.getElementById('boardCount');
+    var currentMode = 'experiences';
+
+    var modeExperiencesBtn = document.createElement('button');
+    var modeTimelineBtn = document.createElement('button');
+
+    function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ''; }
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function asArr(v) { return Array.isArray(v) ? v : []; }
+
+    function normalizeGraphData(raw) {
+      return {
+        topics:      asArr(raw.topics || raw.topic_nodes),
+        experiences: asArr(raw.experiences || raw.experience_nodes || raw.nodes),
+        edges:       asArr(raw.edges || raw.relations || raw.links),
+      };
+    }
+
+    function getTopicId(t, i) {
+      return String(t.id || t.topic_id || t.name || ('t' + i));
+    }
+    function getExpId(e, i) {
+      return String(e.id || e.experience_id || e.title || ('e' + i));
+    }
+    function edgeSource(edge) {
+      return edge.source_experience_id || edge.experience_id || edge.source || edge.from;
+    }
+    function edgeTarget(edge) {
+      return edge.target_topic_id || edge.topic_id || edge.target || edge.to;
+    }
+
+    /* ── Render story board ────────────────────────────────────────── */
+    function renderExperienceBoard(exps, edges) {
+      boardEl.className = 'story-board';
+      boardEl.innerHTML = '';
+
+      if (exps.length === 0) {
+        boardEl.innerHTML = '<p class="empty-board">No connected experiences found for this topic.</p>';
+        if (countEl) countEl.textContent = '0 items';
+        return;
+      }
+
+      if (countEl) countEl.textContent = exps.length + ' item' + (exps.length === 1 ? '' : 's');
+
+      exps.forEach(function (exp, i) {
+        var title   = exp.title   || exp.id   || 'Experience';
+        var summary = exp.summary || '';
+        var expDate = exp.experience_date || '';
+        var expId   = getExpId(exp, i);
+        var relEdge = edges.find(function(e) { return String(edgeSource(e)) === expId; });
+        var rel     = relEdge ? Number(relEdge.relevance || relEdge.weight || 0) : 0;
+
+        var card = document.createElement('article');
+        card.className = 'story-card';
+        card.setAttribute('role', 'listitem');
+
+        var inner =
+          '<div class="story-accent"></div>' +
+          '<div class="story-id">EXP&thinsp;&ndash;&thinsp;' + String(i + 1).padStart(2, '0') + '</div>' +
+          '<h3 class="story-title">' + escHtml(title) + '</h3>';
+
+        if (summary) {
+          inner += '<p class="story-summary">' + escHtml(summary) + '</p>';
+        }
+
+        if (rel > 0) {
+          inner +=
+            '<div class="story-footer">' +
+              '<span class="rel-dot" aria-hidden="true"></span>' +
+              '<span class="rel-val">relevance&nbsp;' + rel.toFixed(2) + '</span>';
+          if (expDate) {
+            inner += '<span class="rel-val">&middot;&nbsp;' + escHtml(expDate) + '</span>';
+          }
+          inner +=
+            '</div>';
+        } else if (expDate) {
+          inner +=
+            '<div class="story-footer">' +
+              '<span class="rel-val">' + escHtml(expDate) + '</span>' +
+            '</div>';
+        }
+
+        card.innerHTML = inner;
+        boardEl.appendChild(card);
+      });
+    }
+
+    function renderTimeline(exps) {
+      boardEl.className = 'timeline-board';
+      boardEl.innerHTML = '';
+      if (!exps.length) {
+        boardEl.innerHTML = '<p class="empty-board">No dated experiences found for this topic.</p>';
+        if (countEl) countEl.textContent = '0 items';
+        return;
+      }
+
+      var ordered = exps.slice().sort(function(a, b) {
+        return String(a.experience_date || '').localeCompare(String(b.experience_date || ''));
+      });
+
+      if (countEl) countEl.textContent = ordered.length + ' timeline event' + (ordered.length === 1 ? '' : 's');
+
+      var wrap = document.createElement('div');
+      wrap.className = 'timeline-list';
+      var track = document.createElement('div');
+      track.className = 'timeline-track';
+
+      ordered.forEach(function(exp, index) {
+        var item = document.createElement('article');
+        item.className = 'timeline-item';
+        item.innerHTML =
+          '<div class="timeline-date">' + escHtml(exp.experience_date || 'Undated') + '</div>' +
+          '<div class="timeline-card">' +
+            '<div class="timeline-label">' + escHtml(exp.title || 'Experience') + '</div>' +
+          '</div>';
+        item.addEventListener('mouseenter', function () {
+          track.querySelectorAll('.timeline-item').forEach(function (node) {
+            node.classList.remove('is-top');
+          });
+          item.classList.add('is-top');
+        });
+        item.addEventListener('focusin', function () {
+          track.querySelectorAll('.timeline-item').forEach(function (node) {
+            node.classList.remove('is-top');
+          });
+          item.classList.add('is-top');
+        });
+        track.appendChild(item);
+      });
+
+      wrap.appendChild(track);
+      boardEl.appendChild(wrap);
+    }
+
+    /* ── Load ──────────────────────────────────────────────────────── */
+    async function loadTopic() {
+      setStatus('Loading…');
+      try {
+        var res  = await fetch(BASE.replace(/\/$/, '') + '/graph');
+        if (!res.ok) throw new Error('Status ' + res.status);
+        var raw  = await res.json();
+        var data = normalizeGraphData(raw);
+
+        var topicObj = data.topics.find(function(t, i) {
+          return getTopicId(t, i) === topicId;
+        }) || {};
+
+        var activation  = Number(topicObj.activation || 0);
+        var description = topicObj.description || '';
+        var metaEl = document.getElementById('topicMetaEl');
+        var parts = [];
+        if (activation) parts.push('Activation ' + activation.toFixed(2));
+        if (description) parts.push(description);
+        if (metaEl) metaEl.textContent = parts.join(' · ');
+
+        var connectedEdges  = data.edges.filter(function(e) {
+          return String(edgeTarget(e)) === topicId;
+        });
+        var connectedExpIds = new Set(connectedEdges.map(function(e) {
+          return String(edgeSource(e));
+        }));
+        var connectedExps   = data.experiences.filter(function(e, i) {
+          return connectedExpIds.has(getExpId(e, i));
+        });
+
+        if (currentMode === 'timeline') {
+          renderTimeline(connectedExps);
+        } else {
+          renderExperienceBoard(connectedExps, connectedEdges);
+        }
+        setStatus('');
+      } catch (err) {
+        setStatus('Could not load topic data — ' + err.message);
+      }
+    }
+
+    var boardHeader = document.querySelector('.board-header');
+    var modeToggle = document.createElement('div');
+    modeToggle.className = 'mode-toggle';
+    modeToggle.setAttribute('aria-label', 'Topic display mode');
+
+    modeExperiencesBtn.id = 'modeExperiences';
+    modeExperiencesBtn.type = 'button';
+    modeExperiencesBtn.textContent = 'Experiences';
+    modeExperiencesBtn.setAttribute('aria-pressed', 'true');
+
+    modeTimelineBtn.id = 'modeTimeline';
+    modeTimelineBtn.type = 'button';
+    modeTimelineBtn.textContent = 'Timeline';
+    modeTimelineBtn.setAttribute('aria-pressed', 'false');
+
+    modeExperiencesBtn.addEventListener('click', function () {
+      currentMode = 'experiences';
+      modeExperiencesBtn.setAttribute('aria-pressed', 'true');
+      modeTimelineBtn.setAttribute('aria-pressed', 'false');
+      loadTopic();
+    });
+
+    modeTimelineBtn.addEventListener('click', function () {
+      currentMode = 'timeline';
+      modeExperiencesBtn.setAttribute('aria-pressed', 'false');
+      modeTimelineBtn.setAttribute('aria-pressed', 'true');
+      loadTopic();
+    });
+
+    modeToggle.appendChild(modeExperiencesBtn);
+    modeToggle.appendChild(modeTimelineBtn);
+    boardHeader.appendChild(modeToggle);
+
+    loadTopic();
+  })();
+  </script>
+</body>
+</html>

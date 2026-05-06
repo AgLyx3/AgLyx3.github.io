@@ -8,9 +8,17 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
+    @font-face {
+      font-family: 'Autumn Brush';
+      src: url('assets/AutumnBrush.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -23,14 +31,14 @@
       --ink-4:       #969884;
       --forest:      #485A34;
       --forest-hover:#344424;
+      --ease-out:    cubic-bezier(0.2, 0.7, 0.2, 1);
       --font-serif:  'Newsreader', Georgia, serif;
+      --font-hand:   'Autumn Brush', cursive;
       --font-sans:   'Geist', -apple-system, sans-serif;
       --font-mono:   'Geist Mono', ui-monospace, monospace;
-      --ease-out:    cubic-bezier(0.2, 0.7, 0.2, 1);
     }
 
     html { -webkit-font-smoothing: antialiased; }
-
     body {
       font-family: var(--font-sans);
       background: var(--paper);
@@ -53,10 +61,7 @@
       text-transform: uppercase;
       color: var(--ink-3);
     }
-    .folio .name {
-      color: var(--ink);
-      font-weight: 500;
-    }
+    .folio .name { color: var(--ink); font-weight: 500; }
 
     /* ── Column ── */
     .mp-column {
@@ -81,95 +86,52 @@
       min-height: 60vh;
     }
 
-    /* portrait slot */
-    .mp-portrait {
-      width: 96px;
-      height: 120px;
-      display: block;
-      border: 1px solid var(--paper-edge);
-      background: var(--paper-2);
-      transform: rotate(-2deg);
-      box-shadow: 0 4px 12px rgba(31,26,20,0.08);
-      position: relative;
-      overflow: hidden;
-    }
-    .mp-portrait img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .mp-portrait-placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.05em;
-      color: var(--ink-4);
-      text-transform: uppercase;
-    }
-
-    /* headline */
     .mp-line {
-      font-family: var(--font-serif);
-      font-weight: 300;
-      font-size: clamp(26px, 3.4vw, 38px);
-      line-height: 1.32;
-      letter-spacing: -0.012em;
+      font-family: var(--font-hand);
+      font-weight: 400;
+      font-size: clamp(26px, 3.4vw, 42px);
+      line-height: 1.45;
+      letter-spacing: 0.01em;
       color: var(--ink);
-      font-variation-settings: "opsz" 36;
       text-wrap: pretty;
-      max-width: 100%;
     }
-    .mp-line em {
-      font-style: italic;
-      color: var(--ink);
-    }
-    .mp-line .accent {
-      color: var(--forest);
-      font-style: italic;
-    }
+    .mp-line em    { font-style: normal; color: var(--ink); }
+    .mp-line .accent { color: var(--forest); }
 
-    /* links */
     .mp-links {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 6px;
+      margin-top: 4px;
     }
     .mp-link {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 20px;
-      font-variation-settings: "opsz" 24;
+      font-family: var(--font-hand);
+      font-size: clamp(22px, 2.6vw, 32px);
       color: var(--forest);
       text-decoration: underline;
       text-decoration-style: dotted;
       text-decoration-thickness: 1px;
-      text-underline-offset: 5px;
+      text-underline-offset: 6px;
       display: inline-flex;
       align-items: baseline;
       gap: 10px;
       transition: color 140ms var(--ease-out), gap 140ms var(--ease-out);
     }
-    .mp-link:hover { color: var(--forest-hover); gap: 16px; }
-    .mp-link .arrow { font-style: normal; }
+    .mp-link:hover { color: var(--forest-hover); gap: 18px; }
+    .mp-link .arrow { font-family: var(--font-sans); font-size: 0.7em; }
 
     /* ── Footer ── */
     .mp-foot {
       border-top: 1px dashed var(--paper-edge);
-      padding: 32px 40px 28px;
+      padding: 28px 40px 24px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
     }
     .mp-foot-art object {
-      width: 280px;
-      height: 192px;
+      width: 260px;
+      height: 178px;
       display: block;
       pointer-events: none;
     }
@@ -184,41 +146,32 @@
       color: var(--ink-3);
       text-transform: uppercase;
     }
-    .mp-foot-meta a {
-      color: var(--ink-2);
-      text-decoration: none;
-    }
+    .mp-foot-meta a { color: var(--ink-2); text-decoration: none; }
     .mp-foot-meta a:hover { color: var(--forest); }
     .mp-foot-meta .dot { color: var(--ink-4); }
 
     /* ── Entry animation ── */
-    .folio, .mp-portrait, .mp-line, .mp-links, .mp-foot {
+    .folio, .mp-line, .mp-links, .mp-foot {
       opacity: 0;
       transform: translateY(10px);
-      animation: rise 0.55s var(--ease-out) forwards;
+      animation: rise 0.5s var(--ease-out) forwards;
     }
-    .folio          { animation-delay: 0ms; }
-    .mp-portrait    { animation-delay: 80ms; }
-    .mp-line        { animation-delay: 160ms; }
-    .mp-links       { animation-delay: 260ms; }
-    .mp-foot        { animation-delay: 340ms; }
-
-    @keyframes rise {
-      to { opacity: 1; transform: none; }
-    }
+    .folio       { animation-delay: 0ms; }
+    .mp-line     { animation-delay: 120ms; }
+    .mp-links    { animation-delay: 220ms; }
+    .mp-foot     { animation-delay: 300ms; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
 
     /* ── Responsive ── */
     @media (max-width: 680px) {
       .folio     { padding: 24px 20px 0; }
       .mp-column { padding: 0 20px; }
       .mp-hero   { padding: 40px 0; gap: 24px; min-height: 55vh; }
-      .mp-portrait { width: 80px; height: 100px; }
-      .mp-line   { font-size: 22px; }
-      .mp-link   { font-size: 18px; }
-      .mp-foot   { padding: 24px 20px 20px; }
-      .mp-foot-art object { width: 220px; height: 150px; }
+      .mp-line   { font-size: 26px; }
+      .mp-link   { font-size: 22px; }
+      .mp-foot   { padding: 20px 20px 18px; }
+      .mp-foot-art object { width: 200px; height: 136px; }
     }
-
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; }
     }
@@ -228,37 +181,31 @@
 
   <div class="folio">
     <span class="name">Yixin Li</span>
-    <span>San Francisco &middot; 2026</span>
+    <span>New York City &middot; 2026</span>
   </div>
 
   <div class="mp-column">
     <section class="mp-hero">
-
-      <div class="mp-portrait">
-        <div class="mp-portrait-placeholder">photo</div>
-      </div>
-
       <p class="mp-line">
-        Hi, I'm Yixin&nbsp;— I build products at the intersection of <em>memory</em> and <span class="accent">AI</span>.
+        Hi, I'm Yixin&nbsp;— I build products at the intersection of <em>Human</em> and <span class="accent">AI</span>. Explore my work through the memory graph or just chat.
       </p>
 
       <nav class="mp-links" aria-label="Primary">
-        <a href="frontend/graph.html" class="mp-link">
-          <span class="lab">Memory graph</span>
+        <a href="graph.html" class="mp-link">
+          <span>Memory graph</span>
           <span class="arrow">&rarr;</span>
         </a>
-        <a href="frontend/chat.html" class="mp-link">
-          <span class="lab">Chat with me</span>
+        <a href="chat.html" class="mp-link">
+          <span>Chat</span>
           <span class="arrow">&rarr;</span>
         </a>
       </nav>
-
     </section>
   </div>
 
   <footer class="mp-foot">
     <div class="mp-foot-art">
-      <object type="image/svg+xml" data="frontend/assets/spot-desk-laptop.svg" aria-hidden="true"></object>
+      <object type="image/svg+xml" data="assets/spot-desk-laptop.svg" aria-hidden="true"></object>
     </div>
     <div class="mp-foot-meta">
       <span>Yixin Li &middot; 2026</span>

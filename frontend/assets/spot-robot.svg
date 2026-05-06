@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 240" fill="none" stroke="#1F1A14" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <filter id="pencil" x="-2%" y="-2%" width="104%" height="104%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="4"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="1.4"></feDisplacementMap>
+    </filter>
+  </defs>
+
+  <g filter="url(#pencil)" stroke-linecap="round" stroke-linejoin="round">
+
+    
+    <path d="M110.6 22 Q110.1 30 109.7 38 Q109.4 43 109.5 46.5" stroke-width="1.3"></path>
+    <path d="M111 23 Q110.3 31 110 39" stroke-width="0.6" opacity="0.45"></path>
+    <circle cx="110" cy="18" r="4.2" fill="#4A6B3A" stroke="none"></circle>
+    <circle cx="110" cy="18" r="4.2"></circle>
+
+    
+    <path d="M72.5 50.5&#xA;             Q60 50 59.2 64&#xA;             L57.6 96 L57.2 128&#xA;             Q57.2 142 72.4 142.2&#xA;             L110 143 L150.2 143&#xA;             Q164.2 143.2 164 128&#xA;             L162.6 96 L162.2 64&#xA;             Q162 49 150 50.2&#xA;             L110 50.4 Z"></path>
+    
+    <path d="M73 51.6 Q92 50.6 110 51 Q132 51.4 149 51.4" stroke-width="0.6" opacity="0.4"></path>
+
+    
+    <path d="M82.6 64.4&#xA;             Q72.4 64 72.2 74&#xA;             L72 92 L72.2 110&#xA;             Q72.2 119 82 119.2&#xA;             L110 120 L140 120.2&#xA;             Q150 120 150 110&#xA;             L150.2 92 L150 74&#xA;             Q150 64 140.2 64.2&#xA;             L110 64.2 Z" stroke="#7A6E5F" stroke-width="1.05"></path>
+
+    
+    <circle cx="93.2" cy="91" r="5.6" fill="#1F1A14" stroke="none"></circle>
+    <circle cx="128" cy="90.4" r="5.2" fill="#1F1A14" stroke="none"></circle>
+    
+    <circle cx="95.2" cy="89.2" r="1.2" fill="#F5EFE6" stroke="none"></circle>
+    <circle cx="130" cy="88.4" r="1.05" fill="#F5EFE6" stroke="none"></circle>
+
+    
+    <path d="M97.5 107 Q103 110.6 110.4 111.4 Q117.6 112 124 107.4" stroke-width="1.3"></path>
+    
+    <path d="M99 108.4 Q110 113 122 108" stroke-width="0.55" opacity="0.4"></path>
+
+    
+    <path d="M50 78 Q47 78 47 82 L47 110 Q47 114 50 114 L57 113 L57 79 Z"></path>
+    <path d="M170 78 Q173 78 173 82 L173 110 Q173 114 170 114 L163 113 L163 79 Z"></path>
+    <circle cx="52" cy="96" r="1.5" fill="#1F1A14" stroke="none"></circle>
+    <circle cx="168" cy="96" r="1.5" fill="#1F1A14" stroke="none"></circle>
+
+    
+    <path d="M84.4 130 Q97 133 110.2 133.4 Q124 133.6 137.6 130.2" stroke="#A89C8A" stroke-width="0.95"></path>
+
+    
+    <path d="M97.4 144 L96.4 158 Q96.4 161 99.2 161 L122 162 Q125 162 125 159 L124 145"></path>
+
+    
+    <path d="M70 178 Q90 165.5 110 166.4 Q132 167.4 152 178"></path>
+    <path d="M70 178 L70.2 188"></path>
+    <path d="M152 178 L151.8 188"></path>
+    
+    <path d="M74 176.8 Q94 167.4 110 168 Q128 168.6 148 176.6" stroke-width="0.55" opacity="0.4"></path>
+
+    
+    <circle cx="110" cy="172" r="2.4" fill="#4A6B3A" stroke="none"></circle>
+
+    
+    <path d="M40 210 Q70 207.4 100 210 Q130 212.6 160 210 Q175 209 180 210" stroke="#A89C8A" stroke-dasharray="2 5" stroke-width="1.05"></path>
+  </g>
+
+  
+  <circle cx="62" cy="156" r="0.6" fill="#A89C8A" stroke="none"></circle>
+  <circle cx="170" cy="158" r="0.5" fill="#A89C8A" stroke="none"></circle>
+  <circle cx="118" cy="200" r="0.5" fill="#A89C8A" stroke="none"></circle>
+</svg>

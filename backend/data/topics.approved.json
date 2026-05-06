@@ -1,0 +1,17 @@
+{
+  "topics": [
+    {
+      "topic_id": "topic-agent-memory-evaluation",
+      "name": "agent memory evaluation",
+      "source_candidate_id": "cand-agent-memory-evaluation",
+      "approved_at": "2026-05-01T03:21:35.190030+00:00"
+    },
+    {
+      "topic_id": "topic-portfolio-graph-query-routing",
+      "name": "portfolio graph query routing",
+      "source_candidate_id": "cand-portfolio-graph-query-routing",
+      "approved_at": "2026-05-01T03:24:58.080047+00:00",
+      "approval_mode": "auto"
+    }
+  ]
+}

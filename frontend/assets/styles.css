@@ -1,0 +1,438 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,300;1,6..72,400;1,6..72,600&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+@font-face {
+  font-family: 'Autumn Brush';
+  src: url('AutumnBrush.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Design tokens ───────────────────────────────────────────────── */
+:root {
+  /* Paper — cool stone-white, no amber warmth */
+  --paper:       #EFEFEA;
+  --paper-2:     #E6E6E0;
+  --paper-3:     #DCDDD6;
+  --paper-edge:  #C6C7BE;
+
+  /* Ink — cooler charcoal, slight olive */
+  --ink:         #1C1E18;
+  --ink-2:       #383B2C;
+  --ink-3:       #626558;
+  --ink-4:       #969884;
+
+  /* Accent — deep muted army green */
+  --forest:        #485A34;
+  --forest-hover:  #344424;
+  --forest-soft:   #B5C4A0;
+
+  /* Semantic aliases (keeps existing references working) */
+  --bg:            var(--paper);
+  --text:          var(--ink);
+  --text-secondary:var(--ink-2);
+  --muted:         var(--ink-3);
+  --accent:        var(--forest);
+  --accent-hover:  var(--forest-hover);
+  --accent-light:  var(--forest-soft);
+  --border:        var(--paper-edge);
+  --border-strong: #B0B2A6;
+
+  /* Radii — restrained */
+  --radius:     4px;
+  --radius-sm:  4px;
+  --radius-pill:999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(28,30,24,0.06);
+  --shadow:    0 4px 12px rgba(28,30,24,0.08);
+
+  /* Motion */
+  --ease-out:   cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast:   140ms;
+  --dur-base:   240ms;
+
+  /* Fonts */
+  --font-serif: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+  --font-sans:  'Geist', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-mono:  'Geist Mono', ui-monospace, 'Courier New', monospace;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  min-height: 100vh;
+}
+
+/* ── Typography ──────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+h1 { font-size: clamp(28px, 4vw, 48px); font-variation-settings: "opsz" 48; }
+h2 { font-size: clamp(20px, 2.5vw, 28px); font-variation-settings: "opsz" 36; }
+h3 { font-family: var(--font-sans); font-size: 16px; font-weight: 500; letter-spacing: 0; }
+
+p { color: var(--ink-2); line-height: 1.65; }
+
+a {
+  color: var(--forest);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--forest) 35%, transparent);
+  transition: color var(--dur-fast) var(--ease-out),
+              text-decoration-color var(--dur-fast) var(--ease-out);
+}
+a:hover { color: var(--forest-hover); text-decoration-color: var(--forest-hover); }
+
+code { font-family: var(--font-mono); font-size: 0.9em; color: var(--ink); }
+
+/* ── Topbar / Site header ────────────────────────────────────────── */
+.site-header,
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--paper-edge);
+  max-width: 100%;
+}
+
+.brand {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  font-variation-settings: "opsz" 24;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.brand:hover { color: var(--ink); text-decoration: none; opacity: 0.72; }
+
+.top-nav,
+.topbar nav {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+.top-nav a,
+.topbar nav a {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  text-decoration: none;
+  padding: 0;
+  border: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.top-nav a:hover,
+.topbar nav a:hover { color: var(--ink); }
+.top-nav a[aria-current="page"],
+.topbar nav a.is-active { color: var(--ink); }
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 32px 64px;
+  display: grid;
+  gap: 1px; /* hairline gaps between cards when stacked */
+}
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  transition: background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+
+.card:hover { background: var(--paper-2); }
+
+/* ── Section labels ──────────────────────────────────────────────── */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.button, .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+.button:hover, .btn:hover {
+  background: var(--paper-2);
+  border-color: var(--ink-4);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.button-primary, .btn-primary {
+  background: var(--forest);
+  color: #EFEFEA;
+  border-color: var(--forest);
+}
+.button-primary:hover, .btn-primary:hover {
+  background: var(--forest-hover);
+  border-color: var(--forest-hover);
+  color: #EFEFEA;
+}
+
+.button-secondary {
+  background: transparent;
+  border-color: var(--paper-edge);
+}
+.button-secondary:hover {
+  background: var(--paper-2);
+  border-color: var(--ink-4);
+}
+
+.button svg {
+  width: 13px; height: 13px;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────── */
+textarea, input[type="text"], input:not([type]) {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+  width: 100%;
+}
+textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+textarea::placeholder, input::placeholder { color: var(--ink-4); }
+textarea:focus, input:focus { border-color: var(--forest); }
+
+/* ── Chat layout ─────────────────────────────────────────────────── */
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 32px;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 32px 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  overflow-y: auto;
+  min-height: 240px;
+  max-height: 520px;
+}
+
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--paper-edge); border-radius: 2px; }
+
+/* message rows */
+.message, .msg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.message h3, .msg .role {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.message-user .message-body, .msg.user .body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.message-assistant .message-body, .msg.assistant .body {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 19px;
+  font-variation-settings: "opsz" 24;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.message p { margin: 0; color: inherit; }
+
+/* citations */
+.chips, .citations {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.chip, .citations a {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  background: var(--paper);
+  text-decoration: none;
+  cursor: default;
+}
+.citations a { cursor: pointer; }
+.citations a:hover { color: var(--forest); border-color: var(--forest); }
+
+/* chat form */
+.chat-form label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.muted  { color: var(--ink-3); font-size: 14px; }
+.status { color: var(--ink-3); font-size: 13px; font-family: var(--font-mono); min-height: 20px; }
+
+/* ── Hero (for index page context if used) ───────────────────────── */
+.hero { padding: 48px 32px; }
+.hero-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--forest);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.hero-label::before {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--forest);
+}
+.hero h1 { margin-bottom: 16px; }
+.hero p  { margin-bottom: 28px; max-width: 52ch; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Plain list ──────────────────────────────────────────────────── */
+.plain-list { list-style: none; padding: 0; display: grid; gap: 8px; }
+.plain-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--ink-2);
+  padding: 12px 14px;
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius);
+}
+.plain-list li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--forest);
+  margin-top: 8px;
+}
+
+/* ── Typing indicator ────────────────────────────────────────────── */
+.typing { display: inline-flex; gap: 4px; align-items: center; }
+.typing span {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink-3);
+  opacity: 0.35;
+  animation: blink 1.2s infinite ease-in-out;
+}
+.typing span:nth-child(2) { animation-delay: 0.18s; }
+.typing span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:0.9} }
+
+/* ── Focus ───────────────────────────────────────────────────────── */
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  .site-header, .topbar { padding: 16px 20px; gap: 1rem; }
+  .container { padding: 0 20px 48px; }
+  .card { padding: 20px; }
+  .chat-shell { padding: 0 20px; }
+  .input-row { flex-direction: column; }
+  .top-nav, .topbar nav { gap: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

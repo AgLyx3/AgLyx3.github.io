@@ -1,0 +1,17 @@
+{"timestamp":"2026-04-29T12:00:00Z","session_id":"s1","query":"agent memory evaluation","topic_confidence":0.12}
+{"timestamp":"2026-04-29T13:00:00Z","session_id":"s2","query":"agent memory evaluation","topic_confidence":0.2}
+{"timestamp":"2026-04-29T14:00:00Z","session_id":"s3","query":"agent memory evaluation","topic_confidence":0.3}
+{"timestamp":"2026-04-29T15:00:00Z","session_id":"s4","query":"agent memory evaluation","topic_confidence":0.1}
+{"timestamp":"2026-04-29T16:00:00Z","session_id":"s5","query":"agent memory evaluation","topic_confidence":0.18}
+{"timestamp":"2026-04-29T17:00:00Z","session_id":"s6","query":"agent memory evaluation","topic_confidence":0.14}
+{"timestamp":"2026-04-29T18:00:00Z","session_id":"s7","query":"agent memory evaluation","topic_confidence":0.24}
+{"timestamp":"2026-04-29T19:00:00Z","session_id":"s8","query":"agent memory evaluation","topic_confidence":0.08}
+{"timestamp":"2026-04-29T20:00:00Z","session_id":"s9","query":"portfolio graph query routing","topic_confidence":0.2}
+{"timestamp":"2026-04-29T21:00:00Z","session_id":"s10","query":"portfolio graph query routing","topic_confidence":0.22}
+{"timestamp":"2026-04-29T22:00:00Z","session_id":"s11","query":"portfolio graph query routing","topic_confidence":0.19}
+{"timestamp":"2026-04-29T23:00:00Z","session_id":"s12","query":"portfolio graph query routing","topic_confidence":0.21}
+{"timestamp":"2026-04-30T00:00:00Z","session_id":"s13","query":"portfolio graph query routing","topic_confidence":0.17}
+{"timestamp":"2026-04-30T01:00:00Z","session_id":"s14","query":"portfolio graph query routing","topic_confidence":0.2}
+{"timestamp":"2026-04-30T02:00:00Z","session_id":"s15","query":"portfolio graph query routing","topic_confidence":0.23}
+{"timestamp":"2026-04-30T03:00:00Z","session_id":"s16","query":"portfolio graph query routing","topic_confidence":0.2}
+{"timestamp":"2026-04-30T04:00:00Z","session_id":"s17","query":"existing topic search","topic_confidence":0.91}

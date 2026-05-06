@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-05-01T03:37:47.380986+00:00",
+  "config": {
+    "candidate_min_distinct_sessions": 5,
+    "candidate_time_window_days": 7,
+    "candidate_max_confidence_to_existing_topic": 0.45,
+    "candidate_auto_approve_topics": true,
+    "topic_labeler_model": "gpt-4o-mini"
+  },
+  "candidates": [
+    {
+      "candidate_id": "cand-agent-evaluation-memory",
+      "phrase": "agent evaluation memory",
+      "topic_name": "agent evaluation memory",
+      "topic_description": "",
+      "labeling_mode": "llm_unavailable",
+      "sample_queries": [
+        "agent memory evaluation"
+      ],
+      "status": "pending_llm_label",
+      "distinct_sessions": 8,
+      "mentions": 8,
+      "max_confidence_to_existing_topic": 0.3,
+      "created_at": "2026-05-01T03:37:47.380986+00:00"
+    },
+    {
+      "candidate_id": "cand-graph-portfolio-query",
+      "phrase": "graph portfolio query",
+      "topic_name": "graph portfolio query",
+      "topic_description": "",
+      "labeling_mode": "llm_unavailable",
+      "sample_queries": [
+        "portfolio graph query routing"
+      ],
+      "status": "pending_llm_label",
+      "distinct_sessions": 8,
+      "mentions": 8,
+      "max_confidence_to_existing_topic": 0.23,
+      "created_at": "2026-05-01T03:37:47.380986+00:00"
+    }
+  ]
+}

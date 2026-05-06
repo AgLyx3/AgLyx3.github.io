@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experience · Yixin Li</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .experience-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+
+    .experience-header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .experience-title {
+      font-family: 'Epilogue', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      letter-spacing: -0.02em;
+      color: var(--text);
+      max-width: 18ch;
+    }
+
+    .experience-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      max-width: 52rem;
+      line-height: 1.6;
+    }
+
+    .board-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .board-count {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'Barlow', sans-serif;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      padding: 0.2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      width: fit-content;
+      background: rgba(247, 246, 242, 0.9);
+      gap: 0.15rem;
+    }
+
+    .mode-toggle button {
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-pill);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+
+    .mode-toggle button[aria-pressed="true"] {
+      background: rgba(17, 17, 16, 0.94);
+      color: #fff;
+    }
+
+    .experience-panel {
+      background: rgba(255, 255, 255, 0.76);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .experience-panel-header {
+      padding: 1rem 1.05rem 0.9rem;
+      border-bottom: 1px solid rgba(17, 17, 16, 0.06);
+      background: rgba(247, 246, 242, 0.72);
+    }
+
+    .experience-panel-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: 'Barlow', sans-serif;
+    }
+
+    .experience-panel-title {
+      font-family: 'Epilogue', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      margin-top: 0.35rem;
+    }
+
+    .experience-panel-body {
+      padding: 1rem 1.05rem 1.05rem;
+    }
+
+    .experience-raw {
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      border-radius: 16px;
+      background: rgba(250, 249, 245, 0.92);
+      padding: 1rem 1rem 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.74;
+      white-space: pre-wrap;
+    }
+
+    .timeline-list {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 1rem;
+      align-items: start;
+      border: 1px solid rgba(17, 17, 16, 0.08);
+      border-radius: 16px;
+      background: rgba(250, 249, 245, 0.92);
+      padding: 1rem 1rem 1.05rem;
+    }
+
+    .timeline-date {
+      font-family: 'Epilogue', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .timeline-body {
+      min-width: 0;
+    }
+
+    .timeline-label {
+      font-family: 'Epilogue', sans-serif;
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .timeline-detail {
+      margin-top: 0.4rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      font-size: 0.92rem;
+    }
+
+    #experienceStatus {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 1.25rem;
+      text-align: center;
+      font-family: 'Barlow', sans-serif;
+    }
+
+    @media (max-width: 700px) {
+      .experience-wrap {
+        padding: 0 1rem 3rem;
+      }
+
+      .timeline-item {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../index.html">Yixin Li</a>
+    <nav class="top-nav" aria-label="Primary">
+      <a href="../index.html">About</a>
+      <a href="chat.html">Chat</a>
+      <a href="graph.html">Memory</a>
+    </nav>
+  </header>
+
+  <div class="experience-wrap">
+    <div class="card experience-header-card">
+      <div>
+        <h1 class="experience-title" id="experienceTitleEl">Experience</h1>
+        <p class="experience-meta" id="experienceMetaEl"></p>
+      </div>
+      <a id="backLink" href="graph.html" class="button button-secondary">
+        <svg viewBox="0 0 24 24" aria-hidden="true" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back
+      </a>
+    </div>
+
+    <div class="board-header">
+      <div>
+        <p class="section-label" style="margin-bottom:0">Experience Record</p>
+        <span class="board-count" id="boardCount">1 item</span>
+      </div>
+      <div class="mode-toggle" aria-label="Experience display mode">
+        <button id="modeRaw" type="button" aria-pressed="true">Full Context</button>
+        <button id="modeTimeline" type="button" aria-pressed="false">Timeline</button>
+      </div>
+    </div>
+
+    <article class="experience-panel">
+      <div class="experience-panel-header">
+        <div class="experience-panel-tag">Experience memory</div>
+        <h2 id="panelTitle" class="experience-panel-title">Experience</h2>
+      </div>
+      <div id="panelBody" class="experience-panel-body"></div>
+    </article>
+
+    <p id="experienceStatus" role="status" aria-live="polite"></p>
+  </div>
+
+  <script>
+  (function () {
+    var BASE = (window.APP_CONFIG && window.APP_CONFIG.backendBaseUrl) ||
+      localStorage.getItem('backendBaseUrl') || 'http://localhost:8000';
+
+    var params = new URLSearchParams(location.search);
+    var experienceId = params.get('id') || '';
+    var topicId = params.get('topic_id') || '';
+    var topicName = params.get('topic_name') || '';
+
+    var titleEl = document.getElementById('experienceTitleEl');
+    var metaEl = document.getElementById('experienceMetaEl');
+    var panelTitleEl = document.getElementById('panelTitle');
+    var panelBodyEl = document.getElementById('panelBody');
+    var statusEl = document.getElementById('experienceStatus');
+    var backLinkEl = document.getElementById('backLink');
+    var modeRawBtn = document.getElementById('modeRaw');
+    var modeTimelineBtn = document.getElementById('modeTimeline');
+
+    var currentMode = 'raw';
+    var currentExperience = null;
+
+    if (topicId && topicName) {
+      backLinkEl.href = 'topic.html?' + new URLSearchParams({ id: topicId, name: topicName }).toString();
+      backLinkEl.lastChild.textContent = 'Back to Topic';
+    }
+
+    function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ''; }
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function render() {
+      if (!currentExperience) {
+        panelBodyEl.innerHTML = '';
+        return;
+      }
+
+      modeRawBtn.setAttribute('aria-pressed', currentMode === 'raw' ? 'true' : 'false');
+      modeTimelineBtn.setAttribute('aria-pressed', currentMode === 'timeline' ? 'true' : 'false');
+      panelTitleEl.textContent = currentExperience.title || 'Experience';
+
+      if (currentMode === 'raw') {
+        panelBodyEl.innerHTML = '<div class="experience-raw">' + escHtml(currentExperience.raw_context || '') + '</div>';
+        return;
+      }
+
+      var date = currentExperience.experience_date || 'Undated';
+      var detail = currentExperience.summary || currentExperience.raw_context || '';
+      panelBodyEl.innerHTML =
+        '<div class="timeline-list">' +
+          '<section class="timeline-item">' +
+            '<div class="timeline-date">' + escHtml(date) + '</div>' +
+            '<div class="timeline-body">' +
+              '<div class="timeline-label">' + escHtml(currentExperience.title || 'Experience milestone') + '</div>' +
+              '<div class="timeline-detail">' + escHtml(detail) + '</div>' +
+            '</div>' +
+          '</section>' +
+        '</div>';
+    }
+
+    async function loadExperience() {
+      setStatus('Loading…');
+      try {
+        var res = await fetch(BASE.replace(/\/$/, '') + '/graph');
+        if (!res.ok) throw new Error('Status ' + res.status);
+        var raw = await res.json();
+        var exps = Array.isArray(raw.experiences) ? raw.experiences : [];
+        currentExperience = exps.find(function (exp) {
+          return String(exp.id || '') === experienceId;
+        }) || null;
+
+        if (!currentExperience) {
+          throw new Error('Experience not found');
+        }
+
+        document.title = (currentExperience.title || 'Experience') + ' · Yixin Li';
+        titleEl.textContent = currentExperience.title || 'Experience';
+        var metaParts = [];
+        if (currentExperience.experience_date) metaParts.push(currentExperience.experience_date);
+        if (topicName) metaParts.push('From ' + topicName);
+        if (currentExperience.summary) metaParts.push(currentExperience.summary);
+        metaEl.textContent = metaParts.join(' · ');
+
+        render();
+        setStatus('');
+      } catch (err) {
+        setStatus('Could not load experience — ' + err.message);
+      }
+    }
+
+    modeRawBtn.addEventListener('click', function () {
+      currentMode = 'raw';
+      render();
+    });
+
+    modeTimelineBtn.addEventListener('click', function () {
+      currentMode = 'timeline';
+      render();
+    });
+
+    loadExperience();
+  })();
+  </script>
+</body>
+</html>
