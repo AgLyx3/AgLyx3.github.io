@@ -1158,7 +1158,8 @@
 
       /* Fade canvas in so any residual early motion isn't jarring */
       svgEl.style.opacity = '0';
-      requestAnimationFrame(function () { svgEl.style.opacity = '1'; });
+      /* Clear the inline override so CSS (including mobile hide rules) takes control */
+      requestAnimationFrame(function () { svgEl.style.opacity = ''; });
 
       /* Start gentle live simulation from near alphaTarget */
       var _tick = 0;
@@ -1590,22 +1591,30 @@
 
     /* ── Init: load topics from backend, fall back to hardcoded list ── */
     async function init() {
-      var topics;
+      var topics = FALLBACK;
       try {
         var controller = new AbortController();
         var timer = setTimeout(function () { controller.abort(); }, 5000);
         var res = await fetch(api('/graph'), { signal: controller.signal });
         clearTimeout(timer);
-        if (!res.ok) throw new Error();
-        var raw = await res.json();
-        var rawTopics = Array.isArray(raw.topics) ? raw.topics :
-                       Array.isArray(raw.topic_nodes) ? raw.topic_nodes : [];
-        topics = rawTopics.length ? rawTopics.map(function (t) {
-          return { id: String(t.id || t.label), label: t.label || String(t.id), activation: Number(t.activation) || 0 };
-        }) : FALLBACK;
-      } catch (_) {
-        topics = FALLBACK;
-      }
+        if (res.ok) {
+          var raw = await res.json();
+          var rawTopics = Array.isArray(raw.topics) ? raw.topics :
+                         Array.isArray(raw.topic_nodes) ? raw.topic_nodes : [];
+          if (rawTopics.length) {
+            /* Build a label→activation map from backend, then merge into FALLBACK */
+            var actMap = {};
+            rawTopics.forEach(function (t) {
+              var key = (t.label || String(t.id || '')).toLowerCase();
+              actMap[key] = Number(t.activation) || 0;
+            });
+            topics = FALLBACK.map(function (t) {
+              var key = t.label.toLowerCase();
+              return { id: t.id, label: t.label, activation: actMap[key] !== undefined ? actMap[key] : t.activation };
+            });
+          }
+        }
+      } catch (_) { /* keep FALLBACK */ }
       buildBubbles(topics);
     }
 

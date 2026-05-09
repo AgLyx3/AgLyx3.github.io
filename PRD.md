@@ -123,12 +123,10 @@ Connected topic nodes will include:
 * Memory Systems
 * Evaluation & Benchmarking
 * Startup & Entrepreneurship
-* Human-Computer Interaction
 * Software Development
 * Product Management
 * Academic Research
 * Accessibility
-* User Research
 * Photography & Videography
 * AI Ethics & Philosophy
 
