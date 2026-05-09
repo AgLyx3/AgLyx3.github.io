@@ -16,15 +16,13 @@
 **Dec 2025 – present**
 
 ### Delivery & Ownership
-- Drove PRD-to-build execution across 3 agentic initiatives (agentic tools, stored memory, evaluation systems), translating concepts into detailed PRDs and prioritized tickets, coordinating dependencies across 5 engineers.
-- Owned end-to-end delivery of agentic actions and personalization for the core conversational AI agent, translating real user interaction patterns into PRDs and coordinating execution.
-- Communicated product direction to leadership (C-suite) across all three initiative areas.
-- Collaborated cross-functionally with leadership and go-to-market teams on marketing briefs, feature launches, and external communications.
+- Drove PRD-to-build execution across 3 initiatives (agentic tools, stored memory, evaluation systems) for the core AI agent, translating concepts into detailed PRDs and prioritized tickets, coordinating dependencies across 5 engineers.
+- Communicated product direction to leadership across all three initiative areas.
+- Collaborated cross-functionally with leadership and go-to-market teams on marketing briefs, influencer recruitement, feature launches, and external communications (interviews with reporters).
 
 ### Memory Systems — Build Memory Architecture [NOTES]
-- Built per-channel memory first, then redesigned to per-user memory to fix signal mixing and improve retrieval precision.
+- Built per-channel memory first (summary of previous conversation history, make inference to identify users with numbers (because users may use different names in group chat we want to make sure we know who we're addressing to and not cause confusion by conversation in group chat, high level interest/goal/identified opportunity for proactivity)), then redesigned to per-user memory (more fine grained than channel memory, privacy boundary across different categories of memory) to fix signal mixing and improve retrieval precision.
 - Problem with per-channel: memory mixed signals from multiple users, accumulated context was not reusable across contexts, retrieval precision was weaker because the storage unit was the channel rather than the user.
-- Designed and implemented a shared memory architecture for multi-user AI agents, building retrieval and tool-calling workflows that enabled context-aware reasoning while enforcing privacy boundaries.
 - Core tradeoff: originally designed a more fine-grained data structure, but engineering estimated 1–2 extra weeks; prioritized a faster first version while setting clear quality guardrails.
 - Built prompts and evaluation cases before development finished to define success criteria up front; used testing results to identify when quality was not acceptable and justify iteration.
 - Defined success metrics and rollout plan before launch; aligned engineers working across memory and memory evaluation despite parallel project demands.
