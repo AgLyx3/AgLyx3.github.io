@@ -176,7 +176,7 @@ def hybrid_retrieve(query: str, limit: int = 3) -> RetrievalResult:
 
     for exp in experiences:
         # bm25: title+summary (concise); semantic proxy: raw_context (richer)
-        bm25 = _overlap_score(query_tokens, f"{exp.title} {exp.summary}")
+        bm25 = _overlap_score(query_tokens, exp.title)
         semantic = _overlap_score(query_tokens, exp.raw_context)
         hybrid = 0.6 * bm25 + 0.4 * semantic
         topic_boost = sum(
@@ -196,7 +196,7 @@ def hybrid_retrieve(query: str, limit: int = 3) -> RetrievalResult:
                     citation=Citation(
                         experience_id=exp.id,
                         experience_title=exp.title,
-                        snippet=exp.summary,
+                        snippet=exp.raw_context,
                         score=round(final_score, 4),
                     ),
                     topic_ids=related_topics,

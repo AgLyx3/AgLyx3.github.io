@@ -170,6 +170,8 @@ class BackendRevampTestCase(unittest.TestCase):
         )
         self.assertLessEqual(len(questions), 3)
         self.assertLessEqual(len(topics), 3)
+        self.assertTrue(any("LoCoMo and EverMemBenchmark" in question for question in questions))
+        self.assertFalse(any("What experience does Yixin have with eval?" == question for question in questions))
 
     def test_chat_endpoint_uses_exact_fallback_message(self) -> None:
         snapshot = SessionSnapshot(

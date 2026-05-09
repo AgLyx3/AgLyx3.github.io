@@ -12,6 +12,20 @@ Check the golden path visually — do not rely on code review alone for UI/front
 
 ## Deployment
 
-Changes to `frontend/index.html` or `PRD.md` are not live until committed and pushed to `main`.
-GitHub Pages serves from the repo; local edits are invisible to the deployed site.
-Always commit + push after frontend fixes, or explicitly tell the user the changes are local only.
+The frontend is a **separate Vercel project** inside the `frontend/` subdirectory.
+Production domain: **www.yixinli.me**
+
+To deploy frontend changes:
+
+```bash
+cd /Users/lyx_computer/Desktop/AgLyx3.github.io/frontend && vercel deploy --prod
+```
+
+Then verify the live site has the new code:
+
+```bash
+curl -s "https://www.yixinli.me" | grep -o "TOPICS\|<some-unique-string>"
+```
+
+Do not tell the user something is deployed until `vercel deploy --prod` finishes and curl confirms the new code is live.
+The root `.vercel/` project (`ag-lyx3-github-io`) is separate and not the live frontend.

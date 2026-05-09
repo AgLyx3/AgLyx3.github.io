@@ -12,6 +12,35 @@ def _normalize_topic_label(label: str) -> str:
     return " ".join(label.strip().split())
 
 
+_GERUND_PREFIXES = {
+    "Built ": "building ",
+    "Ran ": "running ",
+    "Designed ": "designing ",
+    "Interviewed ": "interviewing ",
+    "Wrote ": "writing ",
+    "Won ": "winning ",
+    "Worked ": "working ",
+}
+
+
+def _title_to_follow_up(title: str, index: int) -> str:
+    cleaned = " ".join(title.strip().split()).rstrip(".")
+    for prefix, gerund in _GERUND_PREFIXES.items():
+        if cleaned.startswith(prefix):
+            phrase = gerund + cleaned[len(prefix) :].strip()
+            if index == 0:
+                return f"What did Yixin learn from {phrase}?"
+            if index == 1:
+                return f"How did Yixin approach {phrase}?"
+            return f"How did {phrase} connect to Yixin's broader work?"
+    lowered = cleaned[:1].lower() + cleaned[1:] if cleaned else cleaned
+    if index == 0:
+        return f"Can you tell me more about {lowered}?"
+    if index == 1:
+        return f"What did Yixin learn from {lowered}?"
+    return f"How does {lowered} connect to Yixin's broader work?"
+
+
 def build_follow_up_questions(
     *,
     user_message: str,
@@ -21,43 +50,33 @@ def build_follow_up_questions(
     topics: list | None = None,
     limit: int = MAX_FOLLOWUPS,
 ) -> list[str]:
-    """Return up to three concise adjacent questions.
-
-    The portfolio is graph-led, so the questions should help the visitor
-    continue from either the chosen topic or the strongest cited experience.
-    """
+    """Return up to three concise adjacent questions."""
 
     if topics is None:
         _, topics, _, _ = load_graph()
     topic_labels = {topic.id: _normalize_topic_label(topic.label) for topic in topics}
     chosen_topic_id = active_topic_id or (active_topics[0] if active_topics else None)
     chosen_topic_label = topic_labels.get(chosen_topic_id or "", "").strip()
-    top_citation = citations[0].experience_title if citations else ""
 
     prompts: list[str] = []
-    if chosen_topic_label:
-        label = chosen_topic_label.lower()
-        prompts.extend(
-            [
-                f"What experience does Yixin have with {label}?",
-                f"How did Yixin apply {label} in practice?",
-                f"What did Yixin learn from working on {label}?",
-            ]
-        )
-    if top_citation:
-        prompts.extend(
-            [
-                f"Can you tell me more about {top_citation}?",
-                f"How does {top_citation} connect to Yixin's broader work?",
-            ]
-        )
+    for index, citation in enumerate(citations[:limit]):
+        prompts.append(_title_to_follow_up(citation.experience_title, index))
     if not prompts:
+        label = chosen_topic_label.lower() if chosen_topic_label else ""
         prompts.extend(
-            [
-                "What kind of work has Yixin done recently?",
-                "Which topic should I explore next?",
-                "What is a strong example of Yixin's experience?",
-            ]
+            (
+                [
+                    f"What experience does Yixin have with {label}?",
+                    f"How did Yixin apply {label} in practice?",
+                    f"What did Yixin learn from working on {label}?",
+                ]
+                if label
+                else [
+                    "What kind of work has Yixin done recently?",
+                    "Which topic should I explore next?",
+                    "What is a strong example of Yixin's experience?",
+                ]
+            )
         )
 
     normalized_message = user_message.casefold().strip()
