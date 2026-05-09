@@ -43,22 +43,26 @@ class SyncDatabaseConnection:
 
     def execute(self, query: str, params: tuple[Any, ...] | list[Any] = ()):
         if self.dialect == "postgres":
-            return self._raw.execute(_convert_placeholders(query), params)
+            cursor = self._raw.cursor()
+            cursor.execute(_convert_placeholders(query), params)
+            return cursor
         return self._raw.execute(query, params)
 
     def executemany(self, query: str, seq_of_params: list[tuple[Any, ...]]):
         if self.dialect == "postgres":
-            return self._raw.executemany(_convert_placeholders(query), seq_of_params)
+            cursor = self._raw.cursor()
+            cursor.executemany(_convert_placeholders(query), seq_of_params)
+            return cursor
         return self._raw.executemany(query, seq_of_params)
 
     def executescript(self, script: str):
         if self.dialect == "postgres":
-            cursor = None
+            cursor = self._raw.cursor()
             for statement in script.split(";"):
                 cleaned = statement.strip()
                 if not cleaned:
                     continue
-                cursor = self._raw.execute(cleaned)
+                cursor.execute(cleaned)
             return cursor
         return self._raw.executescript(script)
 
