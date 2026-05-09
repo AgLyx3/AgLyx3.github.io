@@ -10,6 +10,7 @@ venv/
 
 # Local app data
 backend/data/app.db
+backend/.env
 
 # Local tooling state
 .claude/settings.local.json

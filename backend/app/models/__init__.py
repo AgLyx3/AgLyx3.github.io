@@ -1,6 +1,31 @@
 """Pydantic model exports."""
 
-from .chat import ChatFinalMetadata, ChatMessage, ChatRequest, Citation
+from .actions import (
+    ActionTrackRequest,
+    ActionTrackResponse,
+    ContactMessageRequest,
+    ContactMessageResponse,
+    ResumeDownloadRequest,
+)
+from .analytics import (
+    AnalyticsEventCreate,
+    AnalyticsEventRecord,
+    AnalyticsIngestResponse,
+    SessionEnsureRequest,
+    SessionMessageRecordRequest,
+    SessionMessageRecordResult,
+    SessionSnapshot,
+    SessionTouchRequest,
+)
+from .chat import (
+    CTAMention,
+    ChatFinalMetadata,
+    ChatMessage,
+    ChatRequest,
+    ChatSessionState,
+    Citation,
+    TopicSuggestion,
+)
 from .core import (
     ExperienceNode,
     ProfileMemoryField,
@@ -21,15 +46,30 @@ from .topic_ops import (
 )
 
 __all__ = [
+    "ActionTrackRequest",
+    "ActionTrackResponse",
+    "AnalyticsEventCreate",
+    "AnalyticsEventRecord",
+    "AnalyticsIngestResponse",
+    "CTAMention",
     "ChatFinalMetadata",
     "ChatMessage",
     "ChatRequest",
+    "ChatSessionState",
+    "ContactMessageRequest",
+    "ContactMessageResponse",
     "Citation",
     "ExperienceNode",
     "GraphResponse",
     "ProfileMemoryField",
     "ProfileMemoryRecord",
     "RelevanceEdge",
+    "ResumeDownloadRequest",
+    "SessionEnsureRequest",
+    "SessionMessageRecordRequest",
+    "SessionMessageRecordResult",
+    "SessionSnapshot",
+    "SessionTouchRequest",
     "StructuredMemoryView",
     "MemoryGapRecord",
     "MemoryIngestRequest",
@@ -39,4 +79,5 @@ __all__ = [
     "TopicNotification",
     "TopicPendingMemory",
     "TopicNode",
+    "TopicSuggestion",
 ]

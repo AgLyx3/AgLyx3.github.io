@@ -1,10 +1,15 @@
 """Service module exports."""
 
 from .activation import apply_decay, get_activation_snapshot, update_activation
+from .analytics import log_analytics_event
+from .contact import create_contact_message
+from .cta_rules import detect_cta_rejection, should_offer_cta
 from .db import init_db
-from .llm import generate_chat_answer
+from .followups import build_adjacent_topics, build_follow_up_questions
+from .llm import MEMORY_FALLBACK_RESPONSE, generate_chat_answer
 from .retrieval import hybrid_retrieve, load_graph
-from .safety import RateLimiter, enforce_request_size, sanitize_text
+from .safety import RateLimiter, enforce_request_size, estimate_tokens, sanitize_text, truncate_text_to_token_limit
+from .session import ensure_session, record_assistant_response_tokens, record_user_message, touch_session
 from .topic_ops import (
     create_topic_memory,
     ingest_memory,
@@ -16,9 +21,16 @@ from .topic_ops import (
 
 __all__ = [
     "RateLimiter",
+    "MEMORY_FALLBACK_RESPONSE",
     "apply_decay",
+    "build_adjacent_topics",
+    "build_follow_up_questions",
+    "create_contact_message",
+    "detect_cta_rejection",
+    "ensure_session",
     "init_db",
     "enforce_request_size",
+    "estimate_tokens",
     "generate_chat_answer",
     "get_activation_snapshot",
     "hybrid_retrieve",
@@ -30,5 +42,11 @@ __all__ = [
     "list_topics_pending_memory",
     "list_memory_gaps",
     "log_memory_gap",
+    "log_analytics_event",
+    "record_assistant_response_tokens",
+    "record_user_message",
+    "should_offer_cta",
+    "touch_session",
+    "truncate_text_to_token_limit",
     "update_activation",
 ]

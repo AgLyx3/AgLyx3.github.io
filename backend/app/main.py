@@ -1,7 +1,8 @@
 """FastAPI entrypoint."""
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .api import api_router
 from .config import get_settings
@@ -24,9 +25,12 @@ app.add_middleware(
 @app.middleware("http")
 async def security_middleware(request: Request, call_next):
     client_key = request.client.host if request.client else "unknown"
-    limiter.check(client_key)
-    if request.method in {"POST", "PUT", "PATCH"}:
-        enforce_request_size(request, settings.max_request_size_bytes)
+    try:
+        limiter.check(client_key)
+        if request.method in {"POST", "PUT", "PATCH"}:
+            await enforce_request_size(request, settings.max_request_size_bytes)
+    except HTTPException as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     return await call_next(request)
 
 

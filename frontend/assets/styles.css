@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,300;1,6..72,400;1,6..72,600&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Geist+Mono:wght@400;500&display=swap');
 
 @font-face {
   font-family: 'Autumn Brush';
@@ -10,22 +10,22 @@
 
 /* ── Design tokens ───────────────────────────────────────────────── */
 :root {
-  /* Paper — cool stone-white, no amber warmth */
-  --paper:       #EFEFEA;
-  --paper-2:     #E6E6E0;
-  --paper-3:     #DCDDD6;
-  --paper-edge:  #C6C7BE;
+  /* Palette — amber paper + mirage blue */
+  --paper:       #F8F4EE;
+  --paper-2:     #E9D9C9;
+  --paper-3:     #E1CFBE;
+  --paper-edge:  #CFBEAE;
 
-  /* Ink — cooler charcoal, slight olive */
-  --ink:         #1C1E18;
-  --ink-2:       #383B2C;
-  --ink-3:       #626558;
-  --ink-4:       #969884;
+  /* Ink — warm charcoal that still reads like ink on paper */
+  --ink:         #2F2C31;
+  --ink-2:       #4A4750;
+  --ink-3:       #716D73;
+  --ink-4:       #9D97A0;
 
-  /* Accent — deep muted army green */
-  --forest:        #485A34;
-  --forest-hover:  #344424;
-  --forest-soft:   #B5C4A0;
+  /* Accent — dusty editorial blue */
+  --forest:        #6E86AB;
+  --forest-hover:  #5A7093;
+  --forest-soft:   #D8E0EC;
 
   /* Semantic aliases (keeps existing references working) */
   --bg:            var(--paper);
@@ -36,7 +36,7 @@
   --accent-hover:  var(--forest-hover);
   --accent-light:  var(--forest-soft);
   --border:        var(--paper-edge);
-  --border-strong: #B0B2A6;
+  --border-strong: #B9A998;
 
   /* Radii — restrained */
   --radius:     4px;
@@ -53,8 +53,8 @@
   --dur-base:   240ms;
 
   /* Fonts */
-  --font-serif: 'Newsreader', 'Source Serif Pro', Georgia, serif;
-  --font-sans:  'Geist', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans:  -apple-system, 'Helvetica Neue', sans-serif;
   --font-mono:  'Geist Mono', ui-monospace, 'Courier New', monospace;
 }
 
@@ -86,9 +86,9 @@ h1, h2, h3, h4 {
   color: var(--ink);
 }
 
-h1 { font-size: clamp(28px, 4vw, 48px); font-variation-settings: "opsz" 48; }
-h2 { font-size: clamp(20px, 2.5vw, 28px); font-variation-settings: "opsz" 36; }
-h3 { font-family: var(--font-sans); font-size: 16px; font-weight: 500; letter-spacing: 0; }
+h1 { font-size: clamp(28px, 4vw, 48px); }
+h2 { font-size: clamp(20px, 2.5vw, 28px); }
+h3 { font-family: var(--font-mono); font-size: 16px; font-weight: 500; letter-spacing: 0; }
 
 p { color: var(--ink-2); line-height: 1.65; }
 
@@ -121,7 +121,6 @@ code { font-family: var(--font-mono); font-size: 0.9em; color: var(--ink); }
   font-family: var(--font-serif);
   font-size: 18px;
   font-weight: 400;
-  font-variation-settings: "opsz" 24;
   letter-spacing: -0.01em;
   color: var(--ink);
   text-decoration: none;
@@ -138,7 +137,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; color: var(--ink); }
 
 .top-nav a,
 .topbar nav a {
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 500;
   color: var(--ink-3);
@@ -150,6 +149,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; color: var(--ink); }
 .top-nav a:hover,
 .topbar nav a:hover { color: var(--ink); }
 .top-nav a[aria-current="page"],
+.topbar nav a[aria-current="page"],
 .topbar nav a.is-active { color: var(--ink); }
 
 /* ── Layout ──────────────────────────────────────────────────────── */
@@ -189,7 +189,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; color: var(--ink); }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 500;
   color: var(--ink);
@@ -296,7 +296,7 @@ textarea:focus, input:focus { border-color: var(--forest); }
 }
 
 .message-user .message-body, .msg.user .body {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: 15px;
   color: var(--ink);
   line-height: 1.55;
@@ -304,9 +304,8 @@ textarea:focus, input:focus { border-color: var(--forest); }
 
 .message-assistant .message-body, .msg.assistant .body {
   font-family: var(--font-serif);
-  font-weight: 300;
+  font-weight: 400;
   font-size: 19px;
-  font-variation-settings: "opsz" 24;
   line-height: 1.55;
   color: var(--ink);
 }
@@ -322,7 +321,7 @@ textarea:focus, input:focus { border-color: var(--forest); }
 }
 
 .chip, .citations a {
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
   padding: 3px 10px;

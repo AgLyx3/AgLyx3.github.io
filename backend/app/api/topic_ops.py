@@ -1,7 +1,8 @@
 """APIs for auto-topic notifications and manual memory backfill."""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.api.auth import require_admin_key
 from app.models import (
     MemoryGapRecord,
     MemoryIngestRequest,
@@ -19,7 +20,7 @@ from app.services import (
     list_topics_pending_memory,
 )
 
-router = APIRouter(prefix="/topics", tags=["topics"])
+router = APIRouter(prefix="/topics", tags=["topics"], dependencies=[Depends(require_admin_key)])
 
 
 @router.get("/notifications", response_model=list[TopicNotification])

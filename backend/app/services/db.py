@@ -1,24 +1,21 @@
-"""SQLite database setup and helpers for lean v1 backend."""
+"""Database schema setup and seed helpers for local and deployed runtimes."""
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from datetime import UTC, datetime
 import json
 from pathlib import Path
 import sqlite3
 
-from app.config import get_settings
+from app.services.database_engine import (
+    database_dialect,
+    open_database_connection,
+    sqlite_db_path,
+)
 
 
-def _db_path() -> Path:
-    settings = get_settings()
-    raw = settings.database_url.strip()
-    if raw.startswith("sqlite:///"):
-        relative = raw.removeprefix("sqlite:///")
-        return Path(__file__).resolve().parents[3] / relative
-    return Path(__file__).resolve().parents[2] / "data" / "app.db"
-
+def utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()
 
 def _should_reset_db(path: Path) -> bool:
     if not path.exists():
@@ -33,6 +30,15 @@ def _should_reset_db(path: Path) -> bool:
         if "profile_memories" not in tables:
             return True
 
+        required_tables = {"analytics_events", "sessions", "outbound_messages"}
+        if not required_tables.issubset(tables):
+            return False
+
+        session_columns = {row[1] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()}
+        required_session_columns = {"total_token_count", "input_token_count", "output_token_count"}
+        if not required_session_columns.issubset(session_columns):
+            return True
+
         experience_columns = {
             row[1] for row in conn.execute("PRAGMA table_info(experiences)").fetchall()
         }
@@ -45,33 +51,139 @@ def _should_reset_db(path: Path) -> bool:
         ).fetchone()
         if sample_profile is None:
             return False
-        raw = sample_profile[0]
-        return not str(raw).lstrip().startswith("[")
+        try:
+            parsed = json.loads(sample_profile[0])
+            return not isinstance(parsed, list)
+        except (json.JSONDecodeError, ValueError):
+            return True
     finally:
         conn.close()
 
 
-@contextmanager
 def get_conn():
-    path = _db_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-    finally:
-        conn.close()
+    return open_database_connection()
 
 
 def init_db() -> None:
-    path = _db_path()
-    if _should_reset_db(path):
-        path.unlink(missing_ok=True)
+    dialect = database_dialect()
+    if dialect == "sqlite":
+        path = sqlite_db_path()
+        if _should_reset_db(path):
+            path.unlink(missing_ok=True)
 
-    now = datetime.now(UTC).isoformat()
+    now = utc_now_iso()
     with get_conn() as conn:
-        conn.executescript(
-            """
+        conn.executescript(_schema_script_for(dialect))
+        _seed_defaults(conn, now)
+        conn.commit()
+
+
+def _schema_script_for(dialect: str) -> str:
+    if dialect == "postgres":
+        return """
+            CREATE TABLE IF NOT EXISTS topics (
+                id TEXT PRIMARY KEY,
+                label TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                activation DOUBLE PRECISION NOT NULL DEFAULT 0,
+                approval_mode TEXT NOT NULL DEFAULT 'manual',
+                source_candidate_id TEXT,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS profile_memories (
+                memory_id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                raw_context TEXT NOT NULL,
+                structured_json TEXT NOT NULL,
+                source TEXT NOT NULL DEFAULT 'seed',
+                confidence DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS experiences (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                summary TEXT NOT NULL,
+                details TEXT NOT NULL DEFAULT '',
+                experience_date TEXT NOT NULL DEFAULT '',
+                raw_context TEXT NOT NULL DEFAULT '',
+                structured_json TEXT NOT NULL,
+                activation DOUBLE PRECISION NOT NULL DEFAULT 0,
+                source TEXT NOT NULL DEFAULT 'seed',
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS relevance_edges (
+                source_experience_id TEXT NOT NULL,
+                target_topic_id TEXT NOT NULL,
+                relevance DOUBLE PRECISION NOT NULL,
+                PRIMARY KEY (source_experience_id, target_topic_id)
+            );
+            CREATE TABLE IF NOT EXISTS topic_notifications (
+                event_id BIGSERIAL PRIMARY KEY,
+                event TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                topic_id TEXT NOT NULL,
+                topic_name TEXT NOT NULL,
+                candidate_id TEXT NOT NULL,
+                distinct_sessions INTEGER NOT NULL,
+                mentions INTEGER NOT NULL,
+                labeling_mode TEXT
+            );
+            CREATE TABLE IF NOT EXISTS topic_memories (
+                memory_id TEXT PRIMARY KEY,
+                topic_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                summary TEXT NOT NULL,
+                details TEXT NOT NULL,
+                source TEXT NOT NULL DEFAULT 'manual',
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS memory_query_gaps (
+                gap_id BIGSERIAL PRIMARY KEY,
+                query_text TEXT NOT NULL,
+                session_id TEXT NOT NULL,
+                top_score DOUBLE PRECISION NOT NULL,
+                score_gap DOUBLE PRECISION NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS analytics_events (
+                event_id BIGSERIAL PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                event_name TEXT NOT NULL,
+                event_payload_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS sessions (
+                session_id TEXT PRIMARY KEY,
+                started_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL,
+                message_count INTEGER NOT NULL DEFAULT 0,
+                total_token_count INTEGER NOT NULL DEFAULT 0,
+                input_token_count INTEGER NOT NULL DEFAULT 0,
+                output_token_count INTEGER NOT NULL DEFAULT 0,
+                first_message_at TEXT,
+                depth_5_reached_at TEXT,
+                cta_mentioned BOOLEAN NOT NULL DEFAULT FALSE,
+                cta_rejected BOOLEAN NOT NULL DEFAULT FALSE,
+                active_topic_id TEXT
+            );
+            CREATE TABLE IF NOT EXISTS outbound_messages (
+                message_id BIGSERIAL PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                message_body TEXT NOT NULL,
+                included_chat_history BOOLEAN NOT NULL DEFAULT FALSE,
+                conversation_json TEXT,
+                created_at TEXT NOT NULL,
+                delivery_status TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_analytics_events_session
+                ON analytics_events(session_id, event_name, created_at);
+            CREATE INDEX IF NOT EXISTS idx_sessions_last_seen
+                ON sessions(last_seen_at);
+            CREATE INDEX IF NOT EXISTS idx_outbound_messages_session
+                ON outbound_messages(session_id, created_at);
+        """
+    return """
             CREATE TABLE IF NOT EXISTS topics (
                 id TEXT PRIMARY KEY,
                 label TEXT NOT NULL,
@@ -137,10 +249,43 @@ def init_db() -> None:
                 score_gap REAL NOT NULL,
                 created_at TEXT NOT NULL
             );
-            """
-        )
-        _seed_defaults(conn, now)
-        conn.commit()
+            CREATE TABLE IF NOT EXISTS analytics_events (
+                event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                event_name TEXT NOT NULL,
+                event_payload_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS sessions (
+                session_id TEXT PRIMARY KEY,
+                started_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL,
+                message_count INTEGER NOT NULL DEFAULT 0,
+                total_token_count INTEGER NOT NULL DEFAULT 0,
+                input_token_count INTEGER NOT NULL DEFAULT 0,
+                output_token_count INTEGER NOT NULL DEFAULT 0,
+                first_message_at TEXT,
+                depth_5_reached_at TEXT,
+                cta_mentioned INTEGER NOT NULL DEFAULT 0,
+                cta_rejected INTEGER NOT NULL DEFAULT 0,
+                active_topic_id TEXT
+            );
+            CREATE TABLE IF NOT EXISTS outbound_messages (
+                message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                message_body TEXT NOT NULL,
+                included_chat_history INTEGER NOT NULL DEFAULT 0,
+                conversation_json TEXT,
+                created_at TEXT NOT NULL,
+                delivery_status TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_analytics_events_session
+                ON analytics_events(session_id, event_name, created_at);
+            CREATE INDEX IF NOT EXISTS idx_sessions_last_seen
+                ON sessions(last_seen_at);
+            CREATE INDEX IF NOT EXISTS idx_outbound_messages_session
+                ON outbound_messages(session_id, created_at);
+        """
 
 
 def _structured_json(*, context: str, action: str, result: str) -> str:
@@ -163,7 +308,7 @@ def _profile_structured_json(*fields: tuple[str, str]) -> str:
     )
 
 
-def _seed_defaults(conn: sqlite3.Connection, now: str) -> None:
+def _seed_defaults(conn, now: str) -> None:
     topic_count = conn.execute("SELECT COUNT(*) AS c FROM topics").fetchone()["c"]
     if topic_count == 0:
         conn.executemany(

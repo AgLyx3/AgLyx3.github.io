@@ -1,6 +1,6 @@
-"""Per-query activation updates persisted in SQLite."""
+"""Per-query activation updates persisted in the configured database."""
 
-import time
+import math
 
 from app.services.db import get_conn
 
@@ -15,7 +15,7 @@ def get_activation_snapshot() -> tuple[dict[str, float], dict[str, float]]:
 
 
 def apply_decay(decay_lambda: float = 0.01, dt_days: float = 1.0) -> None:
-    factor = 2.718281828 ** (-decay_lambda * dt_days)
+    factor = math.e ** (-decay_lambda * dt_days)
     with get_conn() as conn:
         conn.execute("UPDATE topics SET activation = activation * ?", (factor,))
         conn.execute("UPDATE experiences SET activation = activation * ?", (factor,))
@@ -24,15 +24,11 @@ def apply_decay(decay_lambda: float = 0.01, dt_days: float = 1.0) -> None:
 
 def update_activation(
     session_id: str,
-    query: str,
     cited_experiences: list[tuple[str, float]],
     alpha: float = 1.0,
 ) -> None:
     if not cited_experiences:
         return
-    if not session_id:
-        session_id = f"anon-{int(time.time())}"
-    _ = query
 
     with get_conn() as conn:
         for exp_id, score in cited_experiences:

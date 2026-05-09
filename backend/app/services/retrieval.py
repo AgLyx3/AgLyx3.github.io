@@ -1,4 +1,4 @@
-"""Hybrid retrieval over SQLite-backed topic/experience graph."""
+"""Hybrid retrieval over the persisted topic/experience graph."""
 
 from dataclasses import dataclass
 import json
@@ -31,6 +31,8 @@ class RetrievalResult:
     context_blocks: list[str]
     top_score: float
     second_score: float
+    topics: list  # list[TopicNode] — passed to followups to avoid a second DB round-trip
+    edges: list   # list[RelevanceEdge]
 
 
 def _tokenize(text: str) -> list[str]:
@@ -173,10 +175,10 @@ def hybrid_retrieve(query: str, limit: int = 3) -> RetrievalResult:
     ranked: list[tuple[float, RetrievalItem]] = []
 
     for exp in experiences:
-        candidate_text = f"{exp.title} {exp.summary}"
-        bm25 = _overlap_score(query_tokens, candidate_text)
-        semantic = _overlap_score(query_tokens, candidate_text)
-        hybrid = 0.5 * bm25 + 0.5 * semantic
+        # bm25: title+summary (concise); semantic proxy: raw_context (richer)
+        bm25 = _overlap_score(query_tokens, f"{exp.title} {exp.summary}")
+        semantic = _overlap_score(query_tokens, exp.raw_context)
+        hybrid = 0.6 * bm25 + 0.4 * semantic
         topic_boost = sum(
             topic_weights.get(topic.id, 0.0) * _experience_topic_weight(exp.id, topic.id, edges)
             for topic in topics
@@ -217,4 +219,6 @@ def hybrid_retrieve(query: str, limit: int = 3) -> RetrievalResult:
         context_blocks=context_blocks,
         top_score=top_score,
         second_score=second_score,
+        topics=topics,
+        edges=edges,
     )

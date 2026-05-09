@@ -1,4 +1,4 @@
-"""SQLite-backed topic notification and memory curation helpers."""
+"""Database-backed topic notification and memory curation helpers."""
 
 from __future__ import annotations
 
@@ -160,8 +160,10 @@ def create_topic_memory(topic_id: str, payload: TopicMemoryCreateRequest) -> Top
         )
         conn.execute(
             """
-            INSERT OR REPLACE INTO relevance_edges(source_experience_id, target_topic_id, relevance)
+            INSERT INTO relevance_edges(source_experience_id, target_topic_id, relevance)
             VALUES(?,?,?)
+            ON CONFLICT(source_experience_id, target_topic_id)
+            DO UPDATE SET relevance = excluded.relevance
             """,
             (experience_id, topic_id, 0.85),
         )
@@ -244,8 +246,10 @@ def ingest_memory(payload: MemoryIngestRequest) -> MemoryIngestResponse:
             relevance = max(0.5, 0.9 - 0.15 * index)
             conn.execute(
                 """
-                INSERT OR REPLACE INTO relevance_edges(source_experience_id, target_topic_id, relevance)
+                INSERT INTO relevance_edges(source_experience_id, target_topic_id, relevance)
                 VALUES(?,?,?)
+                ON CONFLICT(source_experience_id, target_topic_id)
+                DO UPDATE SET relevance = excluded.relevance
                 """,
                 (experience_id, topic_id, relevance),
             )

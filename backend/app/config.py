@@ -2,7 +2,15 @@
 
 from dataclasses import dataclass
 import os
-from typing import List
+from typing import List, Optional
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional for local DX
+    load_dotenv = None
+
+if load_dotenv is not None:
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 
 @dataclass(frozen=True)
@@ -11,10 +19,11 @@ class Settings:
 
     app_name: str = "Portfolio Graph Memory API"
     app_version: str = "0.1.0"
-    cors_allow_origins: List[str] = None
+    cors_allow_origins: Optional[List[str]] = None
     cors_allow_credentials: bool = True
-    cors_allow_methods: List[str] = None
-    cors_allow_headers: List[str] = None
+    cors_allow_methods: Optional[List[str]] = None
+    cors_allow_headers: Optional[List[str]] = None
+    admin_api_key: str = ""
 
     candidate_min_distinct_sessions: int = 5
     candidate_time_window_days: int = 7
@@ -33,8 +42,17 @@ class Settings:
     activation_min_top_score: float = 0.5
     activation_min_citation_score: float = 0.35
     rate_limit_per_minute: int = 60
+    chat_rate_limit_per_minute: int = 6
     max_request_size_bytes: int = 32_768
+    max_messages_per_session: int = 15
+    max_total_tokens_per_session: int = 20_000
+    max_input_tokens_per_message: int = 1_500
+    max_output_tokens_per_response: int = 400
     activation_increment_alpha: float = 1.0
+    analytics_write_enabled: bool = True
+    linkedin_url: str = "https://www.linkedin.com/in/yixin-li-796994280/"
+    schedule_url: str = ""
+    resume_url: str = "assets/resume.pdf"
 
 
 def _parse_csv(value: str | None, fallback: List[str]) -> List[str]:
@@ -70,6 +88,16 @@ def get_settings() -> Settings:
         activation_min_top_score=float(os.getenv("ACTIVATION_MIN_TOP_SCORE", "0.5")),
         activation_min_citation_score=float(os.getenv("ACTIVATION_MIN_CITATION_SCORE", "0.35")),
         rate_limit_per_minute=int(os.getenv("RATE_LIMIT_PER_MINUTE", "60")),
+        chat_rate_limit_per_minute=int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "6")),
         max_request_size_bytes=int(os.getenv("MAX_REQUEST_SIZE_BYTES", "32768")),
+        max_messages_per_session=int(os.getenv("MAX_MESSAGES_PER_SESSION", "15")),
+        max_total_tokens_per_session=int(os.getenv("MAX_TOTAL_TOKENS_PER_SESSION", "20000")),
+        max_input_tokens_per_message=int(os.getenv("MAX_INPUT_TOKENS_PER_MESSAGE", "1500")),
+        max_output_tokens_per_response=int(os.getenv("MAX_OUTPUT_TOKENS_PER_RESPONSE", "400")),
         activation_increment_alpha=float(os.getenv("ACTIVATION_INCREMENT_ALPHA", "1.0")),
+        analytics_write_enabled=os.getenv("ANALYTICS_WRITE_ENABLED", "true").lower() == "true",
+        linkedin_url=os.getenv("LINKEDIN_URL", "https://www.linkedin.com/in/yixin-li-796994280/"),
+        schedule_url=os.getenv("SCHEDULE_URL", ""),
+        resume_url=os.getenv("RESUME_URL", "assets/resume.pdf"),
+        admin_api_key=os.getenv("ADMIN_API_KEY", ""),
     )
