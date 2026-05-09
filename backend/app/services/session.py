@@ -63,8 +63,8 @@ def ensure_session(
                     0,
                     None,
                     None,
-                    0,
-                    0,
+                    False,
+                    False,
                     request.active_topic_id,
                 ),
             )
@@ -86,8 +86,16 @@ def touch_session(request: SessionTouchRequest) -> SessionSnapshot:
             "SELECT * FROM sessions WHERE session_id = ?",
             (request.session_id,),
         ).fetchone()
-        cta_mentioned = int(request.cta_mentioned) if request.cta_mentioned is not None else int(current["cta_mentioned"])
-        cta_rejected = int(request.cta_rejected) if request.cta_rejected is not None else int(current["cta_rejected"])
+        cta_mentioned = (
+            bool(request.cta_mentioned)
+            if request.cta_mentioned is not None
+            else bool(current["cta_mentioned"])
+        )
+        cta_rejected = (
+            bool(request.cta_rejected)
+            if request.cta_rejected is not None
+            else bool(current["cta_rejected"])
+        )
         active_topic_id = request.active_topic_id if request.active_topic_id is not None else current["active_topic_id"]
         conn.execute(
             """

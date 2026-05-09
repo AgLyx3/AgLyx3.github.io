@@ -32,7 +32,7 @@ def create_contact_message(request: ContactMessageRequest) -> ContactMessageResp
             (
                 request.session_id,
                 request.message_body,
-                int(included_chat_history),
+                included_chat_history,
                 conversation_json,
                 created_at,
                 "recorded",

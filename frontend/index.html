@@ -1305,6 +1305,21 @@
       var fullText = '';
       var streamStarted = false;
 
+      async function readErrorMessage(res) {
+        var fallback = 'HTTP ' + res.status;
+        try {
+          var raw = await res.text();
+          if (!raw) return fallback;
+          try {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.detail) return 'HTTP ' + res.status + ': ' + parsed.detail;
+          } catch (_) {}
+          return 'HTTP ' + res.status + ': ' + raw.trim();
+        } catch (_) {
+          return fallback;
+        }
+      }
+
       try {
         var res = await fetch(api('/chat'), {
           method: 'POST',
@@ -1320,7 +1335,7 @@
           }),
         });
 
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!res.ok) throw new Error(await readErrorMessage(res));
 
         /* Parse SSE line-by-line */
         var reader = res.body.getReader();
@@ -1380,8 +1395,9 @@
           textEl.innerHTML = '<p>No response received.</p>';
         }
 
-      } catch (_) {
-        textEl.innerHTML = '<p>I\'m having trouble connecting right now. Please try again.</p>';
+      } catch (err) {
+        var message = err && err.message ? err.message : 'I\'m having trouble connecting right now. Please try again.';
+        textEl.innerHTML = '<p>' + escHtml(message) + '</p>';
       } finally {
         isLoading = false;
         chatSend.disabled = false;

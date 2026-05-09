@@ -18,9 +18,11 @@ from app.models import (
     SessionMessageRecordRequest,
     SessionSnapshot,
 )
+from app.models.actions import ContactMessageRequest
 from app.models.chat import Citation
 from app.models.analytics import SessionMessageRecordResult
 from app.services.analytics import log_analytics_event
+from app.services.contact import create_contact_message
 from app.services.cta_rules import detect_cta_rejection, should_offer_cta
 from app.services.db import init_db
 from app.services.followups import build_adjacent_topics, build_follow_up_questions
@@ -248,6 +250,47 @@ class BackendRevampTestCase(unittest.TestCase):
                 )
             )
         self.assertEqual(exc.exception.status_code, 413)
+
+    def test_contact_message_writes_boolean_for_chat_history_flag(self) -> None:
+        captured: dict[str, object] = {}
+
+        class FakeCursor:
+            def fetchone(self):
+                return {"message_id": 42}
+
+        class FakeConn:
+            def execute(self, query, params=()):
+                captured["query"] = query
+                captured["params"] = params
+                return FakeCursor()
+
+            def commit(self):
+                captured["committed"] = True
+
+        class FakeConnManager:
+            def __enter__(self):
+                return FakeConn()
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        with patch("app.services.contact.ensure_session"), patch(
+            "app.services.contact.get_conn", return_value=FakeConnManager()
+        ):
+            response = create_contact_message(
+                ContactMessageRequest(
+                    session_id="contact-session",
+                    message_body="hello there",
+                    included_chat_history=True,
+                    conversation_history=[],
+                    message_count_before_send=3,
+                )
+            )
+
+        self.assertEqual(response.message_id, 42)
+        self.assertIn("params", captured)
+        self.assertIs(captured["params"][2], False)
+        self.assertTrue(captured.get("committed", False))
 
     async def _read_streaming_body(self, response) -> str:
         chunks: list[str] = []
