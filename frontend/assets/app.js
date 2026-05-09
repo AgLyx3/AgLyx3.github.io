@@ -6,7 +6,7 @@
     backendBaseUrl:
       (window.APP_CONFIG && window.APP_CONFIG.backendBaseUrl) ||
       localStorage.getItem("backendBaseUrl") ||
-      "http://localhost:8000",
+      "https://aglyx3githubio-production.up.railway.app",
   };
 
   function endpoint(path) {
