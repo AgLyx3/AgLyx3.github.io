@@ -935,7 +935,7 @@
     var topicsBackPill = document.getElementById('topicsBackPill');
 
     /* ── Topic data ── */
-    var FALLBACK = [
+    var TOPICS = [
       { id: 'ai-agents', label: 'AI Agents',                  activation: 8.5 },
       { id: 'memory',    label: 'Memory Systems',             activation: 9.2 },
       { id: 'eval',      label: 'Evaluation & Benchmarking',  activation: 6.8 },
@@ -1591,7 +1591,7 @@
 
     /* ── Init: load topics from backend, fall back to hardcoded list ── */
     async function init() {
-      var topics = FALLBACK;
+      var topics = TOPICS;
       try {
         var controller = new AbortController();
         var timer = setTimeout(function () { controller.abort(); }, 5000);
@@ -1602,19 +1602,19 @@
           var rawTopics = Array.isArray(raw.topics) ? raw.topics :
                          Array.isArray(raw.topic_nodes) ? raw.topic_nodes : [];
           if (rawTopics.length) {
-            /* Build a label→activation map from backend, then merge into FALLBACK */
+            /* Build a label→activation map from backend, then merge into TOPICS */
             var actMap = {};
             rawTopics.forEach(function (t) {
               var key = (t.label || String(t.id || '')).toLowerCase();
               actMap[key] = Number(t.activation) || 0;
             });
-            topics = FALLBACK.map(function (t) {
+            topics = TOPICS.map(function (t) {
               var key = t.label.toLowerCase();
               return { id: t.id, label: t.label, activation: actMap[key] !== undefined ? actMap[key] : t.activation };
             });
           }
         }
-      } catch (_) { /* keep FALLBACK */ }
+      } catch (_) { /* keep TOPICS */ }
       buildBubbles(topics);
     }
 
