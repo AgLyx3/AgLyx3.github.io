@@ -407,3 +407,18 @@ The assistant should feel:
 - and human
 
 not like a generic RAG chatbot and not like a static resume.
+
+---
+
+## Topic bubble hierarchy — positioning signal over breadth display
+
+**Previous direction:** All topic bubbles had similar `base_weight` values (3.0–7.5), producing a relatively flat visual spread across 10 topics. The intent was to give visitors freedom to explore any area.
+
+**What changed:** Topic `base_weight` values were restructured into three tiers:
+- Primary (9.0–9.0): `ai-agents`, `memory`, `eval`, `pm`
+- Secondary (5.5–6.0): `eng`, `research`, `startup`
+- Personality signal (2.5–4.0): `access`, `ethics`, `photo`
+
+**Why it changed:** A flat bubble field reads as "person who's done many things" rather than "expert with range." Without visual hierarchy, a recruiter's first impression is breadth, not depth. The topic bubbles are the first interactive element visitors see — they should communicate identity, not just offer a menu.
+
+**New intended direction:** The visual weight of the bubbles tells the story before anyone reads anything: Yixin is an AI product PM with a research foundation. Accessibility, ethics, and photography remain present as personality and range signals, but are visually subordinate. As real visitor queries accumulate, `activation` will naturally reinforce or rebalance this hierarchy based on actual interest.
