@@ -55,7 +55,10 @@ def _send_via_resend(
     try:
         with request.urlopen(req, timeout=10) as resp:
             resp.read()
-    except (error.URLError, error.HTTPError) as exc:
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Resend delivery failed: HTTP {exc.code} — {body}") from exc
+    except error.URLError as exc:
         raise RuntimeError(f"Resend delivery failed: {exc}") from exc
 
 
@@ -105,7 +108,8 @@ def create_contact_message(
                 conversation_history=history_dicts,
             )
             delivery_status = "sent"
-        except RuntimeError:
+        except RuntimeError as exc:
+            print(f"[contact] Resend error: {exc}", flush=True)
             delivery_status = "failed"
 
         with get_conn() as conn:
