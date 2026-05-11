@@ -738,6 +738,16 @@
         left: 0;
         transform: none;
       }
+      /* Use dynamic viewport height so iOS browser chrome doesn't push the panel */
+      .chat-panel {
+        height: 100vh; /* fallback */
+        height: 100dvh;
+      }
+      /* Keep topbar visible — solid background so it doesn't vanish over content */
+      .chat-topbar {
+        background: var(--paper);
+        z-index: 10;
+      }
       body.state-landing .chat-panel {
         transform: translateY(22px);
       }
