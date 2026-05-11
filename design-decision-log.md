@@ -422,3 +422,24 @@ not like a generic RAG chatbot and not like a static resume.
 **Why it changed:** A flat bubble field reads as "person who's done many things" rather than "expert with range." Without visual hierarchy, a recruiter's first impression is breadth, not depth. The topic bubbles are the first interactive element visitors see — they should communicate identity, not just offer a menu.
 
 **New intended direction:** The visual weight of the bubbles tells the story before anyone reads anything: Yixin is an AI product PM with a research foundation. Accessibility, ethics, and photography remain present as personality and range signals, but are visually subordinate. As real visitor queries accumulate, `activation` will naturally reinforce or rebalance this hierarchy based on actual interest.
+
+---
+
+## 12. Bot Asks Back — Making the Conversation Two-Directional
+
+**Previous direction:** The chat was entirely one-directional. The assistant answered visitor questions but never asked anything back or adapted to who the visitor is.
+
+**What changed:** The bot now occasionally asks the visitor a short, personalizing question — about their own work, what they're building, or what brought them here. This happens at most once every 3 rounds (1 round = 1 user message + 1 bot answer). When the visitor answers, the bot acknowledges their interest and bridges to Yixin's most relevant experience.
+
+**Two-turn lifecycle:**
+- Turn A (bot asks): Response ends with a natural question directed at the visitor. Follow-up suggestion chips are suppressed so the visitor isn't distracted.
+- Turn B (visitor answers): Route is forced to `memory`, retrieval threshold is bypassed so we always have context to bridge from. The LLM acknowledges what the visitor shared, then bridges to Yixin's relevant work. No additional question — let the visitor continue at their own pace.
+
+**Why this matters:** The conversation feels like a dialogue rather than an FAQ. It signals that the assistant is curious about who the visitor is, and it lets Yixin's experience feel personally relevant rather than generic.
+
+**Technical implementation:**
+- `last_ask_back_round` and `ask_back_pending` columns added to sessions table (migrated automatically)
+- Deterministic trigger: `current_round - last_ask_back_round >= 3`
+- `ask_visitor_question` flag injected into LLM prompt JSON when triggered
+- `visitor_context` injected on the answer turn so the LLM bridges naturally
+- Never triggers on `small_talk` route
