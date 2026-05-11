@@ -535,6 +535,12 @@
       font-weight: 500;
       color: var(--ink);
     }
+    .modal-note {
+      margin: 0 0 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink-3);
+    }
     .modal-close {
       background: none;
       border: none;
@@ -892,6 +898,7 @@
         <button class="modal-close" id="msgModalClose" aria-label="Close">&times;</button>
       </div>
       <form id="msgForm" novalidate>
+        <p class="modal-note">If you'd like Yixin to reply, feel free to drop your contact info in the message.</p>
         <textarea
           id="msgText"
           class="modal-textarea"
