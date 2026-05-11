@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Yixin Li</title>
   <meta name="description" content="Yixin Li — product builder at the intersection of memory and AI.">
 
@@ -790,7 +790,8 @@
       .landing-send { padding: 9px 16px; font-size: 12px; }
       .chat-topbar { padding: 14px 18px; }
       .chat-thread { padding: 20px 18px 12px; gap: 22px; }
-      .chat-composer { padding: 10px 14px 12px; }
+      .chat-composer { padding: 10px 14px 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+      .cta-footer { padding-bottom: env(safe-area-inset-bottom, 0px); height: calc(48px + env(safe-area-inset-bottom, 0px)); }
       .message-assistant .msg-text { font-size: 17px; }
       .cta-action { font-size: 10px; padding: 0 10px; }
       .modal-panel { padding: 22px 20px 24px; }
