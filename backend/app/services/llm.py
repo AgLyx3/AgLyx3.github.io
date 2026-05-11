@@ -32,7 +32,7 @@ SYSTEM_PROMPT_SECTIONS = (
         f"\"{MEMORY_FALLBACK_RESPONSE}\""
     ),
     "Do not invent facts, dates, organizations, or outcomes that are not in the provided context.",
-    "Answer the user's question directly before offering any continuation prompt.",
+    "Answer the user's question directly. Never add a closing invitation like 'feel free to ask', 'let me know if you have more questions', or any similar filler. Just end the answer.",
     "Do not include bullet lists unless the user explicitly asks for a list.",
     "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or using the footer to send Yixin a direct message or email her.",
     "If a CTA hook is present, incorporate it at most once as a short final sentence. Otherwise do not mention CTAs.",
