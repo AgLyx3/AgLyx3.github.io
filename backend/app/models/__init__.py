@@ -28,10 +28,8 @@ from .chat import (
 )
 from .core import (
     ExperienceNode,
-    ProfileMemoryField,
     ProfileMemoryRecord,
     RelevanceEdge,
-    StructuredMemoryView,
     TopicNode,
 )
 from .graph import GraphResponse
@@ -61,7 +59,6 @@ __all__ = [
     "Citation",
     "ExperienceNode",
     "GraphResponse",
-    "ProfileMemoryField",
     "ProfileMemoryRecord",
     "RelevanceEdge",
     "ResumeDownloadRequest",
@@ -70,7 +67,6 @@ __all__ = [
     "SessionMessageRecordResult",
     "SessionSnapshot",
     "SessionTouchRequest",
-    "StructuredMemoryView",
     "MemoryGapRecord",
     "MemoryIngestRequest",
     "MemoryIngestResponse",

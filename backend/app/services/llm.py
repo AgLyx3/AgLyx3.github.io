@@ -47,9 +47,7 @@ def _api_key() -> str:
 
 
 def topic_exploration_hint(*, is_mobile: bool = False) -> str:
-    if is_mobile:
-        return "You can also use the Topics button in the top right or tap a bubble to steer the conversation."
-    return "You can also use the Topics button in the top right or click a bubble on the side to steer the conversation."
+    return "You can also steer the conversation with the bubbles in the background or the Topics button in the top right."
 
 
 def portfolio_chat_system_prompt() -> str:

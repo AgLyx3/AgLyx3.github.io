@@ -440,7 +440,7 @@
               });
             const relations =
               relEdges.length > 0 ? relEdges.join(", ") : "No relevance data";
-            return `Summary: ${exp.summary || "No summary"} | Relevance: ${relations}`;
+            return `Context: ${exp.raw_context || "No context"} | Relevance: ${relations}`;
           }
         );
 

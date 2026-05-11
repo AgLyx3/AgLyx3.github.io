@@ -7,6 +7,114 @@ from app.services.retrieval import load_graph
 
 MAX_FOLLOWUPS = 3
 
+_EXPERIENCE_QUESTIONS: dict[str, list[str]] = {
+    "exp_continua_overview": [
+        "What kind of AI features did Yixin actually build there?",
+        "What does Yixin's engineering work at Continua look like?",
+        "How did Yixin approach customer research to figure out what to build?",
+    ],
+    "exp_pm_delivery": [
+        "What are some of the AI features Yixin shipped?",
+        "How did Yixin approach evaluation for these AI systems?",
+        "What was Yixin's go-to-market work like alongside this?",
+    ],
+    "exp_memory_architecture": [
+        "What other AI features did Yixin build alongside the memory system?",
+        "How did Yixin measure whether the memory was actually working?",
+        "What does Yixin's broader engineering work look like?",
+    ],
+    "exp_agentic_poll": [
+        "What other agentic features did Yixin work on?",
+        "How did Yixin track quality and catch issues after launch?",
+        "What does Yixin's broader PM work look like beyond individual features?",
+    ],
+    "exp_agentic_split": [
+        "What other conversational features did Yixin design?",
+        "What engineering work did Yixin do to bring these features to life?",
+        "How did Yixin measure whether these features were working well?",
+    ],
+    "exp_eval_frameworks": [
+        "What did Yixin build that needed all this evaluation?",
+        "How did Yixin use these results to improve the product?",
+        "Has Yixin done research on human-AI interaction that connects to this?",
+    ],
+    "exp_issue_viewer": [
+        "What product quality problems was the issue viewer tracking?",
+        "What other tooling did Yixin build at Continua?",
+        "How does this fit into Yixin's broader engineering experience?",
+    ],
+    "exp_customer_discovery": [
+        "What did Yixin build after narrowing the ICP?",
+        "Has Yixin done user research in other settings too?",
+        "What go-to-market work did Yixin do at Continua?",
+    ],
+    "exp_gtm": [
+        "What product work was happening alongside the GTM push?",
+        "What customer research informed the GTM direction?",
+        "Has Yixin done startup or market work in other contexts?",
+    ],
+    "exp_continua_eng": [
+        "What PM work did Yixin own alongside the engineering?",
+        "Has Yixin built AI tools in other contexts?",
+        "What research background does Yixin bring to her technical work?",
+    ],
+    "exp_intern_user_research": [
+        "What did Yixin build based on what she found?",
+        "Has Yixin run user research in academic settings too?",
+        "What other PM work did Yixin take on at Continua?",
+    ],
+    "exp_intern_onboarding": [
+        "What research informed this onboarding redesign?",
+        "How does this connect to Yixin's broader engineering work?",
+        "What other PM work did Yixin own at the time?",
+    ],
+    "exp_asana_migration": [
+        "What other process improvements did Yixin drive at Continua?",
+        "How does this connect to Yixin's broader PM work?",
+        "What startup experience does Yixin have beyond Continua?",
+    ],
+    "exp_jackson_lab": [
+        "What other AI or ML work has Yixin done?",
+        "Has Yixin published any research connected to this kind of work?",
+        "What startup or product work did Yixin do around this time?",
+    ],
+    "exp_inclusim": [
+        "How did InclusiM go from idea to a funded startup?",
+        "What did Yixin actually build for InclusiM?",
+        "How does founding a startup connect to what Yixin does now?",
+    ],
+    "exp_research_overview": [
+        "What does Yixin's published research actually cover?",
+        "How has Yixin applied research methods in her product work?",
+        "What other technical areas has Yixin worked in?",
+    ],
+    "exp_insite_lab": [
+        "What did Yixin find from working with blind and low-vision participants?",
+        "What other user study experience does Yixin have?",
+        "How does Yixin's HCI background show up in her AI product work?",
+    ],
+    "exp_eye_tracking_research": [
+        "What other research has Yixin published?",
+        "What other kinds of user studies has Yixin run?",
+        "How does this research connect to Yixin's work in AI?",
+    ],
+    "exp_human_feature_research": [
+        "Where else has Yixin applied ML in her work?",
+        "What other research has Yixin published?",
+        "How does Yixin's research background connect to her product decisions?",
+    ],
+    "exp_ethics_ai_benchmarks": [
+        "What other AI ethics topics has Yixin written about?",
+        "How does Yixin's ethics perspective show up in her product work?",
+        "What other research has Yixin done?",
+    ],
+    "exp_ethics_ai_art": [
+        "What other AI ethics topics has Yixin written about?",
+        "How does Yixin's ethics work connect to her AI product experience?",
+        "What other research has Yixin done?",
+    ],
+}
+
 
 def _normalize_topic_label(label: str) -> str:
     return " ".join(label.strip().split())
@@ -23,22 +131,25 @@ _GERUND_PREFIXES = {
 }
 
 
-def _title_to_follow_up(title: str, index: int) -> str:
+def _title_to_follow_up(title: str, index: int, experience_id: str = "") -> str:
+    questions = _EXPERIENCE_QUESTIONS.get(experience_id, [])
+    if index < len(questions):
+        return questions[index]
     cleaned = " ".join(title.strip().split()).rstrip(".")
     for prefix, gerund in _GERUND_PREFIXES.items():
         if cleaned.startswith(prefix):
-            phrase = gerund + cleaned[len(prefix) :].strip()
+            phrase = gerund + cleaned[len(prefix):].strip()
             if index == 0:
-                return f"What did Yixin learn from {phrase}?"
+                return f"What was the hardest part of {phrase}?"
             if index == 1:
-                return f"How did Yixin approach {phrase}?"
-            return f"How did {phrase} connect to Yixin's broader work?"
+                return f"What made Yixin want to work on {phrase}?"
+            return f"What came out of {phrase}?"
     lowered = cleaned[:1].lower() + cleaned[1:] if cleaned else cleaned
     if index == 0:
-        return f"Can you tell me more about {lowered}?"
+        return f"What's the story behind {lowered}?"
     if index == 1:
-        return f"What did Yixin learn from {lowered}?"
-    return f"How does {lowered} connect to Yixin's broader work?"
+        return f"What problem was {lowered} trying to solve?"
+    return f"What did {lowered} lead to?"
 
 
 def build_follow_up_questions(
@@ -60,21 +171,21 @@ def build_follow_up_questions(
 
     prompts: list[str] = []
     for index, citation in enumerate(citations[:limit]):
-        prompts.append(_title_to_follow_up(citation.experience_title, index))
+        prompts.append(_title_to_follow_up(citation.experience_title, index, citation.experience_id))
     if not prompts:
         label = chosen_topic_label.lower() if chosen_topic_label else ""
         prompts.extend(
             (
                 [
-                    f"What experience does Yixin have with {label}?",
-                    f"How did Yixin apply {label} in practice?",
-                    f"What did Yixin learn from working on {label}?",
+                    f"What has Yixin built in {label}?",
+                    f"What's a good example of Yixin's {label} work?",
+                    f"What does Yixin find interesting about {label}?",
                 ]
                 if label
                 else [
-                    "What kind of work has Yixin done recently?",
-                    "Which topic should I explore next?",
-                    "What is a strong example of Yixin's experience?",
+                    "What's something impressive Yixin has built?",
+                    "What kind of problems does Yixin like to solve?",
+                    "What's Yixin's background in AI and ML?",
                 ]
             )
         )

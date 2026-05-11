@@ -137,6 +137,7 @@ def test_general_early_query_appends_topic_hint():
 
     body = asyncio.run(_read_body(response))
     assert '"token": "Topics "' in body
-    assert '"token": "right "' in body
-    assert '"token": "bubble "' in body
-    assert '"token": "side "' in body
+    assert '"token": "top "' in body
+    assert '"token": "right."' in body or '"token": "right "' in body
+    assert '"token": "background "' in body
+    assert '"token": "bubbles "' in body or '"token": "bubble "' in body

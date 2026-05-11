@@ -32,12 +32,6 @@ class ProfileRetrievalResult:
 
 
 @dataclass(frozen=True)
-class CombinedMemoryRetrievalResult:
-    profile: ProfileRetrievalResult
-    experience: RetrievalResult
-
-
-@dataclass(frozen=True)
 class RetrievalResult:
     active_topics: list[str]
     citations: list[Citation]
@@ -46,6 +40,12 @@ class RetrievalResult:
     second_score: float
     topics: list  # list[TopicNode] — passed to followups to avoid a second DB round-trip
     edges: list   # list[RelevanceEdge]
+
+
+@dataclass(frozen=True)
+class CombinedMemoryRetrievalResult:
+    profile: ProfileRetrievalResult
+    experience: RetrievalResult
 
 
 _STOP_WORDS = frozenset([

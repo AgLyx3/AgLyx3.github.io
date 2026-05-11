@@ -26,10 +26,8 @@ def get_graph() -> GraphResponse:
         ExperienceNode(
             id=exp.id,
             title=exp.title,
-            summary=exp.summary,
             experience_date=exp.experience_date,
             raw_context=exp.raw_context,
-            structured_json=exp.structured_json,
             activation=round(experience_activation.get(exp.id, exp.activation), 4),
         )
         for exp in db_experiences

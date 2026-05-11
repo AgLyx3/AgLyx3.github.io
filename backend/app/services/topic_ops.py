@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-import json
 from uuid import uuid4
 
 from app.config import get_settings
@@ -30,16 +29,6 @@ def _derive_summary(details: str, limit: int = 240) -> str:
     if len(text) <= limit:
         return text
     return text[: limit - 3].rstrip() + "..."
-
-
-def _structured_json(*, context: str, action: str, result: str) -> str:
-    return json.dumps(
-        {
-            "context": context.strip(),
-            "action": action.strip(),
-            "result": result.strip(),
-        }
-    )
 
 
 def list_topic_notifications(limit: int = 50) -> list[TopicNotification]:
@@ -137,24 +126,16 @@ def create_topic_memory(topic_id: str, payload: TopicMemoryCreateRequest) -> Top
         conn.execute(
             """
             INSERT INTO experiences(
-                id, title, summary, details, experience_date, raw_context, structured_json, activation, source, created_at
+                id, title, raw_context, experience_date, activation, created_at
             )
-            VALUES(?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?)
             """,
             (
                 experience_id,
                 record.title,
-                record.summary,
                 record.details,
                 "",
-                record.details,
-                _structured_json(
-                    context=f"Manual memory linked to topic {topic_id}.",
-                    action=record.title,
-                    result=record.summary,
-                ),
                 0.0,
-                record.source,
                 record.created_at,
             ),
         )
@@ -221,24 +202,16 @@ def ingest_memory(payload: MemoryIngestRequest) -> MemoryIngestResponse:
         conn.execute(
             """
             INSERT INTO experiences(
-                id, title, summary, details, experience_date, raw_context, structured_json, activation, source, created_at
+                id, title, raw_context, experience_date, activation, created_at
             )
-            VALUES(?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?)
             """,
             (
                 experience_id,
                 payload.title.strip(),
-                derived_summary,
                 payload.details.strip(),
                 "",
-                payload.details.strip(),
-                _structured_json(
-                    context="Manually ingested experience memory.",
-                    action=payload.title.strip(),
-                    result=derived_summary,
-                ),
                 0.0,
-                payload.source.strip(),
                 now,
             ),
         )

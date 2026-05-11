@@ -3,17 +3,6 @@
 from pydantic import BaseModel, Field
 
 
-class ProfileMemoryField(BaseModel):
-    key: str
-    value: str
-
-
-class StructuredMemoryView(BaseModel):
-    context: str = ""
-    action: str = ""
-    result: str = ""
-
-
 class TopicNode(BaseModel):
     id: str
     type: str = "topic"
@@ -26,10 +15,8 @@ class ExperienceNode(BaseModel):
     id: str
     type: str = "experience"
     title: str
-    summary: str
     experience_date: str = ""
     raw_context: str = ""
-    structured_json: StructuredMemoryView = Field(default_factory=StructuredMemoryView)
     activation: float = 0.0
 
 
@@ -41,10 +28,6 @@ class RelevanceEdge(BaseModel):
 
 class ProfileMemoryRecord(BaseModel):
     memory_id: str
-    title: str
-    raw_context: str
-    structured_fields: list[ProfileMemoryField]
-    source: str
-    confidence: float = Field(ge=0.0, le=1.0)
+    key: str
+    value: str
     created_at: str
-    updated_at: str

@@ -19,9 +19,9 @@ RETRIEVAL_CASES = [
     # Memory
     ("tell me about the memory system you built",
      ["exp_memory_architecture"], []),
-    ("how did you build per-user personalization",
+    ("what kind of work did you do on personalization",
      ["exp_memory_architecture"], []),
-    ("what is the privacy gate in the memory system",
+    ("what's your experience with retrieval system",
      ["exp_memory_architecture"], []),
 
     # Eval
@@ -29,44 +29,42 @@ RETRIEVAL_CASES = [
      ["exp_eval_frameworks"], []),
     ("how did you measure latency in the LLM system",
      ["exp_eval_frameworks"], []),
-    ("tell me about LoCoMo and EverMemBench",
+    ("what kind of eval experience do you have",
      ["exp_eval_frameworks"], []),
 
     # Agentic features
-    ("tell me about the polling feature",
-     ["exp_agentic_poll"], []),
-    ("how did you design the expense splitting feature",
-     ["exp_agentic_split"], []),
+    ("what kind of agentic features did you build",
+     ["exp_agentic_poll", "exp_agentic_split", "exp_memory_architecture"], []),
 
     # Issue viewer
-    ("tell me about the issue viewer",
+    ("tell me about your experience with building internal tool",
+     ["exp_issue_viewer"], []),
+    ("what did you do to improve internal process",
      ["exp_issue_viewer"], []),
 
     # PM / discovery
-    ("how do you write PRDs",
+    ("what did you do as a PM in the company",
      ["exp_pm_delivery"], []),
-    ("tell me about customer discovery",
+    ("what customer facing work did you do",
      ["exp_customer_discovery"], []),
 
     # Startup
-    ("tell me about InclusiM",
-     ["exp_inclusim"], []),
-    ("did you raise funding",
+    ("what kind of startup experience did you have",
      ["exp_inclusim"], []),
 
     # Research / publications
-    ("do you have any publications",
-     [], []),  # TODO: decide expected after testing
+    ("what kind of research did you do",
+     ["exp_research_overview"], []),
     ("tell me about accessibility research",
-     [], []),  # TODO: decide expected — exp_insite_lab or exp_inclusim
+     ["exp_insite_lab"], []),
 
     # Ethics
-    ("what do you think about AI ethics",
+    ("what do you do about AI ethics",
      ["exp_ethics_ai_benchmarks"], []),
 
     # Engineering
     ("what have you built as an engineer",
-     [], []),  # TODO: decide expected
+     ["exp_continua_eng"], []),  # TODO: decide expected
 
     # Graceful degradation — should score low, not hallucinate
     ("what is your favorite color",

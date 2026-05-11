@@ -103,9 +103,12 @@ def track_schedule(
 
 
 @router.post("/contact", response_model=ContactMessageResponse)
-def send_contact_message(payload: ContactMessageRequest) -> ContactMessageResponse:
+def send_contact_message(
+    payload: ContactMessageRequest,
+    settings: Settings = Depends(get_settings),
+) -> ContactMessageResponse:
     ensure_session(SessionEnsureRequest(session_id=payload.session_id))
-    response = create_contact_message(payload)
+    response = create_contact_message(payload, settings=settings)
     log_analytics_event(
         AnalyticsEventCreate(
             session_id=payload.session_id,
