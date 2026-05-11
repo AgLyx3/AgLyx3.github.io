@@ -672,6 +672,12 @@
       background: var(--forest-soft);
       opacity: 0.88;
     }
+    .chat-cta-mention a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 0.16em;
+    }
+    .chat-cta-mention a:hover { color: var(--ink); }
 
     /* ── Entry animation (bubbles rise; identity fades in) ── */
     @keyframes rise { from { opacity: 0; transform: translate(-50%, -48%); } to { opacity: 1; transform: translate(-50%, -50%); } }
@@ -897,8 +903,7 @@
   (function () {
     'use strict';
     /* ── Config ── */
-    var BASE = (window.APP_CONFIG && window.APP_CONFIG.backendBaseUrl) ||
-      localStorage.getItem('backendBaseUrl') || 'https://aglyx3githubio-production.up.railway.app';
+    var BASE = 'http://127.0.0.1:8000';
 
     var SESSION_ID = (function () {
       var id = sessionStorage.getItem('px_sid');
@@ -1294,7 +1299,7 @@
       msgEl.className = 'message message-assistant';
       var roleEl = document.createElement('div');
       roleEl.className = 'msg-role';
-      roleEl.textContent = 'Yixin';
+      roleEl.textContent = 'Yixin.exe';
       var textEl = document.createElement('div');
       textEl.className = 'msg-text';
       textEl.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
@@ -1333,6 +1338,7 @@
             message_index: messageCount,
             cta_already_mentioned: ctaAlreadyMentioned,
             cta_rejected: ctaRejected,
+            viewport_width: vw(),
           }),
         });
 
@@ -1425,6 +1431,17 @@
         var ctaEl = document.createElement('div');
         ctaEl.className = 'chat-cta-mention';
         ctaEl.textContent = meta.cta_mention.message || meta.cta_mention.label;
+        if (meta.cta_mention.action_type === 'send_message' && meta.cta_mention.href) {
+          ctaEl.appendChild(document.createTextNode(' '));
+          var ctaLink = document.createElement('a');
+          ctaLink.href = meta.cta_mention.href;
+          ctaLink.textContent = meta.cta_mention.label || 'Send message';
+          ctaLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            openMessageModal();
+          });
+          ctaEl.appendChild(ctaLink);
+        }
         msgEl.appendChild(ctaEl);
       }
 
@@ -1549,10 +1566,13 @@
     topicsBackPill.addEventListener('click', exitTopicsPeek);
 
     /* ── Message modal ── */
-    document.getElementById('ctaSendMsg').addEventListener('click', function () {
+    function openMessageModal() {
       logEvent('cta_footer_clicked', { action_type: 'send_message', message_count_before_action: messageCount });
       msgModal.classList.add('is-open');
       setTimeout(function () { document.getElementById('msgText').focus(); }, 50);
+    }
+    document.getElementById('ctaSendMsg').addEventListener('click', function () {
+      openMessageModal();
     });
     document.getElementById('msgModalClose').addEventListener('click', function () {
       msgModal.classList.remove('is-open');

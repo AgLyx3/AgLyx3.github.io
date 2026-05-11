@@ -56,11 +56,13 @@ def should_offer_cta(
             action_type="send_message",
             label="Send message",
             message="If this sounds relevant, the visitor can send Yixin a message directly from the portfolio.",
+            href="#send-message",
         )
     if (message_index or 0) >= 5:
         return CTAMention(
             action_type="send_message",
             label="Send message",
             message="If the visitor wants to continue the conversation, they can send Yixin a direct message from the portfolio.",
+            href="#send-message",
         )
     return None

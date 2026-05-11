@@ -6,8 +6,17 @@ from .contact import create_contact_message
 from .cta_rules import detect_cta_rejection, should_offer_cta
 from .db import init_db
 from .followups import build_adjacent_topics, build_follow_up_questions
-from .llm import MEMORY_FALLBACK_RESPONSE, generate_chat_answer
-from .retrieval import hybrid_retrieve, load_graph
+from .llm import MEMORY_FALLBACK_RESPONSE, SMALL_TALK_RESPONSE, generate_chat_answer, generate_small_talk_answer, topic_exploration_hint
+from .query_router import ChatRoute, route_query
+from .retrieval import (
+    CombinedMemoryRetrievalResult,
+    ProfileRetrievalResult,
+    combined_memory_retrieve,
+    hybrid_retrieve,
+    is_general_work_query,
+    load_graph,
+    profile_retrieve,
+)
 from .safety import RateLimiter, enforce_request_size, estimate_tokens, sanitize_text, truncate_text_to_token_limit
 from .session import ensure_session, record_assistant_response_tokens, record_user_message, touch_session
 from .topic_ops import (
@@ -22,6 +31,14 @@ from .topic_ops import (
 __all__ = [
     "RateLimiter",
     "MEMORY_FALLBACK_RESPONSE",
+    "SMALL_TALK_RESPONSE",
+    "CombinedMemoryRetrievalResult",
+    "ProfileRetrievalResult",
+    "ChatRoute",
+    "route_query",
+    "combined_memory_retrieve",
+    "profile_retrieve",
+    "is_general_work_query",
     "apply_decay",
     "build_adjacent_topics",
     "build_follow_up_questions",
@@ -32,6 +49,8 @@ __all__ = [
     "enforce_request_size",
     "estimate_tokens",
     "generate_chat_answer",
+    "generate_small_talk_answer",
+    "topic_exploration_hint",
     "get_activation_snapshot",
     "hybrid_retrieve",
     "ingest_memory",
