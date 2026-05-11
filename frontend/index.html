@@ -303,6 +303,8 @@
       -webkit-backdrop-filter: blur(8px);
     }
     .message-assistant .msg-text p + p { margin-top: 0.7em; }
+    .msg-text a { color: var(--forest); text-decoration: underline; }
+    .msg-text a:hover { color: var(--forest-hover); }
 
     /* ── Follow-up chips ── */
     .followup-chips {
@@ -1244,6 +1246,9 @@
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+    function linkify(s) {
+      return s.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    }
     function api(path) { return BASE.replace(/\/$/, '') + path; }
     function scrollBottom() {
       requestAnimationFrame(function () { chatThread.scrollTop = chatThread.scrollHeight; });
@@ -1390,8 +1395,8 @@
                 /* Reformat accumulated text into paragraphs */
                 var paras = fullText.split(/\n\n+/).filter(function (p) { return p.trim(); });
                 textEl.innerHTML = paras.length
-                  ? paras.map(function (p) { return '<p>' + escHtml(p.trim()) + '</p>'; }).join('')
-                  : '<p>' + escHtml(fullText) + '</p>';
+                  ? paras.map(function (p) { return '<p>' + linkify(escHtml(p.trim())) + '</p>'; }).join('')
+                  : '<p>' + linkify(escHtml(fullText)) + '</p>';
                 handleFinalMetadata(meta, msgEl);
               } catch (_) {}
             }
