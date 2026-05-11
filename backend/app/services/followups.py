@@ -29,6 +29,7 @@ _DEEP_DIVE_QUESTIONS: dict[str, str] = {
     "exp_human_feature_research": "How does Yixin's research background connect to her product decisions?",
     "exp_ethics_ai_benchmarks": "How does Yixin's ethics perspective show up in her product work?",
     "exp_ethics_ai_art": "How does Yixin's ethics work connect to her AI product experience?",
+    "exp_photography": "What kind of photography is Yixin into?",
 }
 
 

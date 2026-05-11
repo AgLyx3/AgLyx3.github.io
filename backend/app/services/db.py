@@ -926,6 +926,24 @@ def _seed_defaults(conn, now: str) -> None:
                 "seed",
                 now,
             ),
+            (
+                "exp_photography",
+                "stage, event, and documentary photography",
+                "",
+                "",
+                "2022-01",
+                (
+                    "Yixin shoots stage and event photography — live performances, speakers, and candid "
+                    "moments in real time. She's also drawn to documentary-style work: images that tell "
+                    "a story or capture something fleeting. "
+                    "You can browse her full photography portfolio here: "
+                    "https://photography-portfolio-cyan-eight.vercel.app"
+                ),
+                None,
+                3.0,
+                "seed",
+                now,
+            ),
         ]
         conn.executemany(
             """
@@ -1014,5 +1032,7 @@ def _seed_defaults(conn, now: str) -> None:
                 # exp_ethics_ai_art
                 ("exp_ethics_ai_art", "ethics", 1.0),
                 ("exp_ethics_ai_art", "research", 0.6),
+                # exp_photography
+                ("exp_photography", "photo", 1.0),
             ],
         )
