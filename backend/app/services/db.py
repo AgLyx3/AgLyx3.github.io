@@ -95,10 +95,22 @@ def _rename_table(conn, dialect: str, old_name: str, new_name: str) -> None:
     conn.execute(f"ALTER TABLE {old_name} RENAME TO {new_name}")
 
 
+def _migrate_sessions(conn, dialect: str) -> None:
+    current = _table_columns(conn, dialect, "sessions")
+    for col, stmt in [
+        ("last_ask_back_round", "ALTER TABLE sessions ADD COLUMN last_ask_back_round INTEGER NOT NULL DEFAULT 0"),
+        ("ask_back_pending", "ALTER TABLE sessions ADD COLUMN ask_back_pending INTEGER NOT NULL DEFAULT 0"),
+    ]:
+        if col not in current:
+            conn.execute(stmt)
+            conn.commit()
+
+
 def _migrate_runtime_schema(conn, dialect: str, now: str) -> None:
     _migrate_profile_memories(conn, dialect, now)
     _migrate_experiences(conn, dialect)
     _migrate_topics(conn, dialect)
+    _migrate_sessions(conn, dialect)
 
 
 def _migrate_profile_memories(conn, dialect: str, now: str) -> None:
@@ -314,7 +326,9 @@ def _schema_script_for(dialect: str) -> str:
                 depth_5_reached_at TEXT,
                 cta_mentioned BOOLEAN NOT NULL DEFAULT FALSE,
                 cta_rejected BOOLEAN NOT NULL DEFAULT FALSE,
-                active_topic_id TEXT
+                active_topic_id TEXT,
+                last_ask_back_round INTEGER NOT NULL DEFAULT 0,
+                ask_back_pending BOOLEAN NOT NULL DEFAULT FALSE
             );
             CREATE TABLE IF NOT EXISTS outbound_messages (
                 message_id BIGSERIAL PRIMARY KEY,
@@ -411,7 +425,9 @@ def _schema_script_for(dialect: str) -> str:
                 depth_5_reached_at TEXT,
                 cta_mentioned INTEGER NOT NULL DEFAULT 0,
                 cta_rejected INTEGER NOT NULL DEFAULT 0,
-                active_topic_id TEXT
+                active_topic_id TEXT,
+                last_ask_back_round INTEGER NOT NULL DEFAULT 0,
+                ask_back_pending INTEGER NOT NULL DEFAULT 0
             );
             CREATE TABLE IF NOT EXISTS outbound_messages (
                 message_id INTEGER PRIMARY KEY AUTOINCREMENT,

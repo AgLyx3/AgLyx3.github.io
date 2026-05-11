@@ -21,6 +21,7 @@ from app.services import (
     RateLimiter,
     build_adjacent_topics,
     build_follow_up_questions,
+    clear_ask_back_pending,
     combined_memory_retrieve,
     detect_cta_rejection,
     estimate_tokens,
@@ -30,6 +31,7 @@ from app.services import (
     is_general_work_query,
     log_memory_gap,
     log_analytics_event,
+    record_ask_back,
     record_assistant_response_tokens,
     record_user_message,
     route_query,
@@ -156,7 +158,22 @@ async def chat_endpoint(
         )
     output_token_budget = min(settings.max_output_tokens_per_response, remaining_token_budget)
 
+    is_ask_back_response = session_snapshot.ask_back_pending
+    if is_ask_back_response:
+        clear_ask_back_pending(session_id)
+
     route = route_query(clean_message)
+    if is_ask_back_response:
+        route = "memory"
+
+    current_round = session_update.message_index_in_session
+    should_ask_back = (
+        not is_ask_back_response
+        and route != "small_talk"
+        and (current_round - session_snapshot.last_ask_back_round) >= 3
+    )
+    if should_ask_back:
+        record_ask_back(session_id, current_round)
 
     try:
         is_mobile = payload.viewport_width is not None and payload.viewport_width <= 880
@@ -188,6 +205,9 @@ async def chat_endpoint(
                 experience_result.top_score >= settings.retrieval_strong_top_score
                 or score_gap >= settings.retrieval_min_score_gap
             )
+            if is_ask_back_response and experience_result.context_blocks:
+                experience_passes = True
+
             profile_passes = (
                 profile_result.top_score >= settings.profile_retrieval_min_top_score
                 and bool(profile_result.context_blocks)
@@ -212,32 +232,37 @@ async def chat_endpoint(
                 else []
             )
 
-            use_memory = bool(memory_sources)
+            use_memory = bool(memory_sources) or is_ask_back_response
             citations = experience_result.citations if experience_passes else []
             active_topics = experience_result.active_topics if experience_passes else []
-            follow_up_questions = (
-                build_follow_up_questions(
-                    user_message=clean_message,
-                    active_topic_id=payload.active_topic_id,
-                    active_topics=active_topics,
-                    citations=citations,
-                    topics=experience_result.topics,
+
+            if should_ask_back:
+                follow_up_questions = []
+                adjacent_topics = []
+            else:
+                follow_up_questions = (
+                    build_follow_up_questions(
+                        user_message=clean_message,
+                        active_topic_id=payload.active_topic_id,
+                        active_topics=active_topics,
+                        citations=citations,
+                        topics=experience_result.topics,
+                    )
+                    if experience_passes
+                    else []
                 )
-                if experience_passes
-                else []
-            )
-            adjacent_topics = (
-                build_adjacent_topics(
-                    active_topic_id=payload.active_topic_id,
-                    active_topics=active_topics,
-                    citations=citations,
-                    topics=experience_result.topics,
-                    edges=experience_result.edges,
-                    limit=max(0, 3 - len(follow_up_questions)),
+                adjacent_topics = (
+                    build_adjacent_topics(
+                        active_topic_id=payload.active_topic_id,
+                        active_topics=active_topics,
+                        citations=citations,
+                        topics=experience_result.topics,
+                        edges=experience_result.edges,
+                        limit=max(0, 3 - len(follow_up_questions)),
+                    )
+                    if experience_passes
+                    else []
                 )
-                if experience_passes
-                else []
-            )
             if use_memory:
                 answer = await asyncio.to_thread(
                     functools.partial(
@@ -254,6 +279,8 @@ async def chat_endpoint(
                         adjacent_topics=adjacent_topics,
                         cta_mention=cta_mention,
                         max_output_tokens=output_token_budget,
+                        ask_visitor_question=should_ask_back,
+                        visitor_context=clean_message if is_ask_back_response else None,
                     )
                 )
             else:

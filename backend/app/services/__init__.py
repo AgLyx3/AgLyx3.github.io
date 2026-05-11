@@ -18,7 +18,7 @@ from .retrieval import (
     profile_retrieve,
 )
 from .safety import RateLimiter, enforce_request_size, estimate_tokens, sanitize_text, truncate_text_to_token_limit
-from .session import ensure_session, record_assistant_response_tokens, record_user_message, touch_session
+from .session import clear_ask_back_pending, ensure_session, record_ask_back, record_assistant_response_tokens, record_user_message, touch_session
 from .topic_ops import (
     create_topic_memory,
     ingest_memory,
@@ -44,7 +44,9 @@ __all__ = [
     "build_follow_up_questions",
     "create_contact_message",
     "detect_cta_rejection",
+    "clear_ask_back_pending",
     "ensure_session",
+    "record_ask_back",
     "init_db",
     "enforce_request_size",
     "estimate_tokens",

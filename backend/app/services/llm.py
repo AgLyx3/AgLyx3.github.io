@@ -36,6 +36,20 @@ SYSTEM_PROMPT_SECTIONS = (
     "Do not include bullet lists unless the user explicitly asks for a list.",
     "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or using the footer to send Yixin a direct message or email her.",
     "If a CTA hook is present, incorporate it at most once as a short final sentence. Otherwise do not mention CTAs.",
+    (
+        "If ask_visitor_question is true in the input, end your response with one short conversational question "
+        "directed at the visitor — about their own work, what they're building, or what brought them here. "
+        "Not a question about Yixin. One sentence, keep it natural and contextual. "
+        "Examples: 'Are you working on something similar?', 'What kind of AI work are you exploring these days?', "
+        "'What brought you to check out the portfolio?'"
+    ),
+    (
+        "If visitor_context is present in the input, the visitor just shared something about themselves in response "
+        "to a question you asked. Acknowledge what they shared in one warm sentence, then naturally bridge to "
+        "Yixin's most relevant experience from the provided context. Keep it direct. "
+        "Do not end with a question — let the visitor continue at their own pace. "
+        "Do not use the fallback response in this case — always bridge, even if the connection is loose."
+    ),
 )
 
 
@@ -66,6 +80,8 @@ def build_portfolio_chat_user_prompt(
     follow_up_questions: list[str] | None = None,
     adjacent_topics: list[TopicSuggestion] | None = None,
     cta_mention: CTAMention | None = None,
+    ask_visitor_question: bool = False,
+    visitor_context: str | None = None,
 ) -> str:
     """Build the user prompt as a single JSON payload for maintainability."""
 
@@ -111,6 +127,10 @@ def build_portfolio_chat_user_prompt(
             "fallback_if_memory_weak": MEMORY_FALLBACK_RESPONSE,
         },
     }
+    if ask_visitor_question:
+        prompt_payload["ask_visitor_question"] = True
+    if visitor_context is not None:
+        prompt_payload["visitor_context"] = visitor_context
     return json.dumps(prompt_payload, ensure_ascii=True, indent=2)
 
 
@@ -173,10 +193,12 @@ def generate_chat_answer(
     adjacent_topics: list[TopicSuggestion] | None = None,
     cta_mention: CTAMention | None = None,
     max_output_tokens: int | None = None,
+    ask_visitor_question: bool = False,
+    visitor_context: str | None = None,
 ) -> str:
     profile_context = profile_context or []
     experience_context = experience_context or []
-    if not profile_context and not experience_context:
+    if not profile_context and not experience_context and not visitor_context:
         return MEMORY_FALLBACK_RESPONSE
 
     payload = {
@@ -196,6 +218,8 @@ def generate_chat_answer(
                     follow_up_questions=follow_up_questions,
                     adjacent_topics=adjacent_topics,
                     cta_mention=cta_mention,
+                    ask_visitor_question=ask_visitor_question,
+                    visitor_context=visitor_context,
                 ),
             },
         ],

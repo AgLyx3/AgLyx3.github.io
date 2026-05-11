@@ -29,6 +29,8 @@ def _row_to_snapshot(row) -> SessionSnapshot:
         cta_mentioned=bool(row["cta_mentioned"]),
         cta_rejected=bool(row["cta_rejected"]),
         active_topic_id=row["active_topic_id"],
+        last_ask_back_round=int(row["last_ask_back_round"] or 0),
+        ask_back_pending=bool(row["ask_back_pending"]),
     )
 
 
@@ -50,8 +52,8 @@ def ensure_session(
                     session_id, started_at, last_seen_at, message_count,
                     total_token_count, input_token_count, output_token_count,
                     first_message_at, depth_5_reached_at, cta_mentioned,
-                    cta_rejected, active_topic_id
-                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+                    cta_rejected, active_topic_id, last_ask_back_round, ask_back_pending
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     request.session_id,
@@ -66,6 +68,8 @@ def ensure_session(
                     False,
                     False,
                     request.active_topic_id,
+                    0,
+                    False,
                 ),
             )
             conn.commit()
@@ -223,3 +227,21 @@ def record_assistant_response_tokens(*, session_id: str, estimated_output_tokens
 
 def record_chat_message(request: SessionMessageRecordRequest) -> SessionMessageRecordResult:
     return record_user_message(request)
+
+
+def record_ask_back(session_id: str, round: int) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE sessions SET last_ask_back_round = ?, ask_back_pending = ? WHERE session_id = ?",
+            (round, True, session_id),
+        )
+        conn.commit()
+
+
+def clear_ask_back_pending(session_id: str) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE sessions SET ask_back_pending = ? WHERE session_id = ?",
+            (False, session_id),
+        )
+        conn.commit()
