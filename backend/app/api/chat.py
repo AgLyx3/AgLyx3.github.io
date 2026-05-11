@@ -162,9 +162,24 @@ async def chat_endpoint(
     if is_ask_back_response:
         clear_ask_back_pending(session_id)
 
-    route = route_query(clean_message)
-    if is_ask_back_response:
-        route = "memory"
+    original_route = route_query(clean_message)
+    route = "memory" if is_ask_back_response else original_route
+
+    # Only treat as a visitor answer if they actually responded personally (not a Yixin query).
+    # If original_route == "memory" they're asking about Yixin — treat as normal query, no bridging.
+    visitor_context: str | None = clean_message if (is_ask_back_response and original_route != "memory") else None
+
+    if is_ask_back_response and visitor_context:
+        log_analytics_event(
+            AnalyticsEventCreate(
+                session_id=session_id,
+                event_name="visitor_ask_back_answered",
+                payload={
+                    "response_text": clean_message[:500],
+                    "message_index": session_update.message_index_in_session,
+                },
+            )
+        )
 
     current_round = session_update.message_index_in_session
     should_ask_back = (
@@ -280,7 +295,7 @@ async def chat_endpoint(
                         cta_mention=cta_mention,
                         max_output_tokens=output_token_budget,
                         ask_visitor_question=should_ask_back,
-                        visitor_context=clean_message if is_ask_back_response else None,
+                        visitor_context=visitor_context,
                     )
                 )
             else:
