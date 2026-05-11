@@ -536,7 +536,7 @@
       color: var(--ink);
     }
     .modal-note {
-      margin: 0 0 14px;
+      margin: 10px 0 6px;
       font-size: 13px;
       line-height: 1.5;
       color: var(--ink-3);
@@ -898,7 +898,6 @@
         <button class="modal-close" id="msgModalClose" aria-label="Close">&times;</button>
       </div>
       <form id="msgForm" novalidate>
-        <p class="modal-note">If you'd like Yixin to reply, feel free to drop your contact info in the message.</p>
         <textarea
           id="msgText"
           class="modal-textarea"
@@ -906,6 +905,7 @@
           rows="5"
           aria-label="Message"
         ></textarea>
+        <p class="modal-note">If you'd like Yixin to reply, feel free to drop your contact info in the message.</p>
         <label class="modal-check-row" for="includeHistory">
           <input type="checkbox" id="includeHistory" checked>
           <span class="modal-check-label">Include this conversation with my message</span>
