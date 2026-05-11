@@ -966,6 +966,25 @@
       'AI Ethics & Philosophy':      "What are Yixin's views on AI ethics?",
     };
 
+    var TOPIC_PROMPTS_BY_ID = {
+      'ai-agents': 'What kind of AI agent work did Yixin do?',
+      'memory':    'What kind of memory systems did Yixin work on?',
+      'eval':      'How did Yixin approach evaluation and benchmarking?',
+      'startup':   'What startup experience does Yixin have?',
+      'eng':       'What engineering projects has Yixin worked on?',
+      'pm':        "What is Yixin's product management experience?",
+      'research':  'What research has Yixin done academically?',
+      'access':    'What accessibility work has Yixin done?',
+      'photo':     'What creative work has Yixin done in photography?',
+      'ethics':    "What are Yixin's views on AI ethics?",
+    };
+
+    function topicPrompt(topicId, label) {
+      if (topicId && TOPIC_PROMPTS_BY_ID[topicId]) return TOPIC_PROMPTS_BY_ID[topicId];
+      if (label && PREFILLS[label]) return PREFILLS[label];
+      return 'What kind of ' + label + ' work has Yixin done?';
+    }
+
     /* ── D3 bubble simulation ── */
     var HUES = {
       amber:  { fill: '233,217,201', text: '118,105,91' },
@@ -1451,7 +1470,12 @@
         chips.push({ label: q, type: 'question' });
       });
       (meta.adjacent_topics || []).forEach(function (t) {
-        chips.push({ label: t.label, type: 'topic', topicId: t.topic_id });
+        chips.push({
+          label: topicPrompt(t.topic_id, t.label),
+          type: 'topic',
+          topicId: t.topic_id,
+          topicLabel: t.label
+        });
       });
 
       if (chips.length) {
@@ -1466,7 +1490,7 @@
             if (chip.type === 'topic') {
               activeBubbleId    = chip.topicId || null;
               nextPrefillOrigin = 'suggestion_topic';
-              chatInput.value   = PREFILLS[chip.label] || ('Tell me about Yixin\'s ' + chip.label + ' work.');
+              chatInput.value   = topicPrompt(chip.topicId, chip.topicLabel || chip.label);
             } else {
               nextPrefillOrigin = 'suggestion_question';
               chatInput.value   = chip.label;

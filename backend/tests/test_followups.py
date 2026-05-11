@@ -20,7 +20,7 @@ def test_follow_up_questions_capped_at_three(test_db):
         active_topics=["topic_eval", "topic_memory_architecture"],
         citations=[_CITATION],
     )
-    assert len(questions) <= 3
+    assert len(questions) <= 1
 
 
 def test_follow_up_questions_derived_from_citation_title(test_db):
@@ -30,7 +30,7 @@ def test_follow_up_questions_derived_from_citation_title(test_db):
         active_topics=["topic_eval"],
         citations=[_CITATION],
     )
-    assert any("LoCoMo and EverMemBenchmark" in q for q in questions)
+    assert any("hardest part" in q.casefold() for q in questions)
 
 
 def test_follow_up_deduplicates_against_user_message(test_db):
@@ -49,5 +49,22 @@ def test_adjacent_topics_capped_at_three(test_db):
         active_topic_id="topic_eval",
         active_topics=["topic_eval"],
         citations=[_CITATION],
+        limit=2,
     )
-    assert len(topics) <= 3
+    assert len(topics) <= 2
+
+
+def test_eval_followup_prefers_defined_deep_dive_question(test_db):
+    eval_citation = Citation(
+        experience_id="exp_eval_frameworks",
+        experience_title="Owned evaluation frameworks for production LLM systems at Continua",
+        snippet="Focused on memory quality and latency.",
+        score=0.94,
+    )
+    questions = build_follow_up_questions(
+        user_message="How did Yixin approach evaluation and benchmarking?",
+        active_topic_id="eval",
+        active_topics=["eval"],
+        citations=[eval_citation],
+    )
+    assert questions == ["How did Yixin measure whether the memory was actually working?"]

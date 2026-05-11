@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import json
 
-import resend
+try:
+    import resend
+except ImportError:  # pragma: no cover - optional local dependency
+    resend = None
 
 from app.config import Settings, get_settings
 from app.models.actions import ContactMessageRequest, ContactMessageResponse
@@ -18,6 +21,9 @@ def _send_via_resend(
     message_body: str,
     conversation_history: list | None = None,
 ) -> None:
+    if resend is None:
+        raise RuntimeError("Resend SDK is not installed")
+
     history_html = ""
     if conversation_history:
         rows = "".join(

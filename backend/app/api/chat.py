@@ -233,6 +233,7 @@ async def chat_endpoint(
                     citations=citations,
                     topics=experience_result.topics,
                     edges=experience_result.edges,
+                    limit=max(0, 3 - len(follow_up_questions)),
                 )
                 if experience_passes
                 else []

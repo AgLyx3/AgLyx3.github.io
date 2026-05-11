@@ -11,7 +11,7 @@ from app.config import Settings
 from app.models import Citation, CTAMention, TopicSuggestion
 
 MEMORY_FALLBACK_RESPONSE = (
-    "not in my knowledge base — i'm a portfolio bot, not psychic. try something else, send yixin a direct message, or email her through the footer."
+    "I don't have enough real context to answer that confidently, and I'm not going to make something up. Try a different angle, or use the footer to send Yixin a direct message or email her."
 )
 
 SMALL_TALK_RESPONSE = (

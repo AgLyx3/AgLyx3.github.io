@@ -789,8 +789,7 @@ def _seed_defaults(conn, now: str) -> None:
                 "2024-10",
                 (
                     "While still in college, Yixin founded InclusiM, an accessibility auditing startup. "
-                    "Secured $5,000 in funding and placed 2nd at the Maine Startup Challenge; pitched on "
-                    "the Greenlight Maine TV show. "
+                    "Pitched at 3 pitch competitions and placed 2nd at the Maine Startup Challenge. "
                     "Identified unmet needs in accessibility tooling through competitive analysis and 20+ "
                     "discovery interviews with developers and business owners; validated problem-solution "
                     "fit before building. "
