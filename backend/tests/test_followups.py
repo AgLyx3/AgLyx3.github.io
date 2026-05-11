@@ -76,12 +76,7 @@ def test_eval_followup_prefers_defined_deep_dive_question(test_db):
 
 
 def test_all_follow_up_questions_route_to_memory():
-    """Every defined follow-up question must route to memory, not small_talk.
-
-    This test imports _DEEP_DIVE_QUESTIONS directly so it auto-covers new
-    questions without any manual updates — just add to _DEEP_DIVE_QUESTIONS
-    and this test will validate it automatically.
-    """
+    """Every defined follow-up question must route to memory, not small_talk."""
     bad = [
         (exp_id, q, route_query(q))
         for exp_id, q in _DEEP_DIVE_QUESTIONS.items()
@@ -90,4 +85,41 @@ def test_all_follow_up_questions_route_to_memory():
     assert not bad, (
         "These follow-up questions routed to small_talk instead of memory:\n"
         + "\n".join(f"  {exp_id!r}: {q!r} → {route!r}" for exp_id, q, route in bad)
+    )
+
+
+def test_all_follow_up_questions_retrieve_above_threshold(test_db):
+    """Every follow-up question must score above the retrieval threshold so it
+    gets a grounded answer instead of the fallback response.
+
+    Mirrors the experience_passes check in chat.py:
+        top_score >= min_top AND (top_score >= strong_top OR gap >= min_gap)
+
+    When you add or change a question in _DEEP_DIVE_QUESTIONS, run this test
+    to confirm retrieval still passes — weak or vague phrasings will fail here.
+    """
+    from app.config import get_settings
+    from app.services.retrieval import combined_memory_retrieve
+
+    s = get_settings()
+    bad = []
+    for exp_id, q in _DEEP_DIVE_QUESTIONS.items():
+        result = combined_memory_retrieve(q)
+        top = result.experience.top_score
+        second = result.experience.second_score
+        gap = top - second
+        passes = top >= s.retrieval_min_top_score and (
+            top >= s.retrieval_strong_top_score or gap >= s.retrieval_min_score_gap
+        )
+        if not passes:
+            bad.append((exp_id, q, top, gap))
+
+    assert not bad, (
+        "These follow-up questions fall below the retrieval threshold "
+        f"(min_top={s.retrieval_min_top_score}, strong={s.retrieval_strong_top_score}, "
+        f"min_gap={s.retrieval_min_score_gap}):\n"
+        + "\n".join(
+            f"  {exp_id!r}: score={top:.3f} gap={gap:.3f}  {q!r}"
+            for exp_id, q, top, gap in bad
+        )
     )
