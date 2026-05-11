@@ -11,22 +11,30 @@ from app.config import Settings
 from app.models import Citation, CTAMention, TopicSuggestion
 
 MEMORY_FALLBACK_RESPONSE = (
-    "I am not sure about this based on my memory about Yixin. Wanna ask something different?"
+    "not in my knowledge base — i'm a portfolio bot, not psychic. try something else or reach out to yixin directly?"
+)
+
+SMALL_TALK_RESPONSE = (
+    "Hey! I'm Yixin's portfolio assistant. Ask me about her work in AI/ML, "
+    "product management, research, or accessibility — happy to dig in."
 )
 
 SYSTEM_PROMPT_SECTIONS = (
     "You are the portfolio chat assistant for Yixin Li.",
     "Always talk about Yixin in the third person. Never speak as Yixin in first person.",
     "Answer only from the provided memory context and routing metadata.",
-    "Keep the response concise and natural, usually 2 to 5 sentences.",
-    "Ground every answer in Yixin's actual experiences when context is available.",
+    "Keep answers short — usually 2 to 5 sentences. Sound like a knowledgeable friend talking about a colleague: casual, warm, and direct. Not a formal bio.",
+    "Do not brag or oversell. Present what Yixin did factually and let the work speak for itself. Avoid superlatives, hype, or framing her as exceptional unless the context explicitly supports it.",
+    "Use profile context for stable background facts and experience context for concrete project or work claims.",
     (
-        "If the memory is weak, ambiguous, or missing, respond with exactly this sentence and nothing else: "
+        "If the memory is weak, ambiguous, or missing, respond with exactly this sentence and nothing else "
+        "(keep the dry, self-aware tone — no apology, no hedging): "
         f"\"{MEMORY_FALLBACK_RESPONSE}\""
     ),
     "Do not invent facts, dates, organizations, or outcomes that are not in the provided context.",
     "Answer the user's question directly before offering any continuation prompt.",
     "Do not include bullet lists unless the user explicitly asks for a list.",
+    "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or reaching out to Yixin directly.",
     "If a CTA hook is present, incorporate it at most once as a short final sentence. Otherwise do not mention CTAs.",
 )
 
@@ -38,6 +46,12 @@ def _api_key() -> str:
     return api_key
 
 
+def topic_exploration_hint(*, is_mobile: bool = False) -> str:
+    if is_mobile:
+        return "You can also use the Topics button in the top right or tap a bubble to steer the conversation."
+    return "You can also use the Topics button in the top right or click a bubble on the side to steer the conversation."
+
+
 def portfolio_chat_system_prompt() -> str:
     return "\n".join(f"{index + 1}. {section}" for index, section in enumerate(SYSTEM_PROMPT_SECTIONS))
 
@@ -45,7 +59,8 @@ def portfolio_chat_system_prompt() -> str:
 def build_portfolio_chat_user_prompt(
     *,
     user_message: str,
-    context_blocks: list[str],
+    profile_context: list[str],
+    experience_context: list[str],
     citations: list[Citation] | None = None,
     active_topic_id: str | None = None,
     prefill_origin: str | None = None,
@@ -63,7 +78,8 @@ def build_portfolio_chat_user_prompt(
             "prefill_origin": prefill_origin,
             "message_index": message_index,
         },
-        "memory_context": context_blocks,
+        "profile_context": profile_context,
+        "experience_context": experience_context,
         "citations": [
             {
                 "experience_id": citation.experience_id,
@@ -92,6 +108,7 @@ def build_portfolio_chat_user_prompt(
         ),
         "output_rules": {
             "voice": "third_person",
+            "tone": "casual and conversational — like a knowledgeable friend, not a formal bio",
             "target_length": "2-5 sentences",
             "fallback_if_memory_weak": MEMORY_FALLBACK_RESPONSE,
         },
@@ -118,11 +135,38 @@ def _post_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> str
         raise RuntimeError(f"LLM chat generation failed: {exc}") from exc
 
 
+def generate_small_talk_answer(*, settings: Settings, user_message: str, is_mobile: bool = False) -> str:
+    explore_hint = topic_exploration_hint()
+    payload = {
+        "model": settings.chat_model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are Yixin.exe, portfolio assistant for Yixin Li. "
+                    "The visitor is making small talk or just saying hi. Reply like you're texting a friend — match their energy, keep it short (1-2 sentences). "
+                    "Tone: lowercase when it feels natural, short punchy sentences, contractions, light wit. "
+                    "No corporate speak, no double exclamation points, no forced slang. "
+                    "If the visitor just greets (hi, hey, hello, etc.), nudge them to ask about Yixin's work — make it feel like an invitation, not a menu. "
+                    "Aim for something in this vibe (don't copy, just match the register):\n"
+                    "  'hey! wanna know what yixin's been building?'\n"
+                    "  'solid opener — she's done a lot. pick a topic and let's go'\n"
+                    "  'lol fair — i'm a bot with a narrow job description but i do it well'\n"
+                    f"Somewhere naturally slip in: \"{explore_hint}\""
+                ),
+            },
+            {"role": "user", "content": user_message},
+        ],
+        "temperature": 0.8,
+    }
+    return _post_chat_completion(settings=settings, payload=payload)
+
 def generate_chat_answer(
     *,
     settings: Settings,
     user_message: str,
-    context_blocks: list[str],
+    profile_context: list[str] | None = None,
+    experience_context: list[str] | None = None,
     citations: list[Citation] | None = None,
     active_topic_id: str | None = None,
     prefill_origin: str | None = None,
@@ -132,7 +176,9 @@ def generate_chat_answer(
     cta_mention: CTAMention | None = None,
     max_output_tokens: int | None = None,
 ) -> str:
-    if not context_blocks:
+    profile_context = profile_context or []
+    experience_context = experience_context or []
+    if not profile_context and not experience_context:
         return MEMORY_FALLBACK_RESPONSE
 
     payload = {
@@ -143,7 +189,8 @@ def generate_chat_answer(
                 "role": "user",
                 "content": build_portfolio_chat_user_prompt(
                     user_message=user_message,
-                    context_blocks=context_blocks,
+                    profile_context=profile_context,
+                    experience_context=experience_context,
                     citations=citations,
                     active_topic_id=active_topic_id,
                     prefill_origin=prefill_origin,
@@ -154,7 +201,7 @@ def generate_chat_answer(
                 ),
             },
         ],
-        "temperature": 0.2,
+        "temperature": 0.4,
     }
     if max_output_tokens is not None:
         payload["max_tokens"] = max_output_tokens

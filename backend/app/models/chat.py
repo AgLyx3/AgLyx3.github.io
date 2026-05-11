@@ -23,6 +23,7 @@ class ChatRequest(BaseModel):
     message_index: Optional[int] = Field(default=None, ge=1, le=1000)
     cta_already_mentioned: bool = False
     cta_rejected: bool = False
+    viewport_width: Optional[int] = Field(default=None, ge=1, le=10000)
 
 
 class Citation(BaseModel):
@@ -41,6 +42,7 @@ class CTAMention(BaseModel):
     action_type: Literal["linkedin", "send_message", "download_resume", "schedule_time"]
     label: str
     message: str
+    href: str | None = Field(default=None, max_length=512)
 
 
 class ChatSessionState(BaseModel):
@@ -63,3 +65,6 @@ class ChatFinalMetadata(BaseModel):
     adjacent_topics: list[TopicSuggestion] = Field(default_factory=list, max_length=3)
     cta_mention: Optional[CTAMention] = None
     session_state: Optional[ChatSessionState] = None
+    route: Optional[Literal["small_talk", "memory"]] = None
+    memory_sources: list[Literal["profile", "experience"]] = Field(default_factory=list)
+    response_mode: Optional[Literal["small_talk", "profile", "experience", "blended"]] = None

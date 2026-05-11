@@ -21,17 +21,21 @@ from app.services import (
     RateLimiter,
     build_adjacent_topics,
     build_follow_up_questions,
+    combined_memory_retrieve,
     detect_cta_rejection,
     estimate_tokens,
     ensure_session,
     generate_chat_answer,
-    hybrid_retrieve,
+    generate_small_talk_answer,
+    is_general_work_query,
     log_memory_gap,
     log_analytics_event,
     record_assistant_response_tokens,
     record_user_message,
+    route_query,
     sanitize_text,
     should_offer_cta,
+    topic_exploration_hint,
     touch_session,
     truncate_text_to_token_limit,
     update_activation,
@@ -39,6 +43,16 @@ from app.services import (
 
 router = APIRouter(tags=["chat"])
 chat_rate_limiter = RateLimiter(get_settings().chat_rate_limit_per_minute)
+
+
+def _append_topic_hint(answer: str, *, is_mobile: bool) -> str:
+    hint = topic_exploration_hint(is_mobile=is_mobile)
+    if hint in answer:
+        return answer
+    trimmed = answer.rstrip()
+    if trimmed.endswith(("!", "?", ".")):
+        return f"{trimmed} {hint}"
+    return f"{trimmed}. {hint}"
 
 
 @router.post("/chat")
@@ -122,102 +136,172 @@ async def chat_endpoint(
             )
         )
 
-    result = hybrid_retrieve(clean_message, limit=settings.retrieval_top_k)
-    use_memory = (
-        result.top_score >= settings.retrieval_min_top_score
-        and (result.top_score - result.second_score) >= settings.retrieval_min_score_gap
-    )
-    context_blocks = result.context_blocks if use_memory else []
-    citations = result.citations if use_memory else []
-    active_topics = result.active_topics if use_memory else []
-    score_gap = result.top_score - result.second_score
-    follow_up_questions = (
-        build_follow_up_questions(
-            user_message=clean_message,
-            active_topic_id=payload.active_topic_id,
-            active_topics=active_topics,
-            citations=citations,
-            topics=result.topics,
-        )
-        if use_memory
-        else []
-    )
-    adjacent_topics = (
-        build_adjacent_topics(
-            active_topic_id=payload.active_topic_id,
-            active_topics=active_topics,
-            citations=citations,
-            topics=result.topics,
-            edges=result.edges,
-        )
-        if use_memory
-        else []
-    )
     cta_mention = should_offer_cta(
         user_message=clean_message,
         message_index=message_index,
         cta_already_mentioned=payload.cta_already_mentioned or session_snapshot.cta_mentioned,
         cta_rejected=cta_rejected,
     )
-    try:
-        remaining_token_budget = max(
-            0,
-            settings.max_total_tokens_per_session - session_snapshot.total_token_count,
+
+    remaining_token_budget = max(
+        0,
+        settings.max_total_tokens_per_session - session_snapshot.total_token_count,
+    )
+    if remaining_token_budget <= 0:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Session token limit reached ({settings.max_total_tokens_per_session} total tokens). Start a new session to continue."
+            ),
         )
-        if remaining_token_budget <= 0:
-            raise HTTPException(
-                status_code=429,
-                detail=(
-                    f"Session token limit reached ({settings.max_total_tokens_per_session} total tokens). Start a new session to continue."
-                ),
-            )
-        output_token_budget = min(settings.max_output_tokens_per_response, remaining_token_budget)
-        if use_memory:
+    output_token_budget = min(settings.max_output_tokens_per_response, remaining_token_budget)
+
+    route = route_query(clean_message)
+
+    try:
+        is_mobile = payload.viewport_width is not None and payload.viewport_width <= 880
+        if route == "small_talk":
             answer = await asyncio.to_thread(
-                functools.partial(
-                    generate_chat_answer,
-                    settings=settings,
-                    user_message=clean_message,
-                    context_blocks=context_blocks,
-                    citations=citations,
-                    active_topic_id=payload.active_topic_id,
-                    prefill_origin=payload.prefill_origin,
-                    message_index=message_index,
-                    follow_up_questions=follow_up_questions,
-                    adjacent_topics=adjacent_topics,
-                    cta_mention=cta_mention,
-                    max_output_tokens=output_token_budget,
-                )
+                functools.partial(generate_small_talk_answer, settings=settings, user_message=clean_message, is_mobile=is_mobile)
             )
-        else:
-            answer = MEMORY_FALLBACK_RESPONSE
+            profile_context: list[str] = []
+            experience_context: list[str] = []
+            citations = []
+            active_topics: list[str] = []
+            score_gap = 0.0
+            follow_up_questions: list[str] = []
+            adjacent_topics = []
+            memory_sources: list[str] = []
+            use_memory = False
+            experience_result = None
+
+        else:  # "memory"
+            combined_result = combined_memory_retrieve(
+                clean_message,
+                profile_limit=settings.profile_retrieval_top_k,
+                experience_limit=settings.retrieval_top_k,
+            )
+            profile_result = combined_result.profile
+            experience_result = combined_result.experience
+            score_gap = experience_result.top_score - experience_result.second_score
+            experience_passes = experience_result.top_score >= settings.retrieval_min_top_score and (
+                experience_result.top_score >= settings.retrieval_strong_top_score
+                or score_gap >= settings.retrieval_min_score_gap
+            )
+            profile_passes = (
+                profile_result.top_score >= settings.profile_retrieval_min_top_score
+                and bool(profile_result.context_blocks)
+            )
+
+            memory_sources = []
+            if profile_passes:
+                memory_sources.append("profile")
+            if experience_passes:
+                memory_sources.append("experience")
+
+            max_blocks = max(1, settings.memory_context_max_blocks)
+            if experience_passes:
+                experience_context = experience_result.context_blocks[:max_blocks]
+                remaining_blocks = max_blocks - len(experience_context)
+            else:
+                experience_context = []
+                remaining_blocks = max_blocks
+            profile_context = (
+                profile_result.context_blocks[:remaining_blocks]
+                if profile_passes and remaining_blocks > 0
+                else []
+            )
+
+            use_memory = bool(memory_sources)
+            citations = experience_result.citations if experience_passes else []
+            active_topics = experience_result.active_topics if experience_passes else []
+            follow_up_questions = (
+                build_follow_up_questions(
+                    user_message=clean_message,
+                    active_topic_id=payload.active_topic_id,
+                    active_topics=active_topics,
+                    citations=citations,
+                    topics=experience_result.topics,
+                )
+                if experience_passes
+                else []
+            )
+            adjacent_topics = (
+                build_adjacent_topics(
+                    active_topic_id=payload.active_topic_id,
+                    active_topics=active_topics,
+                    citations=citations,
+                    topics=experience_result.topics,
+                    edges=experience_result.edges,
+                )
+                if experience_passes
+                else []
+            )
+            if use_memory:
+                answer = await asyncio.to_thread(
+                    functools.partial(
+                        generate_chat_answer,
+                        settings=settings,
+                        user_message=clean_message,
+                        profile_context=profile_context,
+                        experience_context=experience_context,
+                        citations=citations,
+                        active_topic_id=payload.active_topic_id,
+                        prefill_origin=payload.prefill_origin,
+                        message_index=message_index,
+                        follow_up_questions=follow_up_questions,
+                        adjacent_topics=adjacent_topics,
+                        cta_mention=cta_mention,
+                        max_output_tokens=output_token_budget,
+                    )
+                )
+            else:
+                answer = await asyncio.to_thread(
+                    functools.partial(
+                        generate_small_talk_answer,
+                        settings=settings,
+                        user_message=clean_message,
+                        is_mobile=is_mobile,
+                    )
+                )
+
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    if message_index <= 3 and is_general_work_query(clean_message):
+        answer = _append_topic_hint(answer, is_mobile=is_mobile)
+
     answer = truncate_text_to_token_limit(answer, output_token_budget)
     output_tokens = estimate_tokens(answer)
     session_snapshot = record_assistant_response_tokens(
         session_id=session_id,
         estimated_output_tokens=output_tokens,
     )
-    should_activate = use_memory and result.top_score >= settings.activation_min_top_score
-    weighted_citations = [
-        (citation.experience_id, citation.score)
-        for citation in citations
-        if citation.score >= settings.activation_min_citation_score
-    ]
-    if should_activate and weighted_citations:
-        update_activation(
-            session_id=session_id,
-            cited_experiences=weighted_citations,
-            alpha=settings.activation_increment_alpha,
+
+    if route == "memory" and experience_result is not None:
+        should_activate = (
+            "experience" in memory_sources
+            and experience_result.top_score >= settings.activation_min_top_score
         )
-    elif not use_memory:
-        log_memory_gap(
-            query_text=clean_message,
-            session_id=session_id,
-            top_score=result.top_score,
-            score_gap=score_gap,
-        )
+        weighted_citations = [
+            (citation.experience_id, citation.score)
+            for citation in citations
+            if citation.score >= settings.activation_min_citation_score
+        ]
+        if should_activate and weighted_citations:
+            update_activation(
+                session_id=session_id,
+                cited_experiences=weighted_citations,
+                alpha=settings.activation_increment_alpha,
+            )
+        elif "experience" not in memory_sources:
+            log_memory_gap(
+                query_text=clean_message,
+                session_id=session_id,
+                top_score=experience_result.top_score,
+                score_gap=score_gap,
+            )
+
     if cta_mention is not None:
         session_snapshot = touch_session(
             SessionTouchRequest(
@@ -239,6 +323,17 @@ async def chat_endpoint(
         depth_5_reached=session_update.depth_5_reached,
     )
 
+    if route == "small_talk" or not use_memory:
+        response_mode = "small_talk"
+    elif set(memory_sources) == {"profile", "experience"}:
+        response_mode = "blended"
+    elif memory_sources == ["profile"]:
+        response_mode = "profile"
+    elif memory_sources == ["experience"]:
+        response_mode = "experience"
+    else:
+        response_mode = None
+
     async def event_stream():
         words = answer.split()  # split() collapses all whitespace, no empty tokens
         for i, word in enumerate(words):
@@ -253,6 +348,9 @@ async def chat_endpoint(
             adjacent_topics=adjacent_topics,
             cta_mention=cta_mention,
             session_state=final_session_state,
+            route=route,
+            memory_sources=memory_sources,
+            response_mode=response_mode,
         )
         yield f"event: final\ndata: {metadata.model_dump_json()}\n\n"
 
