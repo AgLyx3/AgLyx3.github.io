@@ -110,7 +110,7 @@ def create_contact_message(
             delivery_status = "sent"
         except RuntimeError as exc:
             print(f"[contact] Resend error: {exc}", flush=True)
-            delivery_status = "failed"
+            delivery_status = f"failed: {exc}"
 
         with get_conn() as conn:
             conn.execute(
