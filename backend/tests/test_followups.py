@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 from app.models.chat import Citation
-from app.services.followups import build_adjacent_topics, build_follow_up_questions
+from app.services.followups import (
+    _DEEP_DIVE_QUESTIONS,
+    build_adjacent_topics,
+    build_follow_up_questions,
+)
+from app.services.query_router import route_query
 
 _CITATION = Citation(
     experience_id="exp_locomo_benchmarking",
@@ -68,3 +73,21 @@ def test_eval_followup_prefers_defined_deep_dive_question(test_db):
         citations=[eval_citation],
     )
     assert questions == ["How did Yixin measure whether the memory was actually working?"]
+
+
+def test_all_follow_up_questions_route_to_memory():
+    """Every defined follow-up question must route to memory, not small_talk.
+
+    This test imports _DEEP_DIVE_QUESTIONS directly so it auto-covers new
+    questions without any manual updates — just add to _DEEP_DIVE_QUESTIONS
+    and this test will validate it automatically.
+    """
+    bad = [
+        (exp_id, q, route_query(q))
+        for exp_id, q in _DEEP_DIVE_QUESTIONS.items()
+        if route_query(q) != "memory"
+    ]
+    assert not bad, (
+        "These follow-up questions routed to small_talk instead of memory:\n"
+        + "\n".join(f"  {exp_id!r}: {q!r} → {route!r}" for exp_id, q, route in bad)
+    )
