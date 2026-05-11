@@ -57,14 +57,31 @@ def _profile_memories_ddl(dialect: str) -> str:
 
 
 def _experiences_ddl(dialect: str) -> str:
-    activation_type = "DOUBLE PRECISION" if dialect == "postgres" else "REAL"
+    num_type = "DOUBLE PRECISION" if dialect == "postgres" else "REAL"
     return f"""
         CREATE TABLE experiences (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             raw_context TEXT NOT NULL DEFAULT '',
             experience_date TEXT NOT NULL DEFAULT '',
-            activation {activation_type} NOT NULL DEFAULT 0,
+            base_weight {num_type} NOT NULL DEFAULT 0,
+            activation {num_type} NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL
+        )
+    """
+
+
+def _topics_ddl(dialect: str) -> str:
+    num_type = "DOUBLE PRECISION" if dialect == "postgres" else "REAL"
+    return f"""
+        CREATE TABLE topics (
+            id TEXT PRIMARY KEY,
+            label TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            base_weight {num_type} NOT NULL DEFAULT 0,
+            activation {num_type} NOT NULL DEFAULT 0,
+            approval_mode TEXT NOT NULL DEFAULT 'manual',
+            source_candidate_id TEXT,
             created_at TEXT NOT NULL
         )
     """
@@ -81,6 +98,7 @@ def _rename_table(conn, dialect: str, old_name: str, new_name: str) -> None:
 def _migrate_runtime_schema(conn, dialect: str, now: str) -> None:
     _migrate_profile_memories(conn, dialect, now)
     _migrate_experiences(conn, dialect)
+    _migrate_topics(conn, dialect)
 
 
 def _migrate_profile_memories(conn, dialect: str, now: str) -> None:
@@ -132,7 +150,7 @@ def _migrate_profile_memories(conn, dialect: str, now: str) -> None:
 
 
 def _migrate_experiences(conn, dialect: str) -> None:
-    desired = ["id", "title", "raw_context", "experience_date", "activation", "created_at"]
+    desired = ["id", "title", "raw_context", "experience_date", "base_weight", "activation", "created_at"]
     current = _table_columns(conn, dialect, "experiences")
     if current == desired:
         return
@@ -143,7 +161,7 @@ def _migrate_experiences(conn, dialect: str) -> None:
     conn.execute(_experiences_ddl(dialect))
 
     legacy_rows = conn.execute(f"SELECT * FROM {legacy_name}").fetchall()
-    inserts: list[tuple[str, str, str, str, float, str]] = []
+    inserts: list[tuple[str, str, str, str, float, float, str]] = []
     for row in legacy_rows:
         raw_context = ""
         if "raw_context" in row.keys() and row["raw_context"]:
@@ -152,13 +170,16 @@ def _migrate_experiences(conn, dialect: str) -> None:
             raw_context = row["details"]
         elif "summary" in row.keys() and row["summary"]:
             raw_context = row["summary"]
+        old_activation = float(row["activation"] if "activation" in row.keys() else 0.0)
+        old_base_weight = float(row["base_weight"] if "base_weight" in row.keys() else old_activation)
         inserts.append(
             (
                 row["id"],
                 row["title"],
                 raw_context,
                 row["experience_date"] if "experience_date" in row.keys() else "",
-                float(row["activation"] if "activation" in row.keys() else 0.0),
+                old_base_weight,
+                0.0,
                 row["created_at"],
             )
         )
@@ -166,8 +187,46 @@ def _migrate_experiences(conn, dialect: str) -> None:
     if inserts:
         conn.executemany(
             """
-            INSERT INTO experiences(id, title, raw_context, experience_date, activation, created_at)
-            VALUES(?,?,?,?,?,?)
+            INSERT INTO experiences(id, title, raw_context, experience_date, base_weight, activation, created_at)
+            VALUES(?,?,?,?,?,?,?)
+            """,
+            inserts,
+        )
+    _drop_table(conn, legacy_name)
+
+
+def _migrate_topics(conn, dialect: str) -> None:
+    desired = ["id", "label", "description", "base_weight", "activation", "approval_mode", "source_candidate_id", "created_at"]
+    current = _table_columns(conn, dialect, "topics")
+    if current == desired:
+        return
+
+    legacy_name = "topics_legacy"
+    _drop_table(conn, legacy_name)
+    _rename_table(conn, dialect, "topics", legacy_name)
+    conn.execute(_topics_ddl(dialect))
+
+    legacy_rows = conn.execute(f"SELECT * FROM {legacy_name}").fetchall()
+    inserts = []
+    for row in legacy_rows:
+        old_activation = float(row["activation"] if "activation" in row.keys() else 0.0)
+        old_base_weight = float(row["base_weight"] if "base_weight" in row.keys() else old_activation)
+        inserts.append((
+            row["id"],
+            row["label"],
+            row["description"] if "description" in row.keys() else "",
+            old_base_weight,
+            0.0,
+            row["approval_mode"] if "approval_mode" in row.keys() else "manual",
+            row["source_candidate_id"] if "source_candidate_id" in row.keys() else None,
+            row["created_at"],
+        ))
+
+    if inserts:
+        conn.executemany(
+            """
+            INSERT INTO topics(id, label, description, base_weight, activation, approval_mode, source_candidate_id, created_at)
+            VALUES(?,?,?,?,?,?,?,?)
             """,
             inserts,
         )
@@ -181,6 +240,7 @@ def _schema_script_for(dialect: str) -> str:
                 id TEXT PRIMARY KEY,
                 label TEXT NOT NULL,
                 description TEXT NOT NULL DEFAULT '',
+                base_weight DOUBLE PRECISION NOT NULL DEFAULT 0,
                 activation DOUBLE PRECISION NOT NULL DEFAULT 0,
                 approval_mode TEXT NOT NULL DEFAULT 'manual',
                 source_candidate_id TEXT,
@@ -197,6 +257,7 @@ def _schema_script_for(dialect: str) -> str:
                 title TEXT NOT NULL,
                 raw_context TEXT NOT NULL DEFAULT '',
                 experience_date TEXT NOT NULL DEFAULT '',
+                base_weight DOUBLE PRECISION NOT NULL DEFAULT 0,
                 activation DOUBLE PRECISION NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL
             );
@@ -276,6 +337,7 @@ def _schema_script_for(dialect: str) -> str:
                 id TEXT PRIMARY KEY,
                 label TEXT NOT NULL,
                 description TEXT NOT NULL DEFAULT '',
+                base_weight REAL NOT NULL DEFAULT 0,
                 activation REAL NOT NULL DEFAULT 0,
                 approval_mode TEXT NOT NULL DEFAULT 'manual',
                 source_candidate_id TEXT,
@@ -292,6 +354,7 @@ def _schema_script_for(dialect: str) -> str:
                 title TEXT NOT NULL,
                 raw_context TEXT NOT NULL DEFAULT '',
                 experience_date TEXT NOT NULL DEFAULT '',
+                base_weight REAL NOT NULL DEFAULT 0,
                 activation REAL NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL
             );
@@ -372,78 +435,18 @@ def _seed_defaults(conn, now: str) -> None:
     topic_count = conn.execute("SELECT COUNT(*) AS c FROM topics").fetchone()["c"]
     if topic_count == 0:
         conn.executemany(
-            "INSERT INTO topics(id,label,description,activation,created_at) VALUES(?,?,?,?,?)",
+            "INSERT INTO topics(id,label,description,base_weight,activation,created_at) VALUES(?,?,?,?,?,?)",
             [
-                (
-                    "ai-agents",
-                    "AI Agents",
-                    "Agentic systems, conversational AI features, and multi-step LLM workflows.",
-                    7.0,
-                    now,
-                ),
-                (
-                    "memory",
-                    "Memory",
-                    "Memory architecture, retrieval systems, and personalization in AI.",
-                    7.5,
-                    now,
-                ),
-                (
-                    "eval",
-                    "Eval",
-                    "Model evaluation, benchmarking, and measurement of AI system quality.",
-                    6.5,
-                    now,
-                ),
-                (
-                    "startup",
-                    "Startup",
-                    "Founding, fundraising, and building products from zero.",
-                    5.0,
-                    now,
-                ),
-                (
-                    "eng",
-                    "Engineering",
-                    "Software development, tooling, and technical implementation.",
-                    5.5,
-                    now,
-                ),
-                (
-                    "pm",
-                    "Product Management",
-                    "Product strategy, PRDs, roadmapping, and cross-functional execution.",
-                    7.0,
-                    now,
-                ),
-                (
-                    "research",
-                    "Research",
-                    "Academic research, user studies, and published work.",
-                    5.0,
-                    now,
-                ),
-                (
-                    "access",
-                    "Accessibility",
-                    "Accessible design, WCAG, and inclusive product development.",
-                    5.0,
-                    now,
-                ),
-                (
-                    "photo",
-                    "Photography",
-                    "Stage and event photography.",
-                    3.0,
-                    now,
-                ),
-                (
-                    "ethics",
-                    "Ethics",
-                    "AI ethics, governance, and responsible technology.",
-                    4.0,
-                    now,
-                ),
+                ("ai-agents", "AI Agents", "Agentic systems, conversational AI features, and multi-step LLM workflows.", 7.0, 0.0, now),
+                ("memory", "Memory", "Memory architecture, retrieval systems, and personalization in AI.", 7.5, 0.0, now),
+                ("eval", "Eval", "Model evaluation, benchmarking, and measurement of AI system quality.", 6.5, 0.0, now),
+                ("startup", "Startup", "Founding, fundraising, and building products from zero.", 5.0, 0.0, now),
+                ("eng", "Engineering", "Software development, tooling, and technical implementation.", 5.5, 0.0, now),
+                ("pm", "Product Management", "Product strategy, PRDs, roadmapping, and cross-functional execution.", 7.0, 0.0, now),
+                ("research", "Research", "Academic research, user studies, and published work.", 5.0, 0.0, now),
+                ("access", "Accessibility", "Accessible design, WCAG, and inclusive product development.", 5.0, 0.0, now),
+                ("photo", "Photography", "Stage and event photography.", 3.0, 0.0, now),
+                ("ethics", "Ethics", "AI ethics, governance, and responsible technology.", 4.0, 0.0, now),
             ],
         )
 
@@ -948,10 +951,10 @@ def _seed_defaults(conn, now: str) -> None:
         conn.executemany(
             """
             INSERT INTO experiences(
-                id, title, raw_context, experience_date, activation, created_at
-            ) VALUES(?,?,?,?,?,?)
+                id, title, raw_context, experience_date, base_weight, activation, created_at
+            ) VALUES(?,?,?,?,?,?,?)
             """,
-            [(row[0], row[1], row[5] or row[3] or row[2], row[4], row[7], row[9]) for row in experience_rows],
+            [(row[0], row[1], row[5] or row[3] or row[2], row[4], row[7], 0.0, row[9]) for row in experience_rows],
         )
 
     edge_count = conn.execute("SELECT COUNT(*) AS c FROM relevance_edges").fetchone()["c"]

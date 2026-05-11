@@ -160,11 +160,11 @@ def load_graph() -> tuple[list[ProfileMemoryRecord], list[TopicNode], list[Exper
             """
         ).fetchall()
         topic_rows = conn.execute(
-            "SELECT id, label, description, activation FROM topics ORDER BY label"
+            "SELECT id, label, description, base_weight, activation FROM topics ORDER BY label"
         ).fetchall()
         experience_rows = conn.execute(
             """
-            SELECT id, title, raw_context, experience_date, activation
+            SELECT id, title, raw_context, experience_date, base_weight, activation
             FROM experiences
             ORDER BY title
             """
@@ -187,6 +187,7 @@ def load_graph() -> tuple[list[ProfileMemoryRecord], list[TopicNode], list[Exper
             id=row["id"],
             label=row["label"],
             description=row["description"],
+            base_weight=float(row["base_weight"]),
             activation=float(row["activation"]),
         )
         for row in topic_rows
@@ -197,6 +198,7 @@ def load_graph() -> tuple[list[ProfileMemoryRecord], list[TopicNode], list[Exper
             title=row["title"],
             experience_date=row["experience_date"],
             raw_context=row["raw_context"],
+            base_weight=float(row["base_weight"]),
             activation=float(row["activation"]),
         )
         for row in experience_rows
@@ -346,7 +348,7 @@ def _select_broad_topic_results(
     candidates.sort(
         key=lambda row: (
             _experience_topic_weight(row.experience.id, dominant_topic_id, edges),
-            row.experience.activation,
+            row.experience.base_weight + row.experience.activation,
             row.base_score,
         ),
         reverse=True,
@@ -359,7 +361,7 @@ def _select_broad_topic_results(
         best_score = float("-inf")
         for idx, candidate in enumerate(remaining):
             dominant_edge = _experience_topic_weight(candidate.experience.id, dominant_topic_id, edges)
-            activation_bonus = candidate.experience.activation / 10.0
+            activation_bonus = (candidate.experience.base_weight + candidate.experience.activation) / 10.0
             redundancy_penalty = 0.0
             diversity_bonus = 0.0
             if selected:
@@ -401,7 +403,7 @@ def _select_general_work_results(
     prioritized = sorted(
         ranked,
         key=lambda row: (
-            row.experience.activation,
+            row.experience.base_weight + row.experience.activation,
             row.base_score,
         ),
         reverse=True,

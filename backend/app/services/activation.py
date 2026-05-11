@@ -7,10 +7,10 @@ from app.services.db import get_conn
 
 def get_activation_snapshot() -> tuple[dict[str, float], dict[str, float]]:
     with get_conn() as conn:
-        topics = conn.execute("SELECT id, activation FROM topics").fetchall()
-        experiences = conn.execute("SELECT id, activation FROM experiences").fetchall()
-    topic_map = {row["id"]: float(row["activation"]) for row in topics}
-    exp_map = {row["id"]: float(row["activation"]) for row in experiences}
+        topics = conn.execute("SELECT id, base_weight, activation FROM topics").fetchall()
+        experiences = conn.execute("SELECT id, base_weight, activation FROM experiences").fetchall()
+    topic_map = {row["id"]: float(row["base_weight"]) + float(row["activation"]) for row in topics}
+    exp_map = {row["id"]: float(row["base_weight"]) + float(row["activation"]) for row in experiences}
     return topic_map, exp_map
 
 

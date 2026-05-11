@@ -8,6 +8,7 @@ class TopicNode(BaseModel):
     type: str = "topic"
     label: str
     description: str
+    base_weight: float = 0.0
     activation: float = 0.0
 
 
@@ -17,6 +18,7 @@ class ExperienceNode(BaseModel):
     title: str
     experience_date: str = ""
     raw_context: str = ""
+    base_weight: float = 0.0
     activation: float = 0.0
 
 
