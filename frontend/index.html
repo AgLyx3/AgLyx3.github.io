@@ -863,7 +863,7 @@
     <div class="cta-sep" aria-hidden="true"></div>
     <button class="cta-action" id="ctaSendMsg" type="button">Send Message</button>
     <div class="cta-sep" aria-hidden="true"></div>
-    <a href="assets/resume.pdf" download class="cta-action">Resume</a>
+    <a href="mailto:yixinli.a@gmail.com" class="cta-action">Email</a>
     <div class="cta-sep" aria-hidden="true"></div>
     <button class="cta-action" id="ctaSchedule" type="button">Schedule</button>
   </footer>
@@ -1532,23 +1532,6 @@
         trackAction('/actions/linkedin', {}, href).then(function (url) {
           window.open(url, '_blank', 'noopener');
         });
-      });
-    }
-
-    /* Resume */
-    var resumeEl = document.querySelector('.cta-action[download]');
-    if (resumeEl) {
-      resumeEl.addEventListener('click', function (e) {
-        e.preventDefault();
-        var localHref = this.href;
-        trackAction('/actions/resume', { resume_variant: 'default' }, localHref);
-        /* Always trigger local download without waiting for tracking */
-        var a = document.createElement('a');
-        a.href = localHref;
-        a.download = 'Yixin_Li_Resume.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
       });
     }
 
