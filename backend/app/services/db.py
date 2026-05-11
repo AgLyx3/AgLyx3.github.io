@@ -437,16 +437,16 @@ def _seed_defaults(conn, now: str) -> None:
         conn.executemany(
             "INSERT INTO topics(id,label,description,base_weight,activation,created_at) VALUES(?,?,?,?,?,?)",
             [
-                ("ai-agents", "AI Agents", "Agentic systems, conversational AI features, and multi-step LLM workflows.", 7.0, 0.0, now),
-                ("memory", "Memory", "Memory architecture, retrieval systems, and personalization in AI.", 7.5, 0.0, now),
-                ("eval", "Eval", "Model evaluation, benchmarking, and measurement of AI system quality.", 6.5, 0.0, now),
-                ("startup", "Startup", "Founding, fundraising, and building products from zero.", 5.0, 0.0, now),
+                ("ai-agents", "AI Agents", "Agentic systems, conversational AI features, and multi-step LLM workflows.", 9.0, 0.0, now),
+                ("memory", "Memory", "Memory architecture, retrieval systems, and personalization in AI.", 9.0, 0.0, now),
+                ("eval", "Eval", "Model evaluation, benchmarking, and measurement of AI system quality.", 8.5, 0.0, now),
+                ("startup", "Startup", "Founding, fundraising, and building products from zero.", 6.0, 0.0, now),
                 ("eng", "Engineering", "Software development, tooling, and technical implementation.", 5.5, 0.0, now),
-                ("pm", "Product Management", "Product strategy, PRDs, roadmapping, and cross-functional execution.", 7.0, 0.0, now),
-                ("research", "Research", "Academic research, user studies, and published work.", 5.0, 0.0, now),
-                ("access", "Accessibility", "Accessible design, WCAG, and inclusive product development.", 5.0, 0.0, now),
-                ("photo", "Photography", "Stage and event photography.", 3.0, 0.0, now),
-                ("ethics", "Ethics", "AI ethics, governance, and responsible technology.", 4.0, 0.0, now),
+                ("pm", "Product Management", "Product strategy, PRDs, roadmapping, and cross-functional execution.", 9.0, 0.0, now),
+                ("research", "Research", "Academic research, user studies, and published work.", 6.0, 0.0, now),
+                ("access", "Accessibility", "Accessible design, WCAG, and inclusive product development.", 4.0, 0.0, now),
+                ("photo", "Photography", "Stage and event photography.", 2.5, 0.0, now),
+                ("ethics", "Ethics", "AI ethics, governance, and responsible technology.", 3.5, 0.0, now),
             ],
         )
 
