@@ -11,7 +11,7 @@ from app.config import Settings
 from app.models import Citation, CTAMention, TopicSuggestion
 
 MEMORY_FALLBACK_RESPONSE = (
-    "not in my knowledge base — i'm a portfolio bot, not psychic. try something else or reach out to yixin directly?"
+    "not in my knowledge base — i'm a portfolio bot, not psychic. try something else, send yixin a direct message, or email her through the footer."
 )
 
 SMALL_TALK_RESPONSE = (
@@ -34,7 +34,7 @@ SYSTEM_PROMPT_SECTIONS = (
     "Do not invent facts, dates, organizations, or outcomes that are not in the provided context.",
     "Answer the user's question directly before offering any continuation prompt.",
     "Do not include bullet lists unless the user explicitly asks for a list.",
-    "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or reaching out to Yixin directly.",
+    "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or using the footer to send Yixin a direct message or email her.",
     "If a CTA hook is present, incorporate it at most once as a short final sentence. Otherwise do not mention CTAs.",
 )
 

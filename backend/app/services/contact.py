@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from urllib import error, request
+
+import resend
 
 from app.config import Settings, get_settings
 from app.models.actions import ContactMessageRequest, ContactMessageResponse
@@ -37,28 +38,15 @@ def _send_via_resend(
         "</div>"
     )
 
-    payload = {
-        "from": settings.contact_from_email,
-        "to": [settings.contact_to_email],
-        "subject": "New message from your portfolio",
-        "html": html,
-    }
-    req = request.Request(
-        "https://api.resend.com/emails",
-        data=json.dumps(payload).encode("utf-8"),
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {settings.resend_api_key}",
-            "Content-Type": "application/json",
-        },
-    )
+    resend.api_key = settings.resend_api_key
     try:
-        with request.urlopen(req, timeout=10) as resp:
-            resp.read()
-    except error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Resend delivery failed: HTTP {exc.code} — {body}") from exc
-    except error.URLError as exc:
+        resend.Emails.send({
+            "from": settings.contact_from_email,
+            "to": [settings.contact_to_email],
+            "subject": "New message from your portfolio",
+            "html": html,
+        })
+    except Exception as exc:
         raise RuntimeError(f"Resend delivery failed: {exc}") from exc
 
 
@@ -110,7 +98,7 @@ def create_contact_message(
             delivery_status = "sent"
         except RuntimeError as exc:
             print(f"[contact] Resend error: {exc}", flush=True)
-            delivery_status = f"failed: {exc}"
+            delivery_status = "failed"
 
         with get_conn() as conn:
             conn.execute(
