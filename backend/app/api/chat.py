@@ -209,7 +209,7 @@ async def chat_endpoint(
     should_ask_back = (
         not is_ask_back_response
         and route != "small_talk"
-        and (current_round - session_snapshot.last_ask_back_round) >= 3
+        and (current_round - session_snapshot.last_ask_back_round) >= 2
     )
     if should_ask_back:
         record_ask_back(session_id, current_round)
