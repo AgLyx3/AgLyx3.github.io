@@ -37,6 +37,7 @@ from app.services import (
     route_query,
     sanitize_text,
     should_offer_cta,
+    snooze_ask_back,
     topic_exploration_hint,
     touch_session,
     truncate_text_to_token_limit,
@@ -195,6 +196,12 @@ async def chat_endpoint(
             )
         )
 
+    # Visitor ignored the ask-back question (came back with a Yixin query instead).
+    # Snooze the clock so we don't ask again for 6 more rounds.
+    visitor_declined_ask_back = is_ask_back_response and visitor_context is None
+    if visitor_declined_ask_back:
+        snooze_ask_back(session_id, session_update.message_index_in_session)
+
     current_round = session_update.message_index_in_session
     should_ask_back = (
         not is_ask_back_response
@@ -335,6 +342,7 @@ async def chat_endpoint(
                         max_output_tokens=output_token_budget,
                         ask_visitor_question=should_ask_back,
                         visitor_context=visitor_context,
+                        visitor_declined_previous_question=visitor_declined_ask_back,
                     )
                 )
             else:

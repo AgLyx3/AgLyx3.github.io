@@ -53,6 +53,11 @@ SYSTEM_PROMPT_SECTIONS = (
         "Do not pivot to Yixin's experience. Do not ask another question. Do not add anything else. One sentence, done. "
         "Examples: 'oh nice, ML infra is foundational work.', 'that's a cool space to be in.', 'solid — building in AI right now is wild.'"
     ),
+    (
+        "If visitor_declined_previous_question is true in the input, the visitor already skipped a personal question you asked — "
+        "they want to stay focused on Yixin's work. Do not ask them any visitor-directed questions in this response, "
+        "even if ask_visitor_question is true. Treat ask_visitor_question as false."
+    ),
 )
 
 
@@ -85,6 +90,7 @@ def build_portfolio_chat_user_prompt(
     cta_mention: CTAMention | None = None,
     ask_visitor_question: bool = False,
     visitor_context: str | None = None,
+    visitor_declined_previous_question: bool = False,
 ) -> str:
     """Build the user prompt as a single JSON payload for maintainability."""
 
@@ -134,6 +140,8 @@ def build_portfolio_chat_user_prompt(
         prompt_payload["ask_visitor_question"] = True
     if visitor_context is not None:
         prompt_payload["visitor_context"] = visitor_context
+    if visitor_declined_previous_question:
+        prompt_payload["visitor_declined_previous_question"] = True
     return json.dumps(prompt_payload, ensure_ascii=True, indent=2)
 
 
@@ -212,6 +220,7 @@ def generate_chat_answer(
     max_output_tokens: int | None = None,
     ask_visitor_question: bool = False,
     visitor_context: str | None = None,
+    visitor_declined_previous_question: bool = False,
 ) -> str:
     profile_context = profile_context or []
     experience_context = experience_context or []
@@ -237,6 +246,7 @@ def generate_chat_answer(
                     cta_mention=cta_mention,
                     ask_visitor_question=ask_visitor_question,
                     visitor_context=visitor_context,
+                    visitor_declined_previous_question=visitor_declined_previous_question,
                 ),
             },
         ],

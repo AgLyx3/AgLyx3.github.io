@@ -245,3 +245,13 @@ def clear_ask_back_pending(session_id: str) -> None:
             (False, session_id),
         )
         conn.commit()
+
+
+def snooze_ask_back(session_id: str, current_round: int) -> None:
+    """Visitor ignored the ask-back question. Push the clock forward so we don't ask again soon."""
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE sessions SET last_ask_back_round = ? WHERE session_id = ?",
+            (current_round + 3, session_id),
+        )
+        conn.commit()
