@@ -64,6 +64,9 @@ _SYNONYMS: dict[str, str] = {
     "ml": "machine learning",
     "eng": "engineering",
     "nlp": "natural language processing",
+    # "agent" doesn't match "agentic" or "agents" without stemming
+    "agent": "agentic agents",
+    "agents": "agentic agent",
 }
 
 _PROFILE_KEY_SYNONYMS: dict[str, frozenset[str]] = {
