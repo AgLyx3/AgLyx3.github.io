@@ -378,10 +378,17 @@ async def chat_endpoint(
         response_mode = None
 
     async def event_stream():
-        words = answer.split()  # split() collapses all whitespace, no empty tokens
-        for i, word in enumerate(words):
-            suffix = " " if i < len(words) - 1 else ""
-            yield f"event: token\ndata: {json.dumps({'token': word + suffix})}\n\n"
+        # Split on paragraph breaks first to preserve them, then tokenize words within each paragraph
+        paragraphs = answer.split("\n\n")
+        tokens: list[str] = []
+        for p_idx, para in enumerate(paragraphs):
+            words = para.split()
+            for w_idx, word in enumerate(words):
+                tokens.append(word + (" " if w_idx < len(words) - 1 else ""))
+            if p_idx < len(paragraphs) - 1:
+                tokens.append("\n\n")
+        for tok in tokens:
+            yield f"event: token\ndata: {json.dumps({'token': tok})}\n\n"
             await asyncio.sleep(0.01)
 
         metadata = ChatFinalMetadata(

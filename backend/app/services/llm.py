@@ -37,8 +37,9 @@ SYSTEM_PROMPT_SECTIONS = (
     "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or using the footer to send Yixin a direct message or email her.",
     "If a CTA hook is present, incorporate it at most once as a short final sentence. Otherwise do not mention CTAs.",
     (
-        "If ask_visitor_question is true in the input, end your response with one short conversational question "
-        "directed at the visitor — about their own work, what they're building, or what brought them here. "
+        "If ask_visitor_question is true in the input, write your answer as normal, then leave a blank line and "
+        "put the visitor question as its own separate paragraph. "
+        "The question should be about the visitor — their own work, what they're building, or what brought them here. "
         "Not a question about Yixin. One sentence, keep it natural and contextual. "
         "Examples: 'Are you working on something similar?', 'What kind of AI work are you exploring these days?', "
         "'What brought you to check out the portfolio?'"

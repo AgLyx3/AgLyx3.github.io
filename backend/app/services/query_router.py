@@ -17,7 +17,12 @@ _SMALL_TALK_RE = re.compile(
     r"|thanks?\s*!?|thank\s+you|thx|ty"
     r"|bye|goodbye|see\s+you|take\s+care|later|peace|cya"
     r"|what\s+can\s+you\s+do|who\s+are\s+you"
+    r"|what\s+do\s+you\s+know"
+    r"|what(\s+can)?\s+you\s+(tell|show|help)"
+    r"|where\s+(do\s+i|should\s+i)\s+start"
     r"|ok(ay)?|alright|sounds\s+good|got\s+it|cool|great|awesome"
+    r"|lol|haha|hm+|hmm+|interesting|nice|wow|whoa"
+    r"|not\s+really|no\s+thanks?|nah|nope"
     r")[\s!?.]*$",
     re.IGNORECASE,
 )
