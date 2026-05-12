@@ -5,7 +5,6 @@
     // Override with window.APP_CONFIG = { backendBaseUrl: "http://localhost:8000" }
     backendBaseUrl:
       (window.APP_CONFIG && window.APP_CONFIG.backendBaseUrl) ||
-      localStorage.getItem("backendBaseUrl") ||
       "https://backend-green-zeta-37.vercel.app",
   };
 
