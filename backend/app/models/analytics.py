@@ -17,6 +17,7 @@ AnalyticsEventName = Literal[
     "linkedin_profile_opened",
     "schedule_time_opened",
     "visitor_ask_back_answered",
+    "chat_ask_back_sent",
 ]
 
 MessageOrigin = Literal["topic_prefill", "manual", "suggestion_question", "suggestion_topic"]

@@ -203,12 +203,28 @@ async def chat_endpoint(
     )
     if should_ask_back:
         record_ask_back(session_id, current_round)
+        log_analytics_event(
+            AnalyticsEventCreate(
+                session_id=session_id,
+                event_name="chat_ask_back_sent",
+                payload={
+                    "message_index": current_round,
+                    "active_topic_id": payload.active_topic_id,
+                },
+            )
+        )
 
     try:
         is_mobile = payload.viewport_width is not None and payload.viewport_width <= 880
         if route == "small_talk":
             answer = await asyncio.to_thread(
-                functools.partial(generate_small_talk_answer, settings=settings, user_message=clean_message, is_mobile=is_mobile)
+                functools.partial(
+                    generate_small_talk_answer,
+                    settings=settings,
+                    user_message=clean_message,
+                    is_mobile=is_mobile,
+                    message_index=message_index,
+                )
             )
             profile_context: list[str] = []
             experience_context: list[str] = []
@@ -328,6 +344,7 @@ async def chat_endpoint(
                         settings=settings,
                         user_message=clean_message,
                         is_mobile=is_mobile,
+                        message_index=message_index,
                     )
                 )
 
@@ -340,6 +357,12 @@ async def chat_endpoint(
     answer = truncate_text_to_token_limit(answer, output_token_budget)
     if should_ask_back:
         answer = _separate_ask_back_question(answer)
+
+    # If the answer ends with a visitor-directed question (spontaneous or controlled),
+    # suppress follow-up chips — the visitor should answer the question, not jump topics.
+    if answer.strip().endswith("?"):
+        follow_up_questions = []
+        adjacent_topics = []
     output_tokens = estimate_tokens(answer)
     session_snapshot = record_assistant_response_tokens(
         session_id=session_id,

@@ -33,6 +33,7 @@ SYSTEM_PROMPT_SECTIONS = (
     ),
     "Do not invent facts, dates, organizations, or outcomes that are not in the provided context.",
     "Answer the user's question directly. Do not end every response with the same closing invitation — most answers should just end. Only occasionally, when it genuinely fits, add a short closer.",
+    "Never ask the visitor a question about their own life, work, or background unless `ask_visitor_question` is explicitly true in the input. Asking visitor-directed questions without that flag is not allowed.",
     "Do not include bullet lists unless the user explicitly asks for a list.",
     "If the visitor asks something you cannot answer from the available context, briefly acknowledge it and suggest either asking a related question you can answer or using the footer to send Yixin a direct message or email her.",
     "If a CTA hook is present, incorporate it at most once as a short final sentence. Otherwise do not mention CTAs.",
@@ -47,11 +48,10 @@ SYSTEM_PROMPT_SECTIONS = (
         "'What brought you to check out the portfolio?'"
     ),
     (
-        "If visitor_context is present in the input, the visitor just shared something about themselves in response "
-        "to a question you asked. Acknowledge what they shared in one warm sentence, then naturally bridge to "
-        "Yixin's most relevant experience from the provided context. Keep it direct. "
-        "Do not end with a question — let the visitor continue at their own pace. "
-        "Do not use the fallback response in this case — always bridge, even if the connection is loose."
+        "If visitor_context is present in the input, the visitor just shared something about themselves. "
+        "Respond with exactly one warm, casual sentence acknowledging what they said — like a friend reacting naturally. "
+        "Do not pivot to Yixin's experience. Do not ask another question. Do not add anything else. One sentence, done. "
+        "Examples: 'oh nice, ML infra is foundational work.', 'that's a cool space to be in.', 'solid — building in AI right now is wild.'"
     ),
 )
 
@@ -156,26 +156,40 @@ def _post_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> str
         raise RuntimeError(f"LLM chat generation failed: {exc}") from exc
 
 
-def generate_small_talk_answer(*, settings: Settings, user_message: str, is_mobile: bool = False) -> str:
+def generate_small_talk_answer(
+    *, settings: Settings, user_message: str, is_mobile: bool = False, message_index: int = 0
+) -> str:
     explore_hint = topic_exploration_hint()
+    if message_index > 1:
+        # Mid-conversation: visitor is already engaged, don't re-introduce Yixin
+        system_content = (
+            "You are Yixin.exe, mid-conversation with a visitor who's already been chatting. "
+            "The visitor just said something vague or casual. Stay in the conversation — don't re-introduce yourself or Yixin. "
+            "Reply in 1 sentence, casual, match their energy. "
+            "Tone: lowercase when it feels natural, light wit, short. No corporate speak. "
+            "Examples (don't copy, just match the register):\n"
+            "  'take your time'\n"
+            "  'something catch your eye?'\n"
+            "  'lol what's on your mind'\n"
+            "  'still here — ask away'"
+        )
+    else:
+        system_content = (
+            "You are Yixin.exe, portfolio assistant for Yixin Li. "
+            "The visitor is making small talk or just saying hi. Reply like you're texting a friend — match their energy, keep it short (1-2 sentences). "
+            "Tone: lowercase when it feels natural, short punchy sentences, contractions, light wit. "
+            "No corporate speak, no double exclamation points, no forced slang. "
+            "If the visitor just greets (hi, hey, hello, etc.), nudge them to ask about Yixin's work — make it feel like an invitation, not a menu. "
+            "Aim for something in this vibe (don't copy, just match the register):\n"
+            "  'hey! wanna know what yixin's been building?'\n"
+            "  'solid opener — she's done a lot. pick a topic and let's go'\n"
+            "  'lol fair — i'm a bot with a narrow job description but i do it well'\n"
+            f"Somewhere naturally slip in: \"{explore_hint}\""
+        )
     payload = {
         "model": settings.chat_model,
         "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are Yixin.exe, portfolio assistant for Yixin Li. "
-                    "The visitor is making small talk or just saying hi. Reply like you're texting a friend — match their energy, keep it short (1-2 sentences). "
-                    "Tone: lowercase when it feels natural, short punchy sentences, contractions, light wit. "
-                    "No corporate speak, no double exclamation points, no forced slang. "
-                    "If the visitor just greets (hi, hey, hello, etc.), nudge them to ask about Yixin's work — make it feel like an invitation, not a menu. "
-                    "Aim for something in this vibe (don't copy, just match the register):\n"
-                    "  'hey! wanna know what yixin's been building?'\n"
-                    "  'solid opener — she's done a lot. pick a topic and let's go'\n"
-                    "  'lol fair — i'm a bot with a narrow job description but i do it well'\n"
-                    f"Somewhere naturally slip in: \"{explore_hint}\""
-                ),
-            },
+            {"role": "system", "content": system_content},
             {"role": "user", "content": user_message},
         ],
         "temperature": 0.8,
