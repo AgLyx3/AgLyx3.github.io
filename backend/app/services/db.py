@@ -106,11 +106,33 @@ def _migrate_sessions(conn, dialect: str) -> None:
             conn.commit()
 
 
+def _update_topic_weights(conn) -> None:
+    new_weights = {
+        "pm":        12.0,
+        "ai-agents": 12.0,
+        "eval":      12.0,
+        "memory":     8.0,
+        "startup":    5.5,
+        "research":   5.5,
+        "eng":        5.0,
+        "access":     3.5,
+        "ethics":     3.0,
+        "photo":      2.5,
+    }
+    for topic_id, weight in new_weights.items():
+        conn.execute(
+            "UPDATE topics SET base_weight = ? WHERE id = ?",
+            (weight, topic_id),
+        )
+    conn.commit()
+
+
 def _migrate_runtime_schema(conn, dialect: str, now: str) -> None:
     _migrate_profile_memories(conn, dialect, now)
     _migrate_experiences(conn, dialect)
     _migrate_topics(conn, dialect)
     _migrate_sessions(conn, dialect)
+    _update_topic_weights(conn)
 
 
 def _migrate_profile_memories(conn, dialect: str, now: str) -> None:
@@ -453,16 +475,16 @@ def _seed_defaults(conn, now: str) -> None:
         conn.executemany(
             "INSERT INTO topics(id,label,description,base_weight,activation,created_at) VALUES(?,?,?,?,?,?)",
             [
-                ("ai-agents", "AI Agents", "Agentic systems, conversational AI features, and multi-step LLM workflows.", 9.0, 0.0, now),
-                ("memory", "Memory", "Memory architecture, retrieval systems, and personalization in AI.", 9.0, 0.0, now),
-                ("eval", "Eval", "Model evaluation, benchmarking, and measurement of AI system quality.", 8.5, 0.0, now),
-                ("startup", "Startup", "Founding, fundraising, and building products from zero.", 6.0, 0.0, now),
-                ("eng", "Engineering", "Software development, tooling, and technical implementation.", 5.5, 0.0, now),
-                ("pm", "Product Management", "Product strategy, PRDs, roadmapping, and cross-functional execution.", 9.0, 0.0, now),
-                ("research", "Research", "Academic research, user studies, and published work.", 6.0, 0.0, now),
-                ("access", "Accessibility", "Accessible design, WCAG, and inclusive product development.", 4.0, 0.0, now),
+                ("ai-agents", "AI Agents", "Agentic systems, conversational AI features, and multi-step LLM workflows.", 12.0, 0.0, now),
+                ("memory", "Memory", "Memory architecture, retrieval systems, and personalization in AI.", 8.0, 0.0, now),
+                ("eval", "Eval", "Model evaluation, benchmarking, and measurement of AI system quality.", 12.0, 0.0, now),
+                ("startup", "Startup", "Founding, fundraising, and building products from zero.", 5.5, 0.0, now),
+                ("eng", "Engineering", "Software development, tooling, and technical implementation.", 5.0, 0.0, now),
+                ("pm", "Product Management", "Product strategy, PRDs, roadmapping, and cross-functional execution.", 12.0, 0.0, now),
+                ("research", "Research", "Academic research, user studies, and published work.", 5.5, 0.0, now),
+                ("access", "Accessibility", "Accessible design, WCAG, and inclusive product development.", 3.5, 0.0, now),
                 ("photo", "Photography", "Stage and event photography.", 2.5, 0.0, now),
-                ("ethics", "Ethics", "AI ethics, governance, and responsible technology.", 3.5, 0.0, now),
+                ("ethics", "Ethics", "AI ethics, governance, and responsible technology.", 3.0, 0.0, now),
             ],
         )
 

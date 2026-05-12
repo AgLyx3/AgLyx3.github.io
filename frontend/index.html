@@ -1021,8 +1021,8 @@
 
     function topicR(activation, minA, maxA, mobile) {
       var t = (activation - minA) / Math.max(maxA - minA, 1e-4);
-      var rMin = mobile ? 32 : 44;
-      var rMax = mobile ? 52 : 70;
+      var rMin = mobile ? 30 : 42;
+      var rMax = mobile ? 62 : 84;
       return rMin + t * (rMax - rMin);
     }
 
