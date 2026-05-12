@@ -1451,8 +1451,29 @@
         }
 
       } catch (err) {
-        var message = err && err.message ? err.message : 'I\'m having trouble connecting right now. Please try again.';
-        textEl.innerHTML = '<p>' + escHtml(message) + '</p>';
+        var isNetworkError = !err.status && (
+          !err.message ||
+          err.message === 'Failed to fetch' ||
+          err.message.toLowerCase().includes('network') ||
+          err.message.toLowerCase().includes('cors')
+        );
+        if (isNetworkError) {
+          textEl.innerHTML = '<p>Connection hiccup — the server may be waking up. Give it a second and try again.</p>';
+          /* Add a retry chip */
+          var retryWrap = document.createElement('div');
+          retryWrap.className = 'followup-chips';
+          var retryBtn = document.createElement('button');
+          retryBtn.className = 'followup-chip';
+          retryBtn.textContent = 'Try again';
+          retryBtn.onclick = function () {
+            msgEl.remove();
+            sendToApi(text, topicId, prefillOrigin);
+          };
+          retryWrap.appendChild(retryBtn);
+          msgEl.appendChild(retryWrap);
+        } else {
+          textEl.innerHTML = '<p>' + escHtml(err && err.message ? err.message : 'Something went wrong. Please try again.') + '</p>';
+        }
       } finally {
         isLoading = false;
         chatSend.disabled = false;
