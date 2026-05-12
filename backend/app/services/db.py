@@ -97,12 +97,28 @@ def _rename_table(conn, dialect: str, old_name: str, new_name: str) -> None:
 
 def _migrate_sessions(conn, dialect: str) -> None:
     current = _table_columns(conn, dialect, "sessions")
-    for col, stmt in [
-        ("last_ask_back_round", "ALTER TABLE sessions ADD COLUMN last_ask_back_round INTEGER NOT NULL DEFAULT 0"),
-        ("ask_back_pending", "ALTER TABLE sessions ADD COLUMN ask_back_pending INTEGER NOT NULL DEFAULT 0"),
-    ]:
-        if col not in current:
-            conn.execute(stmt)
+
+    if "last_ask_back_round" not in current:
+        conn.execute("ALTER TABLE sessions ADD COLUMN last_ask_back_round INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+
+    if "ask_back_pending" not in current:
+        if dialect == "postgres":
+            conn.execute("ALTER TABLE sessions ADD COLUMN ask_back_pending BOOLEAN NOT NULL DEFAULT FALSE")
+        else:
+            conn.execute("ALTER TABLE sessions ADD COLUMN ask_back_pending INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    elif dialect == "postgres":
+        # Fix: column may have been added as INTEGER instead of BOOLEAN by an earlier migration
+        row = conn.execute(
+            "SELECT data_type FROM information_schema.columns "
+            "WHERE table_name = 'sessions' AND column_name = 'ask_back_pending'"
+        ).fetchone()
+        if row and (row[0] if isinstance(row, tuple) else row["data_type"]) == "integer":
+            conn.execute(
+                "ALTER TABLE sessions ALTER COLUMN ask_back_pending TYPE BOOLEAN "
+                "USING ask_back_pending::BOOLEAN"
+            )
             conn.commit()
 
 
