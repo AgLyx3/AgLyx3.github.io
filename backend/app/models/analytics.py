@@ -120,6 +120,12 @@ EVENT_PAYLOAD_REQUIREMENTS: dict[AnalyticsEventName, _EventPayloadRequirements] 
     "schedule_time_opened": _EventPayloadRequirements(
         required_fields=("message_count_before_action",)
     ),
+    "visitor_ask_back_answered": _EventPayloadRequirements(
+        required_fields=("response_text", "message_index")
+    ),
+    "chat_ask_back_sent": _EventPayloadRequirements(
+        required_fields=("message_index",)
+    ),
 }
 
 
