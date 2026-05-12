@@ -115,10 +115,12 @@ def _migrate_sessions(conn, dialect: str) -> None:
             "WHERE table_name = 'sessions' AND column_name = 'ask_back_pending'"
         ).fetchone()
         if row and (row[0] if isinstance(row, tuple) else row["data_type"]) == "integer":
+            conn.execute("ALTER TABLE sessions ALTER COLUMN ask_back_pending DROP DEFAULT")
             conn.execute(
                 "ALTER TABLE sessions ALTER COLUMN ask_back_pending TYPE BOOLEAN "
-                "USING ask_back_pending::BOOLEAN"
+                "USING CASE WHEN ask_back_pending = 0 THEN FALSE ELSE TRUE END"
             )
+            conn.execute("ALTER TABLE sessions ALTER COLUMN ask_back_pending SET DEFAULT FALSE")
             conn.commit()
 
 
