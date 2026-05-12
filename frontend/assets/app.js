@@ -6,7 +6,7 @@
     backendBaseUrl:
       (window.APP_CONFIG && window.APP_CONFIG.backendBaseUrl) ||
       localStorage.getItem("backendBaseUrl") ||
-      "https://aglyx3githubio-production.up.railway.app",
+      "https://backend-green-zeta-37.vercel.app",
   };
 
   function endpoint(path) {
