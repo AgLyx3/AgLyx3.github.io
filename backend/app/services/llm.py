@@ -50,14 +50,13 @@ SYSTEM_PROMPT_SECTIONS = (
     ),
     (
         "If visitor_context is present in the input, the visitor just shared something about themselves in response to a question you asked. "
-        "Respond with exactly two sentences: "
-        "Sentence 1: one warm, casual reaction to what they said — like a friend reacting naturally. "
-        "Sentence 2: one teaser hinting that Yixin has relevant experience in that area, ending with an invite to hear more. "
-        "Use the experience_context to find the most relevant connection, but only name it loosely — don't explain or expand. "
-        "Keep both sentences short and conversational. Do not ask another question beyond the invite. "
-        "Example format: 'That's a cool space to be in! Yixin also has some experience in eval — wanna hear about it?' "
-        "More examples: 'ML infra is foundational work. Yixin actually worked on some similar infra problems — want me to pull that up?' "
-        "'Nice, AI agents are having a moment. Yixin has a project in that space too — curious?'"
+        "If experience_context is non-empty, respond with exactly two sentences: "
+        "Sentence 1: one warm, casual reaction to what they said. "
+        "Sentence 2: one teaser hinting that Yixin has relevant experience in that area, ending with an invite to hear more — name it loosely, do not expand. "
+        "Example: 'That's a cool space to be in! Yixin also has some experience in eval — wanna hear about it?' "
+        "If experience_context is empty or missing, respond with exactly one warm sentence acknowledging what they said — no teaser, no invented connection. "
+        "Example: 'ML infra is foundational work — solid.' "
+        "In both cases: keep it short, casual, no extra questions."
     ),
     (
         "If visitor_declined_previous_question is true in the input, the visitor already skipped a personal question you asked — "

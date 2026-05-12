@@ -175,8 +175,6 @@ async def chat_endpoint(
     output_token_budget = min(settings.max_output_tokens_per_response, remaining_token_budget)
 
     is_ask_back_response = session_snapshot.ask_back_pending
-    if is_ask_back_response:
-        clear_ask_back_pending(session_id)
 
     original_route = route_query(clean_message)
     route = "memory" if is_ask_back_response else original_route
@@ -272,8 +270,8 @@ async def chat_endpoint(
                 experience_result.top_score >= settings.retrieval_strong_top_score
                 or score_gap >= settings.retrieval_min_score_gap
             )
-            if is_ask_back_response:
-                experience_passes = True  # always bridge, never fall back on visitor answer turns
+            if is_ask_back_response and visitor_context and experience_result.top_score >= settings.retrieval_min_top_score:
+                experience_passes = True  # bridge only when retrieval has something relevant
 
             profile_passes = (
                 profile_result.top_score >= settings.profile_retrieval_min_top_score
@@ -366,6 +364,11 @@ async def chat_endpoint(
 
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    # Clear only after a successful LLM response — if the LLM failed above, the
+    # pending state is preserved so the next message is still treated as the visitor reply.
+    if is_ask_back_response:
+        clear_ask_back_pending(session_id)
 
     if message_index <= 3 and is_general_work_query(clean_message):
         answer = _append_topic_hint(answer, is_mobile=is_mobile)
