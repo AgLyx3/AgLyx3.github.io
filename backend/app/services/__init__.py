@@ -7,7 +7,7 @@ from .cta_rules import detect_cta_rejection, should_offer_cta
 from .db import init_db
 from .followups import build_adjacent_topics, build_follow_up_questions
 from .llm import MEMORY_FALLBACK_RESPONSE, SMALL_TALK_RESPONSE, generate_chat_answer, generate_small_talk_answer, topic_exploration_hint
-from .query_router import ChatRoute, route_query
+from .query_router import ChatRoute, is_visitor_statement, route_query
 from .retrieval import (
     CombinedMemoryRetrievalResult,
     ProfileRetrievalResult,
@@ -18,7 +18,7 @@ from .retrieval import (
     profile_retrieve,
 )
 from .safety import RateLimiter, enforce_request_size, estimate_tokens, sanitize_text, truncate_text_to_token_limit
-from .session import clear_ask_back_pending, ensure_session, record_ask_back, record_assistant_response_tokens, record_user_message, snooze_ask_back, touch_session
+from .session import clear_ask_back_pending, ensure_session, record_ask_back, record_assistant_response_tokens, record_user_message, snooze_ask_back, touch_session, update_visitor_profile
 from .topic_ops import (
     create_topic_memory,
     ingest_memory,
@@ -48,6 +48,8 @@ __all__ = [
     "ensure_session",
     "record_ask_back",
     "snooze_ask_back",
+    "is_visitor_statement",
+    "update_visitor_profile",
     "init_db",
     "enforce_request_size",
     "estimate_tokens",

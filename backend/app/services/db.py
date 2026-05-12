@@ -108,6 +108,11 @@ def _migrate_sessions(conn, dialect: str) -> None:
         else:
             conn.execute("ALTER TABLE sessions ADD COLUMN ask_back_pending INTEGER NOT NULL DEFAULT 0")
         conn.commit()
+
+    if "visitor_profile" not in current:
+        conn.execute("ALTER TABLE sessions ADD COLUMN visitor_profile TEXT")
+        conn.commit()
+
     elif dialect == "postgres":
         # Fix: column may have been added as INTEGER instead of BOOLEAN by an earlier migration
         row = conn.execute(
@@ -368,7 +373,8 @@ def _schema_script_for(dialect: str) -> str:
                 cta_rejected BOOLEAN NOT NULL DEFAULT FALSE,
                 active_topic_id TEXT,
                 last_ask_back_round INTEGER NOT NULL DEFAULT 0,
-                ask_back_pending BOOLEAN NOT NULL DEFAULT FALSE
+                ask_back_pending BOOLEAN NOT NULL DEFAULT FALSE,
+                visitor_profile TEXT
             );
             CREATE TABLE IF NOT EXISTS outbound_messages (
                 message_id BIGSERIAL PRIMARY KEY,
@@ -467,7 +473,8 @@ def _schema_script_for(dialect: str) -> str:
                 cta_rejected INTEGER NOT NULL DEFAULT 0,
                 active_topic_id TEXT,
                 last_ask_back_round INTEGER NOT NULL DEFAULT 0,
-                ask_back_pending INTEGER NOT NULL DEFAULT 0
+                ask_back_pending INTEGER NOT NULL DEFAULT 0,
+                visitor_profile TEXT
             );
             CREATE TABLE IF NOT EXISTS outbound_messages (
                 message_id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -58,6 +58,12 @@ SYSTEM_PROMPT_SECTIONS = (
         "they want to stay focused on Yixin's work. Do not ask them any visitor-directed questions in this response, "
         "even if ask_visitor_question is true. Treat ask_visitor_question as false."
     ),
+    (
+        "If visitor_profile is present in the input, the visitor has shared something about themselves earlier in the conversation. "
+        "Use it to make your answer feel more tailored — you can make a brief, natural connection when it genuinely fits "
+        "(e.g. 'since you work in ML infra, Yixin's eval work might be relevant'). "
+        "Don't force it and don't repeat it back verbatim. Keep it subtle."
+    ),
 )
 
 
@@ -91,6 +97,7 @@ def build_portfolio_chat_user_prompt(
     ask_visitor_question: bool = False,
     visitor_context: str | None = None,
     visitor_declined_previous_question: bool = False,
+    visitor_profile: str | None = None,
 ) -> str:
     """Build the user prompt as a single JSON payload for maintainability."""
 
@@ -142,6 +149,8 @@ def build_portfolio_chat_user_prompt(
         prompt_payload["visitor_context"] = visitor_context
     if visitor_declined_previous_question:
         prompt_payload["visitor_declined_previous_question"] = True
+    if visitor_profile is not None:
+        prompt_payload["visitor_profile"] = visitor_profile
     return json.dumps(prompt_payload, ensure_ascii=True, indent=2)
 
 
@@ -221,6 +230,7 @@ def generate_chat_answer(
     ask_visitor_question: bool = False,
     visitor_context: str | None = None,
     visitor_declined_previous_question: bool = False,
+    visitor_profile: str | None = None,
 ) -> str:
     profile_context = profile_context or []
     experience_context = experience_context or []
@@ -247,6 +257,7 @@ def generate_chat_answer(
                     ask_visitor_question=ask_visitor_question,
                     visitor_context=visitor_context,
                     visitor_declined_previous_question=visitor_declined_previous_question,
+                    visitor_profile=visitor_profile,
                 ),
             },
         ],
