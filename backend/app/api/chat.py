@@ -222,8 +222,17 @@ async def chat_endpoint(
             experience_result = None
 
         else:  # "memory"
+            # On Turn B (visitor answering the bot's question), their personal answer
+            # won't match Yixin's experience embeddings. Blend the active topic into
+            # the query so retrieval actually finds relevant Yixin context.
+            if is_ask_back_response and visitor_context:
+                topic_hint = (payload.active_topic_id or "").replace("-", " ")
+                retrieval_query = f"{topic_hint} {clean_message}".strip() if topic_hint else clean_message
+            else:
+                retrieval_query = clean_message
+
             combined_result = combined_memory_retrieve(
-                clean_message,
+                retrieval_query,
                 profile_limit=settings.profile_retrieval_top_k,
                 experience_limit=settings.retrieval_top_k,
             )
@@ -234,8 +243,8 @@ async def chat_endpoint(
                 experience_result.top_score >= settings.retrieval_strong_top_score
                 or score_gap >= settings.retrieval_min_score_gap
             )
-            if is_ask_back_response and experience_result.context_blocks:
-                experience_passes = True
+            if is_ask_back_response:
+                experience_passes = True  # always bridge, never fall back on visitor answer turns
 
             profile_passes = (
                 profile_result.top_score >= settings.profile_retrieval_min_top_score
