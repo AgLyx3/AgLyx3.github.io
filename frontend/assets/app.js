@@ -20,6 +20,28 @@
       .replaceAll(">", "&gt;");
   }
 
+  function linkify(value) {
+    return value.replace(
+      /(?<![="'])(https?:\/\/[^\s<>"']+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+  }
+
+  function formatAssistantHtml(value) {
+    const escaped = escapeHtml(value);
+    const withBold = escaped.replace(/\*\*([^*\n][\s\S]*?)\*\*/g, (_, inner) => {
+      const trimmed = inner.trim();
+      return trimmed ? `<strong>${trimmed}</strong>` : `**${inner}**`;
+    });
+    const paragraphs = withBold
+      .split(/\n\n+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    return paragraphs.length
+      ? paragraphs.map((part) => `<p>${linkify(part)}</p>`).join("")
+      : `<p>${linkify(withBold)}</p>`;
+  }
+
   function createEl(tag, className, text) {
     const el = document.createElement(tag);
     if (className) el.className = className;
@@ -220,6 +242,7 @@
           assistantNode.textContent += token;
           messages.scrollTop = messages.scrollHeight;
         });
+        assistantNode.innerHTML = formatAssistantHtml(result.text || assistantNode.textContent);
 
         const metadata = normalizeMetadata(result.metadata);
         renderChips(citationsEl, metadata.citations, formatCitation);

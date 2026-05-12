@@ -141,3 +141,49 @@ def test_general_early_query_appends_topic_hint():
     assert '"token": "right."' in body or '"token": "right "' in body
     assert '"token": "background "' in body
     assert '"token": "bubbles "' in body or '"token": "bubble "' in body
+
+
+def test_ask_back_question_keeps_paragraph_break_in_stream():
+    snapshot = _snapshot("ask-back-session")
+    message_result = SessionMessageRecordResult(
+        session=snapshot,
+        message_index_in_session=2,
+        first_message_recorded=False,
+        depth_5_reached=False,
+    )
+    retrieval_result = CombinedMemoryRetrievalResult(
+        profile=ProfileRetrievalResult(
+            context_blocks=["current role: Product Manager at Continua AI"],
+            top_score=0.5,
+            matches=[],
+        ),
+        experience=RetrievalResult(
+            active_topics=["pm"],
+            citations=[],
+            context_blocks=[],
+            top_score=0.0,
+            second_score=0.0,
+            topics=[],
+            edges=[],
+        ),
+    )
+
+    with patch("app.api.chat.record_user_message", return_value=message_result), \
+         patch("app.api.chat.touch_session", return_value=snapshot), \
+         patch("app.api.chat.combined_memory_retrieve", return_value=retrieval_result), \
+         patch("app.api.chat.log_analytics_event"), \
+         patch("app.api.chat.record_assistant_response_tokens", return_value=snapshot), \
+         patch("app.api.chat.generate_chat_answer", return_value="Yixin is a product manager at Continua AI.\n\nWhat kind of AI work are you exploring these days?"), \
+         patch("app.api.chat.record_ask_back"), \
+         patch("app.api.chat.clear_ask_back_pending"), \
+         patch("app.api.chat.should_offer_cta", return_value=None), \
+         patch("app.api.chat.update_activation"), \
+         patch("app.api.chat.detect_cta_rejection", return_value=False):
+        response = asyncio.run(chat_endpoint(
+            ChatRequest(message="what does she do", session_id="ask-back-session"),
+            _request(),
+            get_settings(),
+        ))
+
+    body = asyncio.run(_read_body(response))
+    assert '\\n\\n' in body

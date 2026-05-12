@@ -48,7 +48,7 @@ def estimate_tokens(value: str) -> int:
 
 
 def truncate_text_to_token_limit(value: str, max_tokens: int) -> str:
-    cleaned = sanitize_text(value)
+    cleaned = _sanitize_model_text(value)
     if max_tokens <= 0 or not cleaned:
         return ""
     if estimate_tokens(cleaned) <= max_tokens:
@@ -62,6 +62,15 @@ def truncate_text_to_token_limit(value: str, max_tokens: int) -> str:
             break
         kept.append(word)
     return " ".join(kept).strip()
+
+
+def _sanitize_model_text(value: str) -> str:
+    """Normalize model output while preserving paragraph breaks."""
+    cleaned = _SAFE_TEXT_RE.sub("", value.replace("\r\n", "\n").replace("\r", "\n"))
+    paragraphs = re.split(r"\n\s*\n+", cleaned)
+    normalized = [re.sub(r"[ \t]+", " ", part).strip() for part in paragraphs]
+    kept = [part for part in normalized if part]
+    return "\n\n".join(kept)
 
 
 async def enforce_request_size(request: Request, max_size_bytes: int) -> None:
