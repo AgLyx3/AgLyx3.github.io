@@ -47,6 +47,20 @@ router = APIRouter(tags=["chat"])
 chat_rate_limiter = RateLimiter(get_settings().chat_rate_limit_per_minute)
 
 
+def _separate_ask_back_question(answer: str) -> str:
+    """Ensure a trailing ask-back question is its own paragraph."""
+    stripped = answer.strip()
+    if "\n\n" in stripped or not stripped.endswith("?"):
+        return stripped
+    for i in range(len(stripped) - 2, -1, -1):
+        if stripped[i] in ".!?" and stripped[i + 1] == " ":
+            prefix = stripped[: i + 1].rstrip()
+            question = stripped[i + 1 :].strip()
+            if prefix and question.endswith("?"):
+                return prefix + "\n\n" + question
+    return stripped
+
+
 def _append_topic_hint(answer: str, *, is_mobile: bool) -> str:
     hint = topic_exploration_hint(is_mobile=is_mobile)
     if hint in answer:
@@ -315,6 +329,8 @@ async def chat_endpoint(
         answer = _append_topic_hint(answer, is_mobile=is_mobile)
 
     answer = truncate_text_to_token_limit(answer, output_token_budget)
+    if should_ask_back:
+        answer = _separate_ask_back_question(answer)
     output_tokens = estimate_tokens(answer)
     session_snapshot = record_assistant_response_tokens(
         session_id=session_id,
