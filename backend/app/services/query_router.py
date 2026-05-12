@@ -27,28 +27,6 @@ _SMALL_TALK_RE = re.compile(
     re.IGNORECASE,
 )
 
-_VISITOR_STATEMENT_RE = re.compile(
-    r"^(i\s+(am|'m|work|do|have|built|build|study|use|run|make|design|like|love|focus|specialize|help|lead|manage|create|develop|joined|started|co-founded|founded)|"
-    r"i'(ve|d|ll)\s+\w+|"
-    r"we\s+(are|'re|work|build|use|run|focus|specialize)|"
-    r"my\s+(company|team|project|work|job|role|startup|background|experience|focus|name)|"
-    r"our\s+(team|company|product|startup|work|project))",
-    re.IGNORECASE,
-)
-
-_YIXIN_RE = re.compile(r"\b(yixin|she\b|her\b)", re.IGNORECASE)
-
-
-def is_visitor_statement(query: str) -> bool:
-    """True if the message looks like the visitor sharing something about themselves."""
-    stripped = query.strip()
-    if stripped.endswith("?"):
-        return False
-    if _YIXIN_RE.search(stripped):
-        return False
-    return bool(_VISITOR_STATEMENT_RE.match(stripped))
-
-
 def route_query(query: str) -> ChatRoute:
     """Classify a query into a top-level route without calling an LLM."""
     lower = query.lower().strip()

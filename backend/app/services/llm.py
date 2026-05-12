@@ -9,6 +9,7 @@ from urllib import error, request
 
 from app.config import Settings
 from app.models import Citation, CTAMention, TopicSuggestion
+from app.models.chat import ChatMessage
 
 MEMORY_FALLBACK_RESPONSE = (
     "I don't have enough real context to answer that confidently, and I'm not going to make something up. Try a different angle, or use the footer to send Yixin a direct message or email her."
@@ -59,10 +60,9 @@ SYSTEM_PROMPT_SECTIONS = (
         "even if ask_visitor_question is true. Treat ask_visitor_question as false."
     ),
     (
-        "If visitor_profile is present in the input, the visitor has shared something about themselves earlier in the conversation. "
-        "Use it to make your answer feel more tailored — you can make a brief, natural connection when it genuinely fits "
-        "(e.g. 'since you work in ML infra, Yixin's eval work might be relevant'). "
-        "Don't force it and don't repeat it back verbatim. Keep it subtle."
+        "Conversation history is provided as prior user/assistant message turns before the current JSON payload. "
+        "Use it to stay consistent with what you've already said, remember what the visitor has shared, "
+        "and avoid repeating yourself. The history is plain text — the current turn is the JSON payload."
     ),
 )
 
@@ -97,7 +97,6 @@ def build_portfolio_chat_user_prompt(
     ask_visitor_question: bool = False,
     visitor_context: str | None = None,
     visitor_declined_previous_question: bool = False,
-    visitor_profile: str | None = None,
 ) -> str:
     """Build the user prompt as a single JSON payload for maintainability."""
 
@@ -149,8 +148,6 @@ def build_portfolio_chat_user_prompt(
         prompt_payload["visitor_context"] = visitor_context
     if visitor_declined_previous_question:
         prompt_payload["visitor_declined_previous_question"] = True
-    if visitor_profile is not None:
-        prompt_payload["visitor_profile"] = visitor_profile
     return json.dumps(prompt_payload, ensure_ascii=True, indent=2)
 
 
@@ -174,11 +171,11 @@ def _post_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> str
 
 
 def generate_small_talk_answer(
-    *, settings: Settings, user_message: str, is_mobile: bool = False, message_index: int = 0
+    *, settings: Settings, user_message: str, is_mobile: bool = False, message_index: int = 0,
+    history: list[ChatMessage] | None = None,
 ) -> str:
     explore_hint = topic_exploration_hint()
     if message_index > 1:
-        # Mid-conversation: visitor is already engaged, don't re-introduce Yixin
         system_content = (
             "You are Yixin.exe, mid-conversation with a visitor who's already been chatting. "
             "The visitor just said something vague or casual. Stay in the conversation — don't re-introduce yourself or Yixin. "
@@ -203,15 +200,17 @@ def generate_small_talk_answer(
             "  'lol fair — i'm a bot with a narrow job description but i do it well'\n"
             f"Somewhere naturally slip in: \"{explore_hint}\""
         )
+    messages: list[dict[str, str]] = [{"role": "system", "content": system_content}]
+    for msg in (history or []):
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": user_message})
     payload = {
         "model": settings.chat_model,
-        "messages": [
-            {"role": "system", "content": system_content},
-            {"role": "user", "content": user_message},
-        ],
+        "messages": messages,
         "temperature": 0.8,
     }
     return _post_chat_completion(settings=settings, payload=payload)
+
 
 def generate_chat_answer(
     *,
@@ -230,37 +229,37 @@ def generate_chat_answer(
     ask_visitor_question: bool = False,
     visitor_context: str | None = None,
     visitor_declined_previous_question: bool = False,
-    visitor_profile: str | None = None,
+    history: list[ChatMessage] | None = None,
 ) -> str:
     profile_context = profile_context or []
     experience_context = experience_context or []
     if not profile_context and not experience_context and not visitor_context:
         return MEMORY_FALLBACK_RESPONSE
 
+    current_user_content = build_portfolio_chat_user_prompt(
+        user_message=user_message,
+        profile_context=profile_context,
+        experience_context=experience_context,
+        citations=citations,
+        active_topic_id=active_topic_id,
+        prefill_origin=prefill_origin,
+        message_index=message_index,
+        follow_up_questions=follow_up_questions,
+        adjacent_topics=adjacent_topics,
+        cta_mention=cta_mention,
+        ask_visitor_question=ask_visitor_question,
+        visitor_context=visitor_context,
+        visitor_declined_previous_question=visitor_declined_previous_question,
+    )
+
+    messages: list[dict[str, str]] = [{"role": "system", "content": portfolio_chat_system_prompt()}]
+    for msg in (history or []):
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": current_user_content})
+
     payload = {
         "model": settings.chat_model,
-        "messages": [
-            {"role": "system", "content": portfolio_chat_system_prompt()},
-            {
-                "role": "user",
-                "content": build_portfolio_chat_user_prompt(
-                    user_message=user_message,
-                    profile_context=profile_context,
-                    experience_context=experience_context,
-                    citations=citations,
-                    active_topic_id=active_topic_id,
-                    prefill_origin=prefill_origin,
-                    message_index=message_index,
-                    follow_up_questions=follow_up_questions,
-                    adjacent_topics=adjacent_topics,
-                    cta_mention=cta_mention,
-                    ask_visitor_question=ask_visitor_question,
-                    visitor_context=visitor_context,
-                    visitor_declined_previous_question=visitor_declined_previous_question,
-                    visitor_profile=visitor_profile,
-                ),
-            },
-        ],
+        "messages": messages,
         "temperature": 0.4,
     }
     if max_output_tokens is not None:

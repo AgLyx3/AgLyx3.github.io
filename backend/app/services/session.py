@@ -31,7 +31,6 @@ def _row_to_snapshot(row) -> SessionSnapshot:
         active_topic_id=row["active_topic_id"],
         last_ask_back_round=int(row["last_ask_back_round"] or 0),
         ask_back_pending=bool(row["ask_back_pending"]),
-        visitor_profile=row["visitor_profile"] if row["visitor_profile"] else None,
     )
 
 
@@ -258,11 +257,3 @@ def snooze_ask_back(session_id: str, current_round: int) -> None:
         conn.commit()
 
 
-def update_visitor_profile(session_id: str, statement: str) -> None:
-    """Store a visitor self-disclosure statement for use in future LLM responses."""
-    with get_conn() as conn:
-        conn.execute(
-            "UPDATE sessions SET visitor_profile = ? WHERE session_id = ?",
-            (statement[:500], session_id),
-        )
-        conn.commit()

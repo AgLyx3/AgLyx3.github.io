@@ -57,7 +57,6 @@ class SessionSnapshot(BaseModel):
     active_topic_id: str | None = None
     last_ask_back_round: int = Field(default=0, ge=0)
     ask_back_pending: bool = False
-    visitor_profile: str | None = None
 
 
 class SessionEnsureRequest(BaseModel):

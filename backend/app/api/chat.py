@@ -29,7 +29,6 @@ from app.services import (
     generate_chat_answer,
     generate_small_talk_answer,
     is_general_work_query,
-    is_visitor_statement,
     log_memory_gap,
     log_analytics_event,
     record_ask_back,
@@ -43,7 +42,6 @@ from app.services import (
     touch_session,
     truncate_text_to_token_limit,
     update_activation,
-    update_visitor_profile,
 )
 
 router = APIRouter(tags=["chat"])
@@ -204,15 +202,6 @@ async def chat_endpoint(
     if visitor_declined_ask_back:
         snooze_ask_back(session_id, session_update.message_index_in_session)
 
-    # Capture visitor self-disclosure (e.g. "I work in ML infra") for session-level personalisation.
-    # We update on every matching turn so the latest statement wins.
-    if is_visitor_statement(clean_message):
-        update_visitor_profile(session_id, clean_message)
-    current_visitor_profile: str | None = (
-        clean_message if is_visitor_statement(clean_message)
-        else session_snapshot.visitor_profile
-    )
-
     current_round = session_update.message_index_in_session
     should_ask_back = (
         not is_ask_back_response
@@ -242,6 +231,7 @@ async def chat_endpoint(
                     user_message=clean_message,
                     is_mobile=is_mobile,
                     message_index=message_index,
+                    history=payload.history or [],
                 )
             )
             profile_context: list[str] = []
@@ -354,7 +344,7 @@ async def chat_endpoint(
                         ask_visitor_question=should_ask_back,
                         visitor_context=visitor_context,
                         visitor_declined_previous_question=visitor_declined_ask_back,
-                        visitor_profile=current_visitor_profile,
+                        history=payload.history or [],
                     )
                 )
             else:
@@ -365,6 +355,7 @@ async def chat_endpoint(
                         user_message=clean_message,
                         is_mobile=is_mobile,
                         message_index=message_index,
+                        history=payload.history or [],
                     )
                 )
 
