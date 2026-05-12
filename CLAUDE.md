@@ -12,19 +12,28 @@ Check the golden path visually — do not rely on code review alone for UI/front
 
 ## Deployment
 
-The frontend is a **separate Vercel project** inside the `frontend/` subdirectory.
+The frontend is a **separate Vercel project** (project ID `prj_0VQlazim8jLvy124ntEtUx4Ro97C`, `rootDirectory: frontend`).
 Production domain: **www.yixinli.me**
 
-To deploy frontend changes:
+The backend is a **separate Vercel project** (`prj_48EU70YMbbmK5kFo7FDUQJa5xO1k`) at **https://backend-green-zeta-37.vercel.app**. DB is Neon Postgres.
+
+To deploy **frontend** changes (must run from repo root with project env vars — rootDirectory is set to `frontend` on the project):
 
 ```bash
-cd /Users/lyx_computer/Desktop/AgLyx3.github.io/frontend && vercel deploy --prod
+cd /Users/lyx_computer/Desktop/AgLyx3.github.io && \
+VERCEL_PROJECT_ID=prj_0VQlazim8jLvy124ntEtUx4Ro97C VERCEL_ORG_ID=team_DmPBnKVz79gxdj2KLxnfPetA vercel deploy --prod
+```
+
+To deploy **backend** changes:
+
+```bash
+cd /Users/lyx_computer/Desktop/AgLyx3.github.io/backend && vercel deploy --prod
 ```
 
 Then verify the live site has the new code:
 
 ```bash
-curl -s "https://www.yixinli.me" | grep -o "TOPICS\|<some-unique-string>"
+curl -s "https://www.yixinli.me/assets/app.js" | grep "backend-green"
 ```
 
 Do not tell the user something is deployed until `vercel deploy --prod` finishes and curl confirms the new code is live.
