@@ -180,9 +180,13 @@ async def chat_endpoint(
     original_route = route_query(clean_message)
     route = "memory" if is_ask_back_response else original_route
 
-    # Only treat as a visitor answer if they actually responded personally (not a Yixin query).
-    # If original_route == "memory" they're asking about Yixin — treat as normal query, no bridging.
-    visitor_context: str | None = clean_message if (is_ask_back_response and original_route != "memory") else None
+    # Treat as visitor answer if ask_back was pending AND message doesn't mention Yixin/she/her.
+    # Checking for Yixin mentions is more accurate than checking the route — personal statements
+    # like "i do ml infra" route to "memory" too, but are not Yixin queries.
+    _yixin_mention = re.compile(r"\b(yixin|she|her)\b", re.IGNORECASE)
+    visitor_context: str | None = (
+        clean_message if (is_ask_back_response and not _yixin_mention.search(clean_message)) else None
+    )
 
     if is_ask_back_response and visitor_context:
         log_analytics_event(
