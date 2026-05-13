@@ -956,15 +956,15 @@
     /* ── Topic data ── */
     var TOPICS = [
       { id: 'ai-agents', label: 'AI Agents',                  activation: 8.5 },
-      { id: 'memory',    label: 'Memory Systems',             activation: 9.2 },
-      { id: 'eval',      label: 'Evaluation & Benchmarking',  activation: 6.8 },
-      { id: 'startup',   label: 'Startup & Entrepreneurship', activation: 7.4 },
-      { id: 'eng',       label: 'Software Development',       activation: 8.0 },
-      { id: 'pm',        label: 'Product Management',         activation: 7.6 },
+      { id: 'memory',    label: 'Memory Systems',             activation: 6.5 },
+      { id: 'eval',      label: 'Evaluation & Benchmarking',  activation: 8.0 },
+      { id: 'startup',   label: 'Startup & Entrepreneurship', activation: 6.2 },
+      { id: 'eng',       label: 'Software Development',       activation: 6.0 },
+      { id: 'pm',        label: 'Product Management',         activation: 8.3 },
       { id: 'research',  label: 'Academic Research',          activation: 6.5 },
       { id: 'access',    label: 'Accessibility',              activation: 5.8 },
       { id: 'photo',     label: 'Photography & Videography',  activation: 4.9 },
-      { id: 'ethics',    label: 'AI Ethics & Philosophy',     activation: 6.0 },
+      { id: 'ethics',    label: 'AI Ethics & Philosophy',     activation: 6.8 },
     ];
 
     var PREFILLS = {
@@ -1011,7 +1011,10 @@
       smoke:  { fill: '214,204,194', text: '109,98,89' },
       dune:   { fill: '223,212,198', text: '116,104,88' },
     };
-    var HUE_CYCLE = ['amber','pearl','dune','mist','cream','mirage','smoke','blue','slate'];
+    /* professional work → blue family; personal/other → warm family */
+    var PROFESSIONAL_IDS = { 'ai-agents': true, 'memory': true, 'eval': true, 'startup': true, 'eng': true, 'pm': true };
+    var BLUE_CYCLE = ['blue','mirage','mist','slate'];
+    var WARM_CYCLE = ['amber','dune','smoke','cream'];
 
     var simulation = null;
     var nodeGroupsSel = null;
@@ -1075,6 +1078,7 @@
       /* Mobile: place bubbles in top/bottom strips so they never overlap the center text */
       var mobTopY = H * 0.20, mobBotY = H * 0.76;
 
+      var blueCount = 0, warmCount = 0;
       allNodes = topics.map(function (t, i) {
         var activation = Number(t.activation) || 0;
         var angle = (Math.PI * 2 * i) / Math.max(topics.length, 1);
@@ -1084,12 +1088,14 @@
         var initY = mob
           ? (bandGroup === 'top' ? mobTopY : mobBotY) + (Math.random() - 0.5) * H * 0.08
           : cy + Math.sin(angle) * ringR;
+        var isPro = !!PROFESSIONAL_IDS[String(t.id)];
+        var hue = isPro ? BLUE_CYCLE[blueCount++ % BLUE_CYCLE.length] : WARM_CYCLE[warmCount++ % WARM_CYCLE.length];
         return {
           id: String(t.id),
           label: t.label || 'Topic',
           radius: r,
           bandGroup: bandGroup,
-          hue: HUE_CYCLE[i % HUE_CYCLE.length],
+          hue: hue,
           sideGroup: i % 2 === 0 ? 'right' : 'left',
           x: initX,
           y: initY,
