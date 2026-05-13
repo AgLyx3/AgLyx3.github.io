@@ -1,2 +1,5 @@
--r backend/requirements.txt
-
+fastapi
+uvicorn
+psycopg[binary]
+python-dotenv
+resend
