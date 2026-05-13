@@ -14,6 +14,7 @@ from app.models import (
     ChatFinalMetadata,
     ChatRequest,
     ChatSessionState,
+    MediaItem,
     SessionMessageRecordRequest,
     SessionTouchRequest,
 )
@@ -32,6 +33,8 @@ from app.services import (
     is_general_work_query,
     log_memory_gap,
     log_analytics_event,
+    mark_media_shown,
+    pick_unshown_media,
     record_ask_back,
     record_assistant_response_tokens,
     record_user_message,
@@ -247,6 +250,7 @@ async def chat_endpoint(
             memory_sources: list[str] = []
             use_memory = False
             experience_result = None
+            media_item = None
 
         else:  # "memory"
             # On Turn B (visitor answering the bot's question), their personal answer
@@ -300,6 +304,11 @@ async def chat_endpoint(
             use_memory = bool(memory_sources) or is_ask_back_response
             citations = experience_result.citations if experience_passes else []
             active_topics = experience_result.active_topics if experience_passes else []
+            media_item = pick_unshown_media(
+                session_id,
+                experience_ids=[c.experience_id for c in citations],
+                profile_memory_ids=[m.memory_id for m in profile_result.matches] if profile_passes else [],
+            )
 
             if should_ask_back:
                 follow_up_questions = []
@@ -369,6 +378,13 @@ async def chat_endpoint(
     # pending state is preserved so the next message is still treated as the visitor reply.
     if is_ask_back_response:
         clear_ask_back_pending(session_id)
+
+    if media_item is not None:
+        mark_media_shown(
+            session_id,
+            media_item["id"],
+            source=media_item.get("source", "experience"),
+        )
 
     if message_index <= 3 and is_general_work_query(clean_message):
         answer = _append_topic_hint(answer, is_mobile=is_mobile)
@@ -468,6 +484,7 @@ async def chat_endpoint(
             route=route,
             memory_sources=memory_sources,
             response_mode=response_mode,
+            media=MediaItem(**media_item) if media_item else None,
         )
         yield f"event: final\ndata: {metadata.model_dump_json()}\n\n"
 

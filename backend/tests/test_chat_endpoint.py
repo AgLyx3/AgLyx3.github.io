@@ -12,6 +12,7 @@ from starlette.requests import Request
 from app.api.chat import chat_endpoint
 from app.config import get_settings
 from app.models import ChatRequest, SessionSnapshot
+from app.models.chat import ChatMessage
 from app.models.analytics import SessionMessageRecordResult
 from app.services.retrieval import (
     CombinedMemoryRetrievalResult,
@@ -187,3 +188,94 @@ def test_ask_back_question_keeps_paragraph_break_in_stream():
 
     body = asyncio.run(_read_body(response))
     assert '\\n\\n' in body
+
+
+def test_chat_request_history_drops_image_like_entries_and_keeps_last_eight_text_turns():
+    request = ChatRequest(
+        message="Tell me about Yixin's eval work.",
+        history=[
+            ChatMessage(role="user", content="text 1"),
+            ChatMessage(role="assistant", content="<image name=[Image #1]>"),
+            ChatMessage(role="assistant", content="![diagram](https://example.com/diagram.png)"),
+            ChatMessage(role="assistant", content="[Image #2]"),
+            ChatMessage(role="assistant", content="https://example.com/photo.jpg"),
+            ChatMessage(role="assistant", content="text 2"),
+            ChatMessage(role="user", content="text 3"),
+            ChatMessage(role="assistant", content="text 4"),
+            ChatMessage(role="user", content="text 5"),
+            ChatMessage(role="assistant", content="text 6"),
+            ChatMessage(role="user", content="text 7"),
+            ChatMessage(role="assistant", content="text 8"),
+            ChatMessage(role="user", content="text 9"),
+            ChatMessage(role="assistant", content="text 10"),
+        ],
+    )
+
+    assert [msg.content for msg in request.history] == [
+        "text 3",
+        "text 4",
+        "text 5",
+        "text 6",
+        "text 7",
+        "text 8",
+        "text 9",
+        "text 10",
+    ]
+
+
+def test_chat_endpoint_passes_sanitized_text_only_history_to_llm():
+    snapshot = _snapshot("history-session")
+    message_result = SessionMessageRecordResult(
+        session=snapshot,
+        message_index_in_session=2,
+        first_message_recorded=False,
+        depth_5_reached=False,
+    )
+    retrieval_result = CombinedMemoryRetrievalResult(
+        profile=ProfileRetrievalResult(
+            context_blocks=["current role: Product Manager at Continua AI"],
+            top_score=0.5,
+            matches=[],
+        ),
+        experience=RetrievalResult(
+            active_topics=["eval"],
+            citations=[],
+            context_blocks=[],
+            top_score=0.0,
+            second_score=0.0,
+            topics=[],
+            edges=[],
+        ),
+    )
+
+    request = ChatRequest(
+        message="Tell me about Yixin's eval work.",
+        session_id="history-session",
+        history=[
+            ChatMessage(role="user", content="What startup experience does she have?"),
+            ChatMessage(role="assistant", content="<image name=[Image #1]>"),
+            ChatMessage(role="assistant", content="She founded InclusiM in college."),
+            ChatMessage(role="user", content="![wireframe](https://example.com/wireframe.png)"),
+            ChatMessage(role="user", content="What eval work did she do?"),
+        ],
+    )
+
+    with patch("app.api.chat.record_user_message", return_value=message_result), \
+         patch("app.api.chat.touch_session", return_value=snapshot), \
+         patch("app.api.chat.combined_memory_retrieve", return_value=retrieval_result), \
+         patch("app.api.chat.log_analytics_event"), \
+         patch("app.api.chat.record_assistant_response_tokens", return_value=snapshot), \
+         patch("app.api.chat.generate_chat_answer", return_value="She built evaluation frameworks at Continua.") as generate_chat_answer_mock:
+        response = asyncio.run(chat_endpoint(
+            request,
+            _request(),
+            get_settings(),
+        ))
+
+    assert response.status_code == 200
+    passed_history = generate_chat_answer_mock.call_args.kwargs["history"]
+    assert [msg.content for msg in passed_history] == [
+        "What startup experience does she have?",
+        "She founded InclusiM in college.",
+        "What eval work did she do?",
+    ]

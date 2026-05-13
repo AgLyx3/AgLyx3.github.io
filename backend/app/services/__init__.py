@@ -17,6 +17,7 @@ from .retrieval import (
     load_graph,
     profile_retrieve,
 )
+from .media import mark_media_shown, pick_unshown_media
 from .safety import RateLimiter, enforce_request_size, estimate_tokens, sanitize_text, truncate_text_to_token_limit
 from .session import clear_ask_back_pending, ensure_session, record_ask_back, record_assistant_response_tokens, record_user_message, snooze_ask_back, touch_session
 from .topic_ops import (
@@ -65,6 +66,8 @@ __all__ = [
     "list_memory_gaps",
     "log_memory_gap",
     "log_analytics_event",
+    "mark_media_shown",
+    "pick_unshown_media",
     "record_assistant_response_tokens",
     "record_user_message",
     "should_offer_cta",

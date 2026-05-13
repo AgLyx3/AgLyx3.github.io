@@ -24,6 +24,7 @@ from .chat import (
     ChatRequest,
     ChatSessionState,
     Citation,
+    MediaItem,
     TopicSuggestion,
 )
 from .core import (
@@ -57,6 +58,7 @@ __all__ = [
     "ContactMessageRequest",
     "ContactMessageResponse",
     "Citation",
+    "MediaItem",
     "ExperienceNode",
     "GraphResponse",
     "ProfileMemoryRecord",

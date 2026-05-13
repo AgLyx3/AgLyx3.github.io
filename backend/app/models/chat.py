@@ -2,9 +2,33 @@
 
 from __future__ import annotations
 
+import re
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+_IMAGE_URL_RE = re.compile(
+    r"^https?://\S+\.(?:png|jpe?g|gif|webp|svg|bmp|avif)(?:\?\S*)?$",
+    re.IGNORECASE,
+)
+
+
+def _is_non_text_history_content(content: str) -> bool:
+    text = content.strip()
+    if not text:
+        return True
+    lowered = text.casefold()
+    if lowered.startswith("<image"):
+        return True
+    if lowered.startswith("!["):
+        return True
+    if lowered.startswith("[image #"):
+        return True
+    if lowered.startswith("data:image/"):
+        return True
+    if _IMAGE_URL_RE.match(text):
+        return True
+    return False
 
 
 class ChatMessage(BaseModel):
@@ -25,12 +49,29 @@ class ChatRequest(BaseModel):
     cta_rejected: bool = False
     viewport_width: Optional[int] = Field(default=None, ge=1, le=10000)
 
+    @model_validator(mode="after")
+    def normalize_history(self) -> "ChatRequest":
+        text_history = [
+            ChatMessage(role=msg.role, content=msg.content.strip())
+            for msg in self.history
+            if not _is_non_text_history_content(msg.content)
+        ]
+        self.history = text_history[-8:]
+        return self
+
 
 class Citation(BaseModel):
     experience_id: str
     experience_title: str
     snippet: str
     score: float
+
+
+class MediaItem(BaseModel):
+    id: int
+    url: str
+    media_type: str
+    caption: str | None = None
 
 
 class TopicSuggestion(BaseModel):
@@ -68,3 +109,4 @@ class ChatFinalMetadata(BaseModel):
     route: Optional[Literal["small_talk", "memory"]] = None
     memory_sources: list[Literal["profile", "experience"]] = Field(default_factory=list)
     response_mode: Optional[Literal["small_talk", "profile", "experience", "blended"]] = None
+    media: Optional[MediaItem] = None

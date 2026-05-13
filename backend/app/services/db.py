@@ -155,6 +155,7 @@ def _migrate_runtime_schema(conn, dialect: str, now: str) -> None:
     _migrate_experiences(conn, dialect)
     _migrate_topics(conn, dialect)
     _migrate_sessions(conn, dialect)
+    _migrate_media_tables(conn, dialect)
     _update_topic_weights(conn)
 
 
@@ -290,6 +291,52 @@ def _migrate_topics(conn, dialect: str) -> None:
     _drop_table(conn, legacy_name)
 
 
+def _migrate_media_tables(conn, dialect: str) -> None:
+    current_profile_media = set(_table_columns(conn, dialect, "profile_media"))
+    if not current_profile_media:
+        if dialect == "postgres":
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS profile_media (
+                    id BIGSERIAL PRIMARY KEY,
+                    memory_id TEXT NOT NULL REFERENCES profile_memories(memory_id),
+                    url TEXT NOT NULL,
+                    media_type TEXT NOT NULL,
+                    caption TEXT,
+                    display_order INTEGER NOT NULL DEFAULT 0
+                )
+                """
+            )
+        else:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS profile_media (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    memory_id TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    media_type TEXT NOT NULL,
+                    caption TEXT,
+                    display_order INTEGER NOT NULL DEFAULT 0
+                )
+                """
+            )
+        conn.commit()
+
+    current_shown_keys = set(_table_columns(conn, dialect, "session_shown_media_keys"))
+    if not current_shown_keys:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS session_shown_media_keys (
+                session_id TEXT NOT NULL,
+                media_key TEXT NOT NULL,
+                shown_at TEXT NOT NULL,
+                PRIMARY KEY (session_id, media_key)
+            )
+            """
+        )
+        conn.commit()
+
+
 def _schema_script_for(dialect: str) -> str:
     if dialect == "postgres":
         return """
@@ -384,6 +431,34 @@ def _schema_script_for(dialect: str) -> str:
                 conversation_json TEXT,
                 created_at TEXT NOT NULL,
                 delivery_status TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS experience_media (
+                id BIGSERIAL PRIMARY KEY,
+                experience_id TEXT NOT NULL REFERENCES experiences(id),
+                url TEXT NOT NULL,
+                media_type TEXT NOT NULL,
+                caption TEXT,
+                display_order INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS profile_media (
+                id BIGSERIAL PRIMARY KEY,
+                memory_id TEXT NOT NULL REFERENCES profile_memories(memory_id),
+                url TEXT NOT NULL,
+                media_type TEXT NOT NULL,
+                caption TEXT,
+                display_order INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS session_shown_media (
+                session_id TEXT NOT NULL,
+                media_id BIGINT NOT NULL REFERENCES experience_media(id),
+                shown_at TEXT NOT NULL,
+                PRIMARY KEY (session_id, media_id)
+            );
+            CREATE TABLE IF NOT EXISTS session_shown_media_keys (
+                session_id TEXT NOT NULL,
+                media_key TEXT NOT NULL,
+                shown_at TEXT NOT NULL,
+                PRIMARY KEY (session_id, media_key)
             );
             CREATE INDEX IF NOT EXISTS idx_analytics_events_session
                 ON analytics_events(session_id, event_name, created_at);
@@ -485,6 +560,34 @@ def _schema_script_for(dialect: str) -> str:
                 created_at TEXT NOT NULL,
                 delivery_status TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS experience_media (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                experience_id TEXT NOT NULL,
+                url TEXT NOT NULL,
+                media_type TEXT NOT NULL,
+                caption TEXT,
+                display_order INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS profile_media (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                memory_id TEXT NOT NULL,
+                url TEXT NOT NULL,
+                media_type TEXT NOT NULL,
+                caption TEXT,
+                display_order INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS session_shown_media (
+                session_id TEXT NOT NULL,
+                media_id INTEGER NOT NULL,
+                shown_at TEXT NOT NULL,
+                PRIMARY KEY (session_id, media_id)
+            );
+            CREATE TABLE IF NOT EXISTS session_shown_media_keys (
+                session_id TEXT NOT NULL,
+                media_key TEXT NOT NULL,
+                shown_at TEXT NOT NULL,
+                PRIMARY KEY (session_id, media_key)
+            );
             CREATE INDEX IF NOT EXISTS idx_analytics_events_session
                 ON analytics_events(session_id, event_name, created_at);
             CREATE INDEX IF NOT EXISTS idx_sessions_last_seen
@@ -534,18 +637,6 @@ def _seed_defaults(conn, now: str) -> None:
                     "profile_education_background",
                     "Education_background",
                     "B.A. with majors in Computer Science and Philosophy",
-                    now,
-                ),
-                (
-                    "profile_fun_fact",
-                    "Fun_fact",
-                    "Peak moment singing: pretended to have 17 different types of voice for a song originally sung by 17 people",
-                    now,
-                ),
-                (
-                    "profile_fun_fact_note",
-                    "Fun_fact_note",
-                    "I know it - i know people will ask about this!",
                     now,
                 ),
             ],
@@ -683,7 +774,8 @@ def _seed_defaults(conn, now: str) -> None:
                     "better user experience; reduced edge-case failures by ~20% in internal testing. "
                     "Evaluation outcome: results drove a shift from a prompt-driven memory approach to a "
                     "more fine-grained architecture, and surfaced incorrect benchmark numbers circulating "
-                    "internally that were corrected before external communication."
+                    "internally that were corrected before external communication. "
+                    "LoCoMo blog post: https://blog.continua.ai/p/the-locomo-fair-fight"
                 ),
                 None,
                 7.0,
