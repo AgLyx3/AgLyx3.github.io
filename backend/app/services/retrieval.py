@@ -70,7 +70,10 @@ _SYNONYMS: dict[str, str] = {
 }
 
 _PROFILE_KEY_SYNONYMS: dict[str, frozenset[str]] = {
-    "current_role": frozenset({"current", "role", "job", "title", "work", "works", "working", "company"}),
+    "current_role": frozenset({
+        "current", "role", "job", "title", "work", "works", "working", "company",
+        "up", "doing", "now", "currently", "nowadays", "lately",
+    }),
     "education": frozenset({"education", "degree", "studied", "study", "major", "college", "colby", "university", "graduate", "graduated"}),
     "interests": frozenset({"interest", "interests", "hobby", "hobbies", "outside", "personal", "free", "spare"}),
 }
@@ -93,6 +96,9 @@ _GENERAL_WORK_QUERY_PATTERNS = (
     re.compile(r"\bwhat projects?(?: has)? (?:she|yixin)(?:\s+li)?(?: worked on| done)?\b"),
     re.compile(r"\bwhat projects?\b"),
     re.compile(r"\bwhat kind of work\b"),
+    re.compile(r"\bwhat(?:'s| is| has she been)\s+(?:she|yixin)\s+up to\b"),
+    re.compile(r"\bwhat(?:'s| is)\s+(?:she|yixin)\s+(?:doing|working on)(?: now| these days| currently| lately)?\b"),
+    re.compile(r"\bwhere\s+(?:does|is)\s+(?:she|yixin)\s+work(?:ing)?\b"),
 )
 
 
