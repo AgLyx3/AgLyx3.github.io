@@ -25,8 +25,8 @@
       --ink-2:        #4A4750;
       --ink-3:        #716D73;
       --ink-4:        #9D97A0;
-      --forest:       #6E86AB;
-      --forest-hover: #5A7093;
+      --forest:       #536C89;
+      --forest-hover: #425978;
       --forest-soft:  #D8E0EC;
       --ease-out:     cubic-bezier(0.2, 0.7, 0.2, 1);
       --font-serif:   'Playfair Display', Georgia, serif;
@@ -36,7 +36,7 @@
       /* RGB component versions — use with rgba(var(--X-rgb), alpha) */
       --ink-rgb:       47, 44, 49;
       --paper-rgb:     248, 244, 238;
-      --forest-rgb:    110, 134, 171;
+      --forest-rgb:    83, 108, 137;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -171,13 +171,13 @@
       font-size: 13px;
       font-weight: 500;
       color: var(--paper);
-      background: linear-gradient(160deg, rgba(110,134,171,0.98) 0%, rgba(90,112,147,0.98) 100%);
+      background: linear-gradient(160deg, rgba(83,108,137,0.98) 0%, rgba(66,89,120,0.98) 100%);
       border: none;
       border-radius: 999px;
       padding: 10px 20px;
       cursor: pointer;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(110,134,171,0.28);
+      box-shadow: 0 4px 12px rgba(83,108,137,0.28);
       transition: background 140ms, transform 100ms;
     }
     .landing-send:hover { transform: translateY(-1px); }
@@ -271,7 +271,7 @@
       font-weight: 500;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--ink-4);
+      color: var(--ink-3);
     }
 
     .message-user .msg-text {
@@ -405,13 +405,13 @@
       font-size: 12px;
       font-weight: 500;
       color: var(--paper);
-      background: linear-gradient(160deg, rgba(110,134,171,0.98) 0%, rgba(90,112,147,0.98) 100%);
+      background: linear-gradient(160deg, rgba(83,108,137,0.98) 0%, rgba(66,89,120,0.98) 100%);
       border: none;
       border-radius: 999px;
       padding: 8px 16px;
       cursor: pointer;
       flex-shrink: 0;
-      box-shadow: 0 3px 10px rgba(110,134,171,0.22);
+      box-shadow: 0 3px 10px rgba(83,108,137,0.22);
       transition: background 140ms, transform 100ms;
     }
     .composer-send:hover { transform: translateY(-1px); }
@@ -419,7 +419,7 @@
     .composer-hint {
       font-family: var(--font-mono);
       font-size: 10px;
-      color: var(--ink-4);
+      color: var(--ink-3);
       letter-spacing: 0.04em;
       margin-top: 7px;
       padding-left: 18px;
@@ -631,7 +631,7 @@
       font-size: 11px;
       font-weight: 400;
       letter-spacing: 0.05em;
-      color: var(--ink-4);
+      color: var(--ink-3);
       pointer-events: none;
       margin-top: -4px;
     }
@@ -651,7 +651,7 @@
       font-family: var(--font-mono);
       font-size: 11px;
       letter-spacing: 0.05em;
-      color: var(--ink-4);
+      color: var(--ink-3);
       text-transform: uppercase;
       pointer-events: all;
       transition: opacity 200ms var(--ease-out);
@@ -818,16 +818,54 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
     }
+
+    /* ── Skip navigation link ── */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 16px;
+      z-index: 9999;
+      padding: 8px 16px;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: top 120ms;
+    }
+    .skip-link:focus { top: 16px; outline: 2px solid var(--forest); outline-offset: 2px; }
+
+    /* ── Screen-reader only utility ── */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Inputs sit inside containers that already show a focus-within ring —
+       suppress the browser default so there's no double border. */
+    .landing-input:focus-visible,
+    .composer-input:focus-visible { outline: none; }
   </style>
 </head>
 <body class="state-landing">
 
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <!-- ── Full-screen bubble canvas ── -->
   <svg id="bubbleCanvas" aria-hidden="true"></svg>
 
+  <main id="main-content">
+
   <!-- ── Landing overlay ── -->
   <div class="landing-overlay" id="landingOverlay">
-    <div class="landing-name">Yixin Li</div>
+    <h1 class="landing-name">Yixin Li</h1>
     <p class="landing-tagline">I build products at the intersection of Human and <span class="accent">AI</span>.</p>
     <form class="landing-form" id="landingForm" novalidate>
       <input
@@ -845,7 +883,7 @@
   </div>
 
   <!-- ── Footnote (landing state only) ── -->
-  <div class="landing-foot" aria-hidden="true">
+  <div class="landing-foot" id="landingFoot">
     <span>Yixin Li &middot; 2026</span>
     <span class="lf-dot">&middot;</span>
     <a href="mailto:yixinli.a@gmail.com">Email</a>
@@ -859,7 +897,7 @@
   <div class="chat-panel" id="chatPanel" aria-hidden="true">
     <header class="chat-topbar">
       <a class="chat-brand" href="index.html">Yixin Li</a>
-      <nav class="chat-topbar-nav" aria-label="Primary">
+      <nav class="chat-topbar-nav" aria-label="Chat navigation">
         <button class="topbar-topics-btn" id="topicsBtn" type="button">Topics</button>
       </nav>
     </header>
@@ -883,6 +921,8 @@
       <div class="composer-hint">enter to send</div>
     </div>
   </div>
+
+  </main>
 
   <!-- ── CTA footer ── -->
   <footer class="cta-footer" id="ctaFooter" aria-label="Connect with Yixin">
@@ -969,6 +1009,7 @@
     var msgModal      = document.getElementById('msgModal');
     var topicsBtn     = document.getElementById('topicsBtn');
     var topicsBackPill = document.getElementById('topicsBackPill');
+    var landingFoot   = document.getElementById('landingFoot');
 
     /* ── Topic data ── */
     var TOPICS = [
@@ -1340,6 +1381,8 @@
       bodyEl.classList.remove('state-landing');
       bodyEl.classList.add('state-chat', 'was-chat');
       chatPanel.removeAttribute('aria-hidden');
+      landingOverlay.setAttribute('aria-hidden', 'true');
+      landingFoot.setAttribute('aria-hidden', 'true');
       setTimeout(shiftBubblesToSides, 80);
       setTimeout(function () {
         addUserMessage(firstMessage);
@@ -1373,7 +1416,7 @@
       roleEl.textContent = 'Yixin.exe';
       var textEl = document.createElement('div');
       textEl.className = 'msg-text';
-      textEl.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+      textEl.innerHTML = '<div class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></div><span class="sr-only">Yixin.exe is thinking…</span>';
       msgEl.appendChild(roleEl);
       msgEl.appendChild(textEl);
       chatThread.appendChild(msgEl);
@@ -1671,22 +1714,47 @@
     topicsBackPill.addEventListener('click', exitTopicsPeek);
 
     /* ── Message modal ── */
+    var _modalTrigger = null;
+
     function openMessageModal() {
+      _modalTrigger = document.activeElement;
       logEvent('cta_footer_clicked', { action_type: 'send_message', message_count_before_action: messageCount });
       msgModal.classList.add('is-open');
       setTimeout(function () { document.getElementById('msgText').focus(); }, 50);
     }
+
+    function closeMessageModal() {
+      msgModal.classList.remove('is-open');
+      if (_modalTrigger) { _modalTrigger.focus(); _modalTrigger = null; }
+    }
+
     document.getElementById('ctaSendMsg').addEventListener('click', function () {
       openMessageModal();
     });
-    document.getElementById('msgModalClose').addEventListener('click', function () {
-      msgModal.classList.remove('is-open');
-    });
+    document.getElementById('msgModalClose').addEventListener('click', closeMessageModal);
     msgModal.addEventListener('click', function (e) {
-      if (e.target === msgModal) msgModal.classList.remove('is-open');
+      if (e.target === msgModal) closeMessageModal();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') msgModal.classList.remove('is-open');
+      if (e.key === 'Escape' && msgModal.classList.contains('is-open')) closeMessageModal();
+    });
+
+    /* Focus trap inside modal */
+    msgModal.addEventListener('keydown', function (e) {
+      if (!msgModal.classList.contains('is-open') || e.key !== 'Tab') return;
+      var focusable = [
+        document.getElementById('msgText'),
+        document.getElementById('includeHistory'),
+        document.getElementById('msgSubmit'),
+        document.getElementById('msgModalClose'),
+      ];
+      var first = focusable[0];
+      var last  = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
     });
 
     document.getElementById('msgForm').addEventListener('submit', async function (e) {
