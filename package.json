@@ -1,0 +1,11 @@
+{
+  "name": "aglyx-portfolio",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "test": "npx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}
