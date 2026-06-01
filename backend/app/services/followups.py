@@ -22,7 +22,6 @@ _DEEP_DIVE_QUESTIONS: dict[str, str] = {
     "exp_intern_onboarding": "What research informed this onboarding redesign?",
     "exp_asana_migration": "How did Yixin migrate the Continua team from Google Docs to Asana?",
     "exp_jackson_lab": "Has Yixin published any research connected to this kind of work?",
-    "exp_inclusim": "How did InclusiM go from idea to a funded startup?",
     "exp_research_overview": "What does Yixin's published research actually cover?",
     "exp_insite_lab": "What research did Yixin do with blind and low-vision participants at the INSITE Lab?",
     "exp_eye_tracking_research": "How does this research connect to Yixin's work in AI?",
