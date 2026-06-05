@@ -65,6 +65,7 @@ class Citation(BaseModel):
     experience_title: str
     snippet: str
     score: float
+    key_concepts: list[str] = Field(default_factory=list)
 
 
 class MediaItem(BaseModel):
@@ -110,3 +111,4 @@ class ChatFinalMetadata(BaseModel):
     memory_sources: list[Literal["profile", "experience"]] = Field(default_factory=list)
     response_mode: Optional[Literal["small_talk", "profile", "experience", "blended"]] = None
     media: Optional[MediaItem] = None
+    highlight_terms: list[str] = Field(default_factory=list)

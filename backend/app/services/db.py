@@ -66,7 +66,8 @@ def _experiences_ddl(dialect: str) -> str:
             experience_date TEXT NOT NULL DEFAULT '',
             base_weight {num_type} NOT NULL DEFAULT 0,
             activation {num_type} NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            key_concepts TEXT DEFAULT NULL
         )
     """
 
@@ -208,9 +209,14 @@ def _migrate_profile_memories(conn, dialect: str, now: str) -> None:
 
 
 def _migrate_experiences(conn, dialect: str) -> None:
-    desired = ["id", "title", "raw_context", "experience_date", "base_weight", "activation", "created_at"]
+    desired = ["id", "title", "raw_context", "experience_date", "base_weight", "activation", "created_at", "key_concepts"]
     current = _table_columns(conn, dialect, "experiences")
     if current == desired:
+        return
+    # Additive migration: just add key_concepts if the only difference is that column is missing
+    if current == desired[:-1]:
+        conn.execute("ALTER TABLE experiences ADD COLUMN key_concepts TEXT DEFAULT NULL")
+        conn.commit()
         return
 
     legacy_name = "experiences_legacy"
@@ -250,6 +256,14 @@ def _migrate_experiences(conn, dialect: str) -> None:
             """,
             inserts,
         )
+        # Carry over key_concepts if the legacy table had the column
+        if "key_concepts" in current:
+            for row in legacy_rows:
+                if row["key_concepts"]:
+                    conn.execute(
+                        "UPDATE experiences SET key_concepts = ? WHERE id = ?",
+                        (row["key_concepts"], row["id"]),
+                    )
     _drop_table(conn, legacy_name)
 
 
@@ -363,7 +377,8 @@ def _schema_script_for(dialect: str) -> str:
                 experience_date TEXT NOT NULL DEFAULT '',
                 base_weight DOUBLE PRECISION NOT NULL DEFAULT 0,
                 activation DOUBLE PRECISION NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                key_concepts TEXT DEFAULT NULL
             );
             CREATE TABLE IF NOT EXISTS relevance_edges (
                 source_experience_id TEXT NOT NULL,
@@ -491,7 +506,8 @@ def _schema_script_for(dialect: str) -> str:
                 experience_date TEXT NOT NULL DEFAULT '',
                 base_weight REAL NOT NULL DEFAULT 0,
                 activation REAL NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                key_concepts TEXT DEFAULT NULL
             );
             CREATE TABLE IF NOT EXISTS relevance_edges (
                 source_experience_id TEXT NOT NULL,

@@ -26,6 +26,7 @@ from app.services import (
     clear_ask_back_pending,
     combined_memory_retrieve,
     detect_cta_rejection,
+    extract_highlight_terms,
     estimate_tokens,
     ensure_session,
     generate_chat_answer,
@@ -251,6 +252,8 @@ async def chat_endpoint(
             use_memory = False
             experience_result = None
             media_item = None
+            profile_result = None
+            profile_passes = False
 
         else:  # "memory"
             # On Turn B (visitor answering the bot's question), their personal answer
@@ -474,6 +477,12 @@ async def chat_endpoint(
             yield f"event: token\ndata: {json.dumps({'token': tok})}\n\n"
             await asyncio.sleep(0.01)
 
+        highlight_terms = extract_highlight_terms(
+            profile_matches=profile_result.matches if route == "memory" and profile_passes else [],
+            citations=citations,
+            context_blocks=experience_context + profile_context,
+        ) if route == "memory" else []
+
         metadata = ChatFinalMetadata(
             active_topics=active_topics,
             citations=citations,
@@ -485,6 +494,7 @@ async def chat_endpoint(
             memory_sources=memory_sources,
             response_mode=response_mode,
             media=MediaItem(**media_item) if media_item else None,
+            highlight_terms=highlight_terms,
         )
         yield f"event: final\ndata: {metadata.model_dump_json()}\n\n"
 

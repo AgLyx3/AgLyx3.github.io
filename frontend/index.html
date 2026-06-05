@@ -303,7 +303,26 @@
       -webkit-backdrop-filter: blur(8px);
     }
     .message-assistant .msg-text p + p { margin-top: 0.7em; }
-    .message-assistant .msg-text strong { font-weight: 600; color: var(--ink); }
+    .message-assistant .msg-text strong {
+      font-weight: 600;
+      color: var(--forest);
+      background: rgba(var(--forest-rgb), 0.09);
+      padding: 0.05em 0.3em;
+      border-radius: 3px;
+    }
+    .message-assistant .msg-text em {
+      font-style: italic;
+      color: var(--ink-2);
+    }
+    .message-assistant .msg-text .hl-entity {
+      background: var(--paper-2);
+      border-radius: 2px;
+      padding: 0 0.15em;
+    }
+    .message-assistant .msg-text .hl-metric {
+      font-weight: 500;
+    }
+
     .msg-text a { color: var(--forest); text-decoration: underline; }
     .msg-text a:hover { color: var(--forest-hover); }
 
@@ -1333,12 +1352,47 @@
     }
     function formatAssistantText(s) {
       var escaped = escHtml(s);
+      // Bold: **text** → <strong>
       var withBold = escaped.replace(/\*\*([^*\n][\s\S]*?)\*\*/g, function (_, inner) {
         var trimmed = inner.trim();
         return trimmed ? '<strong>' + trimmed + '</strong>' : '**' + inner + '**';
       });
-      return linkify(withBold);
+      // Italic: *text* not adjacent to another * → <em>
+      var withItalic = withBold.replace(/(?<!\*)\*([^*\n][^*\n]*?)\*(?!\*)/g, function (_, inner) {
+        var trimmed = inner.trim();
+        return trimmed ? '<em>' + trimmed + '</em>' : '*' + inner + '*';
+      });
+      return linkify(withItalic);
     }
+    function applyEntityHighlights(html, terms) {
+      var sorted = (terms || []).slice().sort(function (a, b) { return b.length - a.length; });
+      var parts = html.split(/(<[^>]+>)/);
+      var depth = 0; // track if we're inside strong/em/code
+      return parts.map(function (part) {
+        if (part.charAt(0) === '<') {
+          var tag = part.toLowerCase();
+          if (/^<(strong|em)[\s>]/.test(tag)) depth++;
+          else if (/^<\/(strong|em)>/.test(tag)) depth = Math.max(0, depth - 1);
+          return part;
+        }
+        if (depth > 0) return part; // already inside a formatted element — skip
+        // Quantifiable metrics: ~20%, 3x, $24K, 1-2 weeks, etc.
+        part = part.replace(
+          /~?\$?\d+(?:[.,]\d+)?(?:%|x\b|\s*[kKmMbB]\b|\s+weeks?\b|\s+months?\b|\s+years?\b|\s+days?\b)?/g,
+          function (m) { return '<span class="hl-metric">' + m + '</span>'; }
+        );
+        // Named concepts from retrieval key_concepts
+        sorted.forEach(function (term) {
+          var esc = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          part = part.replace(
+            new RegExp('\\b' + esc + '\\b', 'gi'),
+            function (m) { return '<span class="hl-entity">' + m + '</span>'; }
+          );
+        });
+        return part;
+      }).join('');
+    }
+
     function api(path) { return BASE.replace(/\/$/, '') + path; }
     function scrollBottom() {
       requestAnimationFrame(function () { chatThread.scrollTop = chatThread.scrollHeight; });
@@ -1479,7 +1533,7 @@
                   streamStarted = true;
                 }
                 fullText += tok;
-                textEl.textContent = fullText;
+                textEl.innerHTML = formatAssistantText(fullText);
                 scrollBottom();
               } catch (_) {}
             } else if (curEvent === 'final' && curData) {
@@ -1487,9 +1541,10 @@
                 var meta = JSON.parse(curData);
                 /* Reformat accumulated text into paragraphs */
                 var paras = fullText.split(/\n\n+/).filter(function (p) { return p.trim(); });
-                textEl.innerHTML = paras.length
+                var builtHtml = paras.length
                   ? paras.map(function (p) { return '<p>' + formatAssistantText(p.trim()) + '</p>'; }).join('')
                   : '<p>' + formatAssistantText(fullText) + '</p>';
+                textEl.innerHTML = applyEntityHighlights(builtHtml, meta.highlight_terms);
                 handleFinalMetadata(meta, msgEl);
               } catch (_) {}
             }

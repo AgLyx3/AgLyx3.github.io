@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
+import json
 from math import fsum
 import re
 from typing import Iterable
@@ -173,7 +174,7 @@ def load_graph() -> tuple[list[ProfileMemoryRecord], list[TopicNode], list[Exper
         ).fetchall()
         experience_rows = conn.execute(
             """
-            SELECT id, title, raw_context, experience_date, base_weight, activation
+            SELECT id, title, raw_context, experience_date, base_weight, activation, key_concepts
             FROM experiences
             ORDER BY title
             """
@@ -209,6 +210,7 @@ def load_graph() -> tuple[list[ProfileMemoryRecord], list[TopicNode], list[Exper
             raw_context=row["raw_context"],
             base_weight=float(row["base_weight"]),
             activation=float(row["activation"]),
+            key_concepts=json.loads(row["key_concepts"]) if row["key_concepts"] else [],
         )
         for row in experience_rows
     ]
@@ -468,6 +470,7 @@ def _hybrid_retrieve_from_graph(
                 experience_title=row.experience.title,
                 snippet=row.experience.raw_context,
                 score=round(row.base_score, 4),
+                key_concepts=row.experience.key_concepts,
             ),
             topic_ids=row.topic_ids,
         )
@@ -563,3 +566,70 @@ def combined_memory_retrieve(
             limit=experience_limit,
         ),
     )
+
+
+_HIGHLIGHT_STOPWORDS = frozenset({
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "was", "are", "were", "she", "her",
+    "his", "their", "this", "that", "it", "as", "be", "has", "had", "have",
+    "will", "would", "could", "should", "may", "also", "both", "through",
+    "over", "under", "after", "before", "during", "including", "where",
+    "when", "how", "what", "which", "who", "yixin", "work", "works",
+    "worked", "project", "experience", "include", "including", "using",
+    "used", "built", "build", "make", "made", "majors", "major",
+})
+
+# Noise tokens that look like entities but aren't worth highlighting
+_HIGHLIGHT_BLOCKLIST = frozenset({
+    "AI", "ML", "PM", "MVP", "API", "CS", "BA", "BS", "MS", "PhD",
+    "US", "UK", "NYC", "LA", "SF", "B.A", "M.S", "Ph.D",
+})
+
+
+def extract_highlight_terms(
+    profile_matches: list[ProfileMemoryRecord],
+    citations: list[Citation],
+    context_blocks: list[str],
+) -> list[str]:
+    """Extract entity terms worth auto-highlighting from retrieved context.
+
+    Primary source: LLM-extracted key_concepts stored per experience.
+    Fallback: heuristic extraction from profile values and ALL_CAPS acronyms.
+    """
+    candidates: set[str] = set()
+
+    # Primary: use LLM-extracted key concepts stored on each citation
+    for citation in citations:
+        for concept in citation.key_concepts:
+            concept = concept.strip()
+            if 2 <= len(concept) <= 80:
+                candidates.add(concept)
+
+    # Fallback: profile memory values (company, role, education)
+    for match in profile_matches:
+        value = (match.value or "").strip()
+        parts = re.split(r"\s+at\s+|\s+in\s+|\s+with\s+|,\s*", value, flags=re.IGNORECASE)
+        for part in parts:
+            part = part.strip()
+            if 3 <= len(part) <= 60 and part.lower() not in _HIGHLIGHT_STOPWORDS and "." not in part:
+                candidates.add(part)
+
+    # Fallback: ALL_CAPS tech acronyms from context (RAG, LLM, MERN, etc.)
+    all_text = " ".join(context_blocks)
+    for m in re.finditer(r"\b([A-Z]{2,6})\b", all_text):
+        term = m.group()
+        if term not in _HIGHLIGHT_BLOCKLIST:
+            candidates.add(term)
+
+    terms = [
+        t for t in candidates
+        if len(t) >= 3
+        and len(t.split()) <= 5
+        and t.lower() not in _HIGHLIGHT_STOPWORDS
+        and t not in _HIGHLIGHT_BLOCKLIST
+        and "." not in t
+    ]
+
+    # Longest first so multi-word phrases match before their single-word components
+    terms.sort(key=len, reverse=True)
+    return terms[:30]

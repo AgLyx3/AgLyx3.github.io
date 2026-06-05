@@ -20,6 +20,7 @@ class ExperienceNode(BaseModel):
     raw_context: str = ""
     base_weight: float = 0.0
     activation: float = 0.0
+    key_concepts: list[str] = Field(default_factory=list)
 
 
 class RelevanceEdge(BaseModel):
