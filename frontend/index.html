@@ -6,6 +6,21 @@
   <title>Yixin Li</title>
   <meta name="description" content="Yixin Li — product builder at the intersection of memory and AI.">
 
+  <!-- Apply saved colour theme before first paint to avoid a flash -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('px_theme');
+        var prefersDark = window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -871,11 +886,122 @@
        suppress the browser default so there's no double border. */
     .landing-input:focus-visible,
     .composer-input:focus-visible { outline: none; }
+
+    /* ── Theme toggle button ── */
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid rgba(var(--forest-rgb), 0.22);
+      border-radius: 999px;
+      background: rgba(var(--paper-rgb), 0.55);
+      color: var(--ink-3);
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: color 140ms, border-color 140ms, background 140ms;
+    }
+    .theme-toggle:hover {
+      color: var(--forest);
+      border-color: rgba(var(--forest-rgb), 0.44);
+    }
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--forest);
+      outline-offset: 2px;
+    }
+    .theme-toggle svg { width: 16px; height: 16px; display: block; }
+    .theme-toggle .icon-sun  { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    html[data-theme="dark"] .theme-toggle .icon-sun  { display: block; }
+    html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+    /* Place toggle inside the landing footer */
+    .landing-foot .theme-toggle { margin-left: 4px; }
+
+    /* ── Dark theme — night sky ── */
+    html[data-theme="dark"] {
+      --paper:        #0B1024;
+      --paper-2:      #1A2340;
+      --paper-edge:   #2B3766;
+      --ink:          #EAEBF6;
+      --ink-2:        #C3C7E2;
+      --ink-3:        #9094BC;
+      --ink-4:        #646890;
+      --forest:       #93B4EC;
+      --forest-hover: #B2CBF6;
+      --forest-soft:  #1B2649;
+
+      --ink-rgb:       234, 235, 246;
+      --paper-rgb:     11, 16, 36;
+      --forest-rgb:    147, 180, 236;
+    }
+
+    html[data-theme="dark"] body {
+      background:
+        radial-gradient(circle at 80% 16%,
+          rgba(205,215,245,0.14) 0%,
+          rgba(205,215,245,0.04) 16%,
+          rgba(11,16,36,0) 34%),
+        radial-gradient(ellipse at 50% -10%,
+          rgba(60,82,150,0.30) 0%,
+          rgba(11,16,36,0) 55%),
+        linear-gradient(180deg,
+          #131A3A 0%,
+          #0C1228 46%,
+          #070A18 100%),
+        var(--paper);
+    }
+
+    /* ── Starfield + celestial bodies (dark only) ── */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      display: none;
+      opacity: 0;
+      transition: opacity 600ms var(--ease-out);
+    }
+    html[data-theme="dark"] #starfield { display: block; opacity: 1; }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 4px 1px rgba(255,255,255,0.55);
+      animation: twinkle var(--tw-dur, 4s) ease-in-out infinite;
+      animation-delay: var(--tw-delay, 0s);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.18; }
+      50%      { opacity: var(--tw-max, 0.9); }
+    }
+
+    /* Soften the baked-in white highlights so glass panels read as dark */
+    html[data-theme="dark"] .landing-form {
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 8px 24px rgba(0,0,0,0.5),
+        0 2px 6px rgba(0,0,0,0.35);
+    }
+    html[data-theme="dark"] .landing-form:focus-within {
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 2px rgba(var(--forest-rgb), 0.38),
+        0 10px 28px rgba(0,0,0,0.55);
+    }
   </style>
 </head>
 <body class="state-landing">
 
   <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ── Night-sky starfield (dark mode only) ── -->
+  <div id="starfield" aria-hidden="true"></div>
 
   <!-- ── Full-screen bubble canvas ── -->
   <svg id="bubbleCanvas" aria-hidden="true"></svg>
@@ -910,6 +1036,11 @@
     <a href="https://github.com/AgLyx3" target="_blank" rel="noopener">GitHub</a>
     <span class="lf-dot">&middot;</span>
     <a href="https://www.linkedin.com/in/yixin-li-796994280/" target="_blank" rel="noopener">LinkedIn</a>
+    <span class="lf-dot">&middot;</span>
+    <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+    </button>
   </div>
 
   <!-- ── Chat panel ── -->
@@ -918,6 +1049,10 @@
       <a class="chat-brand" href="index.html">Yixin Li</a>
       <nav class="chat-topbar-nav" aria-label="Chat navigation">
         <button class="topbar-topics-btn" id="topicsBtn" type="button">Topics</button>
+        <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        </button>
       </nav>
     </header>
 
@@ -1031,6 +1166,55 @@
     var topicsBtn     = document.getElementById('topicsBtn');
     var topicsBackPill = document.getElementById('topicsBackPill');
     var landingFoot   = document.getElementById('landingFoot');
+
+    /* ── Night-sky starfield ── */
+    (function buildStarfield() {
+      var field = document.getElementById('starfield');
+      if (!field) return;
+      var STAR_COUNT = 150;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < STAR_COUNT; i++) {
+        var s = document.createElement('span');
+        s.className = 'star';
+        var size = (Math.random() * 1.6 + 0.6).toFixed(2);
+        s.style.width = size + 'px';
+        s.style.height = size + 'px';
+        s.style.top = (Math.random() * 100).toFixed(2) + '%';
+        s.style.left = (Math.random() * 100).toFixed(2) + '%';
+        s.style.setProperty('--tw-dur', (Math.random() * 4 + 2.5).toFixed(2) + 's');
+        s.style.setProperty('--tw-delay', (Math.random() * 5).toFixed(2) + 's');
+        s.style.setProperty('--tw-max', (Math.random() * 0.5 + 0.5).toFixed(2));
+        frag.appendChild(s);
+      }
+      field.appendChild(frag);
+    })();
+
+    /* ── Colour theme toggle ── */
+    (function initThemeToggle() {
+      var root = document.documentElement;
+      function currentTheme() {
+        return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      }
+      function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        try { localStorage.setItem('px_theme', theme); } catch (e) {}
+        var pressed = theme === 'dark' ? 'true' : 'false';
+        var label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        var toggles = document.querySelectorAll('.theme-toggle');
+        for (var i = 0; i < toggles.length; i++) {
+          toggles[i].setAttribute('aria-pressed', pressed);
+          toggles[i].setAttribute('aria-label', label);
+          toggles[i].setAttribute('title', label);
+        }
+      }
+      applyTheme(currentTheme());
+      var toggles = document.querySelectorAll('.theme-toggle');
+      for (var i = 0; i < toggles.length; i++) {
+        toggles[i].addEventListener('click', function () {
+          applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+        });
+      }
+    })();
 
     /* ── Topic data ── */
     var TOPICS = [
