@@ -132,17 +132,17 @@
     }
 
     .landing-tagline {
-      font-family: var(--font-serif);
+      font-family: var(--font-mono);
       font-style: normal;
-      font-size: clamp(16px, 1.55vw, 19px);
+      font-size: clamp(13px, 1.2vw, 15px);
       font-weight: 400;
       color: var(--ink-2);
       line-height: 1.65;
-      max-width: 42ch;
-      letter-spacing: 0.01em;
+      max-width: 56ch;
+      letter-spacing: 0.02em;
       pointer-events: none;
     }
-    .landing-tagline .accent { font-style: italic; color: var(--forest); }
+    .landing-tagline .accent { color: var(--forest); font-weight: 500; }
 
     .landing-form {
       display: flex;
@@ -1397,9 +1397,9 @@
       nodeGroupsSel.each(function (d) {
         var g = d3.select(this).select('.node-inner');
         var lines = wrapLabel(d.label, d.radius);
-        var fsMin = mob ? 11 : 13, fsMax = mob ? 15 : 21;
-        var fs = Math.max(fsMin, Math.min(fsMax, fsMin + (d.radius - (mob ? 36 : 50)) * 0.26));
-        var lh = fs * 1.18;
+        var fsMin = mob ? 9 : 11, fsMax = mob ? 13 : 16;
+        var fs = Math.max(fsMin, Math.min(fsMax, fsMin + (d.radius - (mob ? 36 : 50)) * 0.18));
+        var lh = fs * 1.30;
         var startY = -(lines.length * lh / 2) + lh * 0.5;
         var textColor = 'rgb(' + HUES[d.hue].text + ')';
         var txt = g.append('text')
@@ -1408,10 +1408,10 @@
         lines.forEach(function (line, i) {
           txt.append('tspan')
             .attr('x', 0).attr('y', startY + i * lh)
-            .attr('font-family', "'Playfair Display', Georgia, serif")
-            .attr('font-weight', '600')
+            .attr('font-family', "'Geist Mono', ui-monospace, monospace")
+            .attr('font-weight', '500')
             .attr('font-size', fs)
-            .attr('letter-spacing', '-0.01em')
+            .attr('letter-spacing', '0.01em')
             .attr('fill', textColor)
             .text(line);
         });
