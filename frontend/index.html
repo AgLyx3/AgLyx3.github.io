@@ -1345,7 +1345,7 @@
         .attr('dx', 0).attr('dy', 10).attr('stdDeviation', 10)
         .attr('flood-color', '#1C1E18').attr('flood-opacity', 0.12);
 
-      var ringR = Math.min(W * 0.30, H * 0.33);
+      var ringR = Math.min(W * 0.42, H * 0.46);
       /* Mobile: place bubbles in top/bottom strips so they never overlap the center text */
       var mobTopY = H * 0.20, mobBotY = H * 0.76;
 
@@ -1435,11 +1435,11 @@
 
       simulation = d3.forceSimulation(allNodes)
         .force('collide', d3.forceCollide(function (d) { return d.radius + 8; }).strength(0.9).iterations(4))
-        .force('charge', d3.forceManyBody().strength(-38))
-        .force('x', d3.forceX(cx).strength(mob ? 0.010 : 0.022))
+        .force('charge', d3.forceManyBody().strength(-90))
+        .force('x', d3.forceX(cx).strength(mob ? 0.008 : 0.013))
         .force('y', mob
           ? d3.forceY(function (d) { return d.bandGroup === 'top' ? H * 0.20 : H * 0.76; }).strength(0.055)
-          : d3.forceY(cy).strength(0.022))
+          : d3.forceY(cy).strength(0.013))
         .alphaDecay(0.002).alphaMin(1e-4).alphaTarget(0.06)
         .stop() /* pause before pre-warming */
 
@@ -1546,7 +1546,7 @@
         simulation
           .force('x', d3.forceX(vw() / 2).strength(0.04))
           .force('y', d3.forceY(vh() / 2).strength(0.04))
-          .force('charge', d3.forceManyBody().strength(-38))
+          .force('charge', d3.forceManyBody().strength(-90))
           .alpha(0.45).restart();
       }
     }
@@ -2099,10 +2099,10 @@
         else {
           var _isMob = vw() < 880;
           var _vh = vh();
-          simulation.force('x', d3.forceX(vw() / 2).strength(_isMob ? 0.010 : 0.022));
+          simulation.force('x', d3.forceX(vw() / 2).strength(_isMob ? 0.008 : 0.013));
           simulation.force('y', _isMob
             ? d3.forceY(function (d) { return d.bandGroup === 'top' ? _vh * 0.20 : _vh * 0.76; }).strength(0.055)
-            : d3.forceY(_vh / 2).strength(0.022));
+            : d3.forceY(_vh / 2).strength(0.013));
           simulation.alpha(0.3).restart();
         }
       }, 200);
