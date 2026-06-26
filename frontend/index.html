@@ -1267,16 +1267,17 @@
     }
 
     /* ── D3 bubble simulation ── */
+    /* text values darkened for WCAG AA contrast (≥4.5:1) against each fill */
     var HUES = {
-      amber:  { fill: '233,217,201', text: '118,105,91' },
-      cream:  { fill: '243,236,227', text: '125,116,107' },
-      pearl:  { fill: '231,226,222', text: '116,110,113' },
-      mist:   { fill: '220,228,239', text: '89,104,132' },
-      blue:   { fill: '196,208,228', text: '84,100,128' },
-      mirage: { fill: '168,185,214', text: '70,86,115' },
-      slate:  { fill: '149,164,189', text: '67,79,102' },
-      smoke:  { fill: '214,204,194', text: '109,98,89' },
-      dune:   { fill: '223,212,198', text: '116,104,88' },
+      amber:  { fill: '233,217,201', text: '66,50,34' },
+      cream:  { fill: '243,236,227', text: '66,50,34' },
+      pearl:  { fill: '231,226,222', text: '66,50,34' },
+      mist:   { fill: '220,228,239', text: '24,40,70' },
+      blue:   { fill: '196,208,228', text: '24,40,70' },
+      mirage: { fill: '168,185,214', text: '22,38,66' },
+      slate:  { fill: '149,164,189', text: '20,36,62' },
+      smoke:  { fill: '214,204,194', text: '66,50,34' },
+      dune:   { fill: '223,212,198', text: '66,50,34' },
     };
     /* professional work → blue family; personal/other → warm family */
     var PROFESSIONAL_IDS = { 'ai-agents': true, 'memory': true, 'eval': true, 'startup': true, 'eng': true, 'pm': true };
@@ -1292,14 +1293,14 @@
 
     function topicR(activation, minA, maxA, mobile) {
       var t = (activation - minA) / Math.max(maxA - minA, 1e-4);
-      var rMin = mobile ? 30 : 42;
-      var rMax = mobile ? 62 : 84;
+      var rMin = mobile ? 36 : 54;
+      var rMax = mobile ? 66 : 92;
       return rMin + t * (rMax - rMin);
     }
 
     function wrapLabel(label, radius) {
       var words = label.split(' ');
-      var maxCh = Math.max(6, Math.floor(radius / 5.5));
+      var maxCh = Math.max(7, Math.floor(radius / 5.5));
       var lines = [], cur = '';
       words.forEach(function (w) {
         var cand = cur ? cur + ' ' + w : w;
@@ -1329,7 +1330,7 @@
         var fg = defs.append('radialGradient')
           .attr('id', 'fg-' + name)
           .attr('cx', '50%').attr('cy', '50%').attr('r', '50%');
-        [[0, 0.90],[62, 0.85],[82, 0.55],[93, 0.18],[100, 0]].forEach(function (s) {
+        [[0, 0.96],[50, 0.95],[72, 0.90],[86, 0.62],[94, 0.22],[100, 0]].forEach(function (s) {
           fg.append('stop').attr('offset', s[0] + '%')
             .attr('stop-color', 'rgb(' + h.fill + ')').attr('stop-opacity', s[1]);
         });
@@ -1395,17 +1396,19 @@
       nodeGroupsSel.each(function (d) {
         var g = d3.select(this).select('.node-inner');
         var lines = wrapLabel(d.label, d.radius);
-        var fsMin = mob ? 10 : 12, fsMax = mob ? 14 : 20;
-        var fs = Math.max(fsMin, Math.min(fsMax, fsMin + (d.radius - (mob ? 32 : 44)) * 0.26));
-        var lh = fs * 1.15;
+        var fsMin = mob ? 11 : 13, fsMax = mob ? 15 : 21;
+        var fs = Math.max(fsMin, Math.min(fsMax, fsMin + (d.radius - (mob ? 36 : 50)) * 0.26));
+        var lh = fs * 1.18;
         var startY = -(lines.length * lh / 2) + lh * 0.5;
         var textColor = 'rgb(' + HUES[d.hue].text + ')';
-        var txt = g.append('text').attr('text-anchor', 'middle').attr('pointer-events', 'none');
+        var txt = g.append('text')
+          .attr('text-anchor', 'middle')
+          .attr('pointer-events', 'none');
         lines.forEach(function (line, i) {
           txt.append('tspan')
             .attr('x', 0).attr('y', startY + i * lh)
             .attr('font-family', "'Playfair Display', Georgia, serif")
-            .attr('font-weight', '500')
+            .attr('font-weight', '600')
             .attr('font-size', fs)
             .attr('letter-spacing', '-0.01em')
             .attr('fill', textColor)
@@ -1456,7 +1459,7 @@
         });
 
       /* Pre-warm: resolve collisions silently so the first visible frame is already settled */
-      simulation.tick(160);
+      simulation.tick(220);
       /* Clamp positions after pre-warm */
       var W0 = vw(), H0 = vh();
       allNodes.forEach(function (n) {
