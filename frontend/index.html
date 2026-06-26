@@ -89,6 +89,8 @@
       transition: opacity 500ms var(--ease-out);
     }
 
+    .bubble-traces .trace-line { stroke: var(--ink-3); }
+    [data-theme=dark] .bubble-traces .trace-line { stroke: rgb(160, 200, 255); }
     .bubble-node { cursor: pointer; pointer-events: all; }
     .bubble-node .node-halo {
       opacity: 0;
@@ -1374,6 +1376,8 @@
         };
       });
 
+      var traceGroup = svg.append('g').attr('class', 'bubble-traces');
+
       nodeGroupsSel = svg.selectAll('.bubble-node')
         .data(allNodes).enter()
         .append('g')
@@ -1471,6 +1475,27 @@
       /* Place nodes at their settled positions before starting the render loop */
       nodeGroupsSel.attr('transform', function (d) { return 'translate(' + d.x + ',' + d.y + ')'; });
 
+      /* Constellation traces — connect nearby bubble pairs */
+      var traceThresh = mob ? 190 : 260;
+      var tracePairs = [];
+      for (var _ti = 0; _ti < allNodes.length; _ti++) {
+        for (var _tj = _ti + 1; _tj < allNodes.length; _tj++) {
+          var _na = allNodes[_ti], _nb = allNodes[_tj];
+          var _tdx = _na.x - _nb.x, _tdy = _na.y - _nb.y;
+          var _tgap = Math.sqrt(_tdx*_tdx + _tdy*_tdy) - _na.radius - _nb.radius;
+          if (_tgap > 0 && _tgap < traceThresh) {
+            tracePairs.push({ a: _na, b: _nb, g: _tgap });
+          }
+        }
+      }
+      var traceLinesSel = traceGroup.selectAll('line').data(tracePairs).enter().append('line')
+        .attr('class', 'trace-line')
+        .attr('stroke-width', 0.7)
+        .attr('opacity', function (d) { return 0.12 + 0.45 * (1 - d.g / traceThresh); })
+        .attr('pointer-events', 'none')
+        .attr('x1', function (d) { return d.a.x; }).attr('y1', function (d) { return d.a.y; })
+        .attr('x2', function (d) { return d.b.x; }).attr('y2', function (d) { return d.b.y; });
+
       /* Fade canvas in so any residual early motion isn't jarring */
       svgEl.style.opacity = '0';
       /* Clear the inline override so CSS (including mobile hide rules) takes control */
@@ -1489,6 +1514,9 @@
           n.y = Math.max(n.radius + 14, Math.min(H2 - n.radius - 14, n.y));
         });
         nodeGroupsSel.attr('transform', function (d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+        traceLinesSel
+          .attr('x1', function (d) { return d.a.x; }).attr('y1', function (d) { return d.a.y; })
+          .attr('x2', function (d) { return d.b.x; }).attr('y2', function (d) { return d.b.y; });
       });
       simulation.alpha(0.12).restart();
     }
