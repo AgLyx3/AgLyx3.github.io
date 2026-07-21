@@ -48,6 +48,7 @@ class ChatRequest(BaseModel):
     cta_already_mentioned: bool = False
     cta_rejected: bool = False
     viewport_width: Optional[int] = Field(default=None, ge=1, le=10000)
+    voice_mode: bool = False
 
     @model_validator(mode="after")
     def normalize_history(self) -> "ChatRequest":

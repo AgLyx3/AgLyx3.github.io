@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
+import re
+from typing import Any, Iterator
 from urllib import error, request
 
 from app.config import Settings
@@ -276,6 +277,99 @@ def generate_chat_answer(
     if max_output_tokens is not None:
         payload["max_tokens"] = max_output_tokens
     return _post_chat_completion(settings=settings, payload=payload)
+
+
+def _strip_markdown_for_voice(text: str) -> str:
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+    text = re.sub(r'\*(.+?)\*', r'\1', text)
+    text = text.replace('\n\n', ' ').replace('\n', ' ')
+    return text
+
+
+def _stream_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> Iterator[str]:
+    streaming_payload = {**payload, "stream": True}
+    req = request.Request(
+        f"{settings.chat_api_base.rstrip('/')}/chat/completions",
+        data=json.dumps(streaming_payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {_api_key()}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with request.urlopen(req, timeout=settings.chat_timeout_seconds) as response:
+            for raw_line in response:
+                line = raw_line.decode("utf-8").strip()
+                if not line.startswith("data: "):
+                    continue
+                data = line[6:]
+                if data == "[DONE]":
+                    return
+                try:
+                    delta = json.loads(data)["choices"][0]["delta"].get("content", "")
+                    if delta:
+                        yield delta
+                except (json.JSONDecodeError, KeyError, IndexError):
+                    continue
+    except (TimeoutError, error.URLError, error.HTTPError) as exc:
+        raise RuntimeError(f"LLM streaming failed: {exc}") from exc
+
+
+def generate_chat_answer_stream(
+    *,
+    settings: Settings,
+    user_message: str,
+    profile_context: list[str] | None = None,
+    experience_context: list[str] | None = None,
+    citations: list[Citation] | None = None,
+    active_topic_id: str | None = None,
+    prefill_origin: str | None = None,
+    message_index: int | None = None,
+    follow_up_questions: list[str] | None = None,
+    adjacent_topics: list[TopicSuggestion] | None = None,
+    cta_mention: CTAMention | None = None,
+    max_output_tokens: int | None = None,
+    ask_visitor_question: bool = False,
+    visitor_context: str | None = None,
+    visitor_declined_previous_question: bool = False,
+    history: list[ChatMessage] | None = None,
+) -> Iterator[str]:
+    profile_context = profile_context or []
+    experience_context = experience_context or []
+    if not profile_context and not experience_context and not visitor_context:
+        yield MEMORY_FALLBACK_RESPONSE
+        return
+
+    current_user_content = build_portfolio_chat_user_prompt(
+        user_message=user_message,
+        profile_context=profile_context,
+        experience_context=experience_context,
+        citations=citations,
+        active_topic_id=active_topic_id,
+        prefill_origin=prefill_origin,
+        message_index=message_index,
+        follow_up_questions=follow_up_questions,
+        adjacent_topics=adjacent_topics,
+        cta_mention=cta_mention,
+        ask_visitor_question=ask_visitor_question,
+        visitor_context=visitor_context,
+        visitor_declined_previous_question=visitor_declined_previous_question,
+    )
+
+    messages: list[dict[str, str]] = [{"role": "system", "content": portfolio_chat_system_prompt()}]
+    for msg in (history or []):
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": current_user_content})
+
+    payload: dict[str, Any] = {
+        "model": settings.chat_model,
+        "messages": messages,
+        "temperature": 0.4,
+    }
+    if max_output_tokens is not None:
+        payload["max_tokens"] = max_output_tokens
+    yield from _stream_chat_completion(settings=settings, payload=payload)
 
 
 def assign_memory_topics_with_llm(
