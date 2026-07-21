@@ -57,6 +57,9 @@ class Settings:
     linkedin_url: str = "https://www.linkedin.com/in/yixin-li-796994280/"
     schedule_url: str = ""
     resume_url: str = "assets/resume.pdf"
+    tts_model: str = "tts-1"
+    tts_voice: str = "nova"
+    assemblyai_api_key: str = ""
     resend_api_key: str = ""
     contact_from_email: str = "onboarding@resend.dev"
     contact_to_email: str = "yixinli.a@gmail.com"
@@ -112,6 +115,9 @@ def get_settings() -> Settings:
         linkedin_url=os.getenv("LINKEDIN_URL", "https://www.linkedin.com/in/yixin-li-796994280/"),
         schedule_url=os.getenv("SCHEDULE_URL", ""),
         resume_url=os.getenv("RESUME_URL", "assets/resume.pdf"),
+        tts_model=os.getenv("TTS_MODEL", "tts-1"),
+        tts_voice=os.getenv("TTS_VOICE", "nova"),
+        assemblyai_api_key=os.getenv("ASSEMBLYAI_API_KEY", ""),
         admin_api_key=os.getenv("ADMIN_API_KEY", ""),
         resend_api_key=os.getenv("RESEND_API_KEY", ""),
         contact_from_email=os.getenv("CONTACT_FROM_EMAIL", "onboarding@resend.dev"),

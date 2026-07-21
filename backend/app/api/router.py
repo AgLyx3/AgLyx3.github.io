@@ -8,6 +8,7 @@ from .chat import router as chat_router
 from .graph import router as graph_router
 from .health import router as health_router
 from .topic_ops import router as topic_ops_router
+from .voice import router as voice_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -16,3 +17,4 @@ api_router.include_router(graph_router)
 api_router.include_router(topic_ops_router)
 api_router.include_router(actions_router)
 api_router.include_router(analytics_router)
+api_router.include_router(voice_router)

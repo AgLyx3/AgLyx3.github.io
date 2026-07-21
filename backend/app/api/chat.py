@@ -43,6 +43,7 @@ from app.services import (
     sanitize_text,
     should_offer_cta,
     snooze_ask_back,
+    _strip_markdown_for_voice,
     topic_exploration_hint,
     touch_session,
     truncate_text_to_token_limit,
@@ -464,18 +465,24 @@ async def chat_endpoint(
         response_mode = None
 
     async def event_stream():
-        # Split on paragraph breaks first to preserve them, then tokenize words within each paragraph
-        paragraphs = answer.split("\n\n")
-        tokens: list[str] = []
-        for p_idx, para in enumerate(paragraphs):
-            words = para.split()
-            for w_idx, word in enumerate(words):
-                tokens.append(word + (" " if w_idx < len(words) - 1 else ""))
-            if p_idx < len(paragraphs) - 1:
-                tokens.append("\n\n")
-        for tok in tokens:
-            yield f"event: token\ndata: {json.dumps({'token': tok})}\n\n"
-            await asyncio.sleep(0.01)
+        if payload.voice_mode:
+            clean_answer = _strip_markdown_for_voice(answer)
+            for word in clean_answer.split():
+                yield f"event: token\ndata: {json.dumps({'token': word + ' '})}\n\n"
+
+        else:
+            # Split on paragraph breaks first to preserve them, then tokenize words within each paragraph
+            paragraphs = answer.split("\n\n")
+            tokens: list[str] = []
+            for p_idx, para in enumerate(paragraphs):
+                words = para.split()
+                for w_idx, word in enumerate(words):
+                    tokens.append(word + (" " if w_idx < len(words) - 1 else ""))
+                if p_idx < len(paragraphs) - 1:
+                    tokens.append("\n\n")
+            for tok in tokens:
+                yield f"event: token\ndata: {json.dumps({'token': tok})}\n\n"
+                await asyncio.sleep(0.01)
 
         highlight_terms = extract_highlight_terms(
             profile_matches=profile_result.matches if route == "memory" and profile_passes else [],

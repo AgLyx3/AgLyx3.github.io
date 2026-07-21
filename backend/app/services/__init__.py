@@ -6,7 +6,7 @@ from .contact import create_contact_message
 from .cta_rules import detect_cta_rejection, should_offer_cta
 from .db import init_db
 from .followups import build_adjacent_topics, build_follow_up_questions
-from .llm import MEMORY_FALLBACK_RESPONSE, SMALL_TALK_RESPONSE, generate_chat_answer, generate_small_talk_answer, topic_exploration_hint
+from .llm import MEMORY_FALLBACK_RESPONSE, SMALL_TALK_RESPONSE, _strip_markdown_for_voice, generate_chat_answer, generate_chat_answer_stream, generate_small_talk_answer, topic_exploration_hint
 from .query_router import ChatRoute, route_query
 from .retrieval import (
     CombinedMemoryRetrievalResult,
@@ -54,7 +54,9 @@ __all__ = [
     "init_db",
     "enforce_request_size",
     "estimate_tokens",
+    "_strip_markdown_for_voice",
     "generate_chat_answer",
+    "generate_chat_answer_stream",
     "generate_small_talk_answer",
     "topic_exploration_hint",
     "get_activation_snapshot",
