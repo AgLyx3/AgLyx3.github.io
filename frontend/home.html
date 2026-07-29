@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Yixin Li</title>
+<meta name="description" content="Yixin Li — product builder at the intersection of Human and AI. Chat with my agent, or explore what I've built.">
+
+<!-- Apply saved colour theme before first paint to avoid a flash -->
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('px_theme');
+      var theme = stored || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'Autumn Brush';
+    src: url('assets/AutumnBrush.otf') format('opentype');
+    font-weight: normal; font-style: normal; font-display: swap;
+  }
+
+  :root {
+    --paper:        #F8F4EE;
+    --paper-2:      #E9D9C9;
+    --paper-edge:   #CFBEAE;
+    --ink:          #2F2C31;
+    --ink-2:        #4A4750;
+    --ink-3:        #716D73;
+    --ink-4:        #9D97A0;
+    --forest:       #536C89;
+    --forest-hover: #425978;
+    --forest-soft:  #D8E0EC;
+    --ease-out:     cubic-bezier(0.2, 0.7, 0.2, 1);
+    --font-serif:   'Playfair Display', Georgia, serif;
+    --font-sans:    -apple-system, 'Helvetica Neue', sans-serif;
+    --font-mono:    'Geist Mono', ui-monospace, monospace;
+    --ink-rgb:    47, 44, 49;
+    --paper-rgb:  248, 244, 238;
+    --forest-rgb: 83, 108, 137;
+  }
+  html[data-theme="dark"] {
+    --paper:        #0B1024;
+    --paper-2:      #1A2340;
+    --paper-edge:   #2B3766;
+    --ink:          #EAEBF6;
+    --ink-2:        #C3C7E2;
+    --ink-3:        #9094BC;
+    --ink-4:        #646890;
+    --forest:       #93B4EC;
+    --forest-hover: #B2CBF6;
+    --forest-soft:  #1B2649;
+    --ink-rgb:    234, 235, 246;
+    --paper-rgb:  11, 16, 36;
+    --forest-rgb: 147, 180, 236;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  body {
+    font-family: var(--font-sans); color: var(--ink); overflow: hidden;
+    background:
+      radial-gradient(circle at top left,
+        rgba(110,134,171,0.16) 0%, rgba(110,134,171,0.04) 24%, rgba(248,244,238,0) 48%),
+      linear-gradient(180deg,
+        rgba(216,224,236,0.22) 0%, rgba(248,244,238,0.68) 22%, rgba(248,244,238,0.96) 100%),
+      var(--paper);
+  }
+  html[data-theme="dark"] body {
+    background:
+      radial-gradient(circle at 80% 16%, rgba(205,215,245,0.14) 0%, rgba(205,215,245,0.04) 16%, rgba(11,16,36,0) 34%),
+      radial-gradient(ellipse at 50% -10%, rgba(60,82,150,0.30) 0%, rgba(11,16,36,0) 55%),
+      linear-gradient(180deg, #131A3A 0%, #0C1228 46%, #070A18 100%),
+      var(--paper);
+  }
+
+  /* starfield (dark only) */
+  #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; display: none; opacity: 0; transition: opacity 600ms var(--ease-out); }
+  html[data-theme="dark"] #starfield { display: block; opacity: 1; }
+  .star { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 4px 1px rgba(255,255,255,0.55);
+          animation: twinkle var(--tw-dur, 4s) ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  @keyframes twinkle { 0%,100% { opacity: 0.18; } 50% { opacity: var(--tw-max, 0.9); } }
+
+  /* soft floating dots (light-mode bubble motif) */
+  .field { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  html[data-theme="dark"] .field { display: none; }
+  .dot { position: absolute; border-radius: 50%; background: rgba(var(--forest-rgb), 0.10); animation: drift 18s ease-in-out infinite; }
+  @keyframes drift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-22px); } }
+
+  .wrap { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 40px; padding: 40px 24px; }
+
+  .hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;
+          animation: rise 600ms 80ms var(--ease-out) both; }
+  .name { font-family: 'Autumn Brush', cursive; font-weight: 400; font-size: clamp(48px, 6vw, 82px); line-height: 1.05; color: var(--ink); }
+  .tagline { font-family: var(--font-serif); font-size: clamp(16px, 1.6vw, 20px); color: var(--ink-2); line-height: 1.6; max-width: 44ch; }
+  .tagline .accent { font-style: italic; color: var(--forest); }
+
+  .doors { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; width: min(760px, 92vw);
+           animation: rise 600ms 220ms var(--ease-out) both; }
+
+  .door { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 30px 28px 26px; text-decoration: none;
+    background: rgba(var(--paper-rgb), 0.72); border: 1px solid rgba(var(--forest-rgb), 0.20); border-radius: 22px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 10px 30px rgba(var(--forest-rgb), 0.10);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    transition: transform 240ms var(--ease-out), box-shadow 240ms var(--ease-out), border-color 240ms; }
+  html[data-theme="dark"] .door { box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 34px rgba(0,0,0,0.5); }
+  .door:hover { transform: translateY(-6px); border-color: rgba(var(--forest-rgb), 0.42);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 44px rgba(var(--forest-rgb), 0.20); }
+  .door:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+
+  .door-icon { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+               border-radius: 14px; background: var(--forest-soft); color: var(--forest); }
+  .door-icon svg { width: 24px; height: 24px; }
+  .door-kicker { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .door-title { font-family: var(--font-serif); font-size: 24px; font-weight: 500; color: var(--ink); }
+  .door-desc { font-family: var(--font-serif); font-size: 14.5px; color: var(--ink-2); line-height: 1.55; }
+  .door-cta { margin-top: 4px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--forest);
+              display: inline-flex; align-items: center; gap: 6px; transition: gap 200ms; }
+  .door:hover .door-cta { gap: 10px; }
+  .door-cta svg { width: 14px; height: 14px; }
+
+  .foot { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; gap: 10px;
+          align-items: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-3); text-transform: uppercase; }
+  .foot a { color: var(--ink-3); text-decoration: none; transition: color 140ms; }
+  .foot a:hover { color: var(--forest); }
+  .lf-dot { color: var(--paper-edge); }
+
+  /* theme toggle */
+  .theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;
+    border: 1px solid rgba(var(--forest-rgb), 0.22); border-radius: 999px; background: rgba(var(--paper-rgb), 0.55); color: var(--ink-3);
+    cursor: pointer; -webkit-appearance: none; appearance: none; transition: color 140ms, border-color 140ms, background 140ms; }
+  .theme-toggle:hover { color: var(--forest); border-color: rgba(var(--forest-rgb), 0.44); }
+  .theme-toggle svg { width: 16px; height: 16px; display: block; }
+  .theme-toggle .icon-sun { display: none; } .theme-toggle .icon-moon { display: block; }
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: block; } html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 640px) {
+    .doors { grid-template-columns: 1fr; }
+    body { overflow: auto; }
+    .foot { position: static; transform: none; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+    .wrap { justify-content: flex-start; padding-top: 64px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+  <div id="starfield" aria-hidden="true"></div>
+  <div class="field" id="field" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <div class="hero">
+      <h1 class="name">Yixin Li</h1>
+      <p class="tagline">I build products at the intersection of Human and <span class="accent">AI</span>.</p>
+    </div>
+
+    <div class="doors">
+      <a class="door" href="index.html">
+        <div class="door-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+        <span class="door-kicker">Ask anything</span>
+        <span class="door-title">Chat with my agent</span>
+        <span class="door-desc">A conversational agent trained on my work. Ask about my projects, experience, or how I think — it answers in real time.</span>
+        <span class="door-cta">Start a conversation
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </a>
+
+      <a class="door" href="portfolio.html">
+        <div class="door-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
+        </div>
+        <span class="door-kicker">See the work</span>
+        <span class="door-title">What I've built</span>
+        <span class="door-desc">Wander through the things I've made — working code, live demos, papers, prototypes, and everything in between. Come have a look.</span>
+        <span class="door-cta">Explore the portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </a>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>Yixin Li · 2026</span>
+    <span class="lf-dot">·</span>
+    <a href="mailto:yixinli.a@gmail.com">Email</a>
+    <span class="lf-dot">·</span>
+    <a href="https://github.com/AgLyx3" target="_blank" rel="noopener">GitHub</a>
+    <span class="lf-dot">·</span>
+    <a href="https://www.linkedin.com/in/yixin-li-796994280/" target="_blank" rel="noopener">LinkedIn</a>
+    <span class="lf-dot">·</span>
+    <button class="theme-toggle" type="button" aria-label="Toggle dark mode">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+    </button>
+  </footer>
+
+  <script>
+    // starfield
+    (function () {
+      var field = document.getElementById('starfield'); if (!field) return;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < 150; i++) {
+        var s = document.createElement('span'); s.className = 'star';
+        var size = (Math.random() * 1.6 + 0.6).toFixed(2);
+        s.style.width = size + 'px'; s.style.height = size + 'px';
+        s.style.top = (Math.random() * 100).toFixed(2) + '%'; s.style.left = (Math.random() * 100).toFixed(2) + '%';
+        s.style.setProperty('--tw-dur', (Math.random() * 4 + 2.5).toFixed(2) + 's');
+        s.style.setProperty('--tw-delay', (Math.random() * 5).toFixed(2) + 's');
+        s.style.setProperty('--tw-max', (Math.random() * 0.5 + 0.5).toFixed(2));
+        frag.appendChild(s);
+      }
+      field.appendChild(frag);
+    })();
+    // floating dots (light mode)
+    (function () {
+      var f = document.getElementById('field');
+      for (var i=0;i<14;i++){ var d=document.createElement('span'); d.className='dot';
+        var s=(Math.random()*70+20).toFixed(0); d.style.width=s+'px'; d.style.height=s+'px';
+        d.style.top=(Math.random()*100).toFixed(1)+'%'; d.style.left=(Math.random()*100).toFixed(1)+'%';
+        d.style.animationDelay=(Math.random()*-18).toFixed(1)+'s';
+        d.style.animationDuration=(Math.random()*10+14).toFixed(1)+'s'; f.appendChild(d); }
+    })();
+    // theme toggle (persisted, shared key with chat app)
+    (function () {
+      var root = document.documentElement;
+      function apply(t){ root.setAttribute('data-theme', t); try { localStorage.setItem('px_theme', t); } catch(e){} }
+      document.querySelector('.theme-toggle').addEventListener('click', function(){
+        apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+    })();
+  </script>
+</body>
+</html>
