@@ -154,10 +154,27 @@
     .wrap { justify-content: flex-start; padding-top: 64px; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  /* ── galaxy: milky-way band + meteors (dark only) ── */
+  #galaxy-mw { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; display: none; }
+  html[data-theme="dark"] #galaxy-mw { display: block; }
+  #galaxy-mw .mwband { position: absolute; left: -20%; right: -20%; top: 6%; height: 62%;
+    transform: rotate(-18deg); transform-origin: center; filter: blur(22px);
+    background:
+      radial-gradient(ellipse 60% 42% at 50% 50%, rgba(150,170,240,0.11), rgba(150,170,240,0) 70%),
+      radial-gradient(ellipse 46% 30% at 42% 46%, rgba(205,150,215,0.09), rgba(0,0,0,0) 70%),
+      radial-gradient(ellipse 40% 26% at 62% 54%, rgba(120,200,210,0.07), rgba(0,0,0,0) 70%); }
+  .meteor { position: absolute; width: 150px; height: 2px; border-radius: 2px; opacity: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(200,220,255,0.85) 100%); }
+  .meteor::after { content: ''; position: absolute; right: 0; top: 50%; width: 4px; height: 4px; border-radius: 50%;
+    transform: translateY(-50%); background: #fff; box-shadow: 0 0 8px 3px rgba(255,255,255,0.7); }
+  @keyframes shoot { 0% { opacity: 0; transform: rotate(25deg) translateX(0); }
+    12% { opacity: 1; } 100% { opacity: 0; transform: rotate(25deg) translateX(560px); } }
 </style>
 </head>
 <body>
   <div id="starfield" aria-hidden="true"></div>
+  <div id="galaxy-mw" aria-hidden="true"></div>
   <div class="field" id="field" aria-hidden="true"></div>
 
   <main class="wrap">
@@ -241,6 +258,24 @@
       document.querySelector('.theme-toggle').addEventListener('click', function(){
         apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
       });
+    })();
+    // galaxy: milky-way band + periodic meteors
+    (function () {
+      var mw = document.getElementById('galaxy-mw'); if (!mw) return;
+      var band = document.createElement('div'); band.className = 'mwband'; mw.appendChild(band);
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) return;
+      function spawn () {
+        var m = document.createElement('span'); m.className = 'meteor';
+        m.style.left = (Math.random()*48 + 2) + '%';
+        m.style.top = (Math.random()*26 + 3) + '%';
+        var dur = (Math.random()*0.8 + 1.0);
+        m.style.animation = 'shoot ' + dur.toFixed(2) + 's ease-in forwards';
+        mw.appendChild(m);
+        setTimeout(function () { m.remove(); }, dur*1000 + 120);
+      }
+      function loop () { spawn(); setTimeout(loop, Math.random()*3200 + 1800); }
+      setTimeout(loop, 1000);
     })();
   </script>
 </body>
