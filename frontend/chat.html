@@ -256,6 +256,39 @@
     .chat-topbar-nav a:hover { color: var(--ink); }
     .chat-topbar-nav a[aria-current="page"] { color: var(--ink-2); }
 
+    /* ── Landing topbar ── */
+    .landing-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 26px;
+      pointer-events: all;
+      transition: opacity 200ms var(--ease-out);
+    }
+    .landing-topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .landing-topbar-nav a {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--ink-3);
+      text-decoration: none;
+      transition: color 140ms;
+    }
+    .landing-topbar-nav a:hover { color: var(--ink); }
+    body.state-landing .landing-topbar { opacity: 1; }
+    body.state-chat .landing-topbar { opacity: 0; pointer-events: none; }
+
     /* ── Thread ── */
     .chat-thread {
       flex: 1;
@@ -843,6 +876,7 @@
       .landing-form { padding: 5px 5px 5px 18px; }
       .landing-input { font-size: 15px; }
       .landing-send { padding: 9px 16px; font-size: 12px; }
+      .landing-topbar { padding: 14px 18px; }
       .chat-topbar { padding: 14px 18px; }
       .chat-thread { padding: 20px 18px 12px; gap: 22px; }
       .chat-composer { padding: 10px 14px 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
@@ -1088,6 +1122,17 @@
 <body class="state-landing">
 
   <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="landing-topbar">
+    <a class="chat-brand" href="index.html">Yixin Li</a>
+    <nav class="landing-topbar-nav" aria-label="Primary">
+      <a href="portfolio.html">Portfolio</a>
+      <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+      </button>
+    </nav>
+  </header>
 
   <!-- ── Night-sky starfield (dark mode only) ── -->
   <div id="starfield" aria-hidden="true"></div>
