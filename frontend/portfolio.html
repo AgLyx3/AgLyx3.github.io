@@ -112,6 +112,9 @@
   html[data-theme="dark"] .status-live { background: rgba(120,210,150,0.14); color: #7fd39a; } html[data-theme="dark"] .status-live .pip { background:#7fd39a; }
   .status-research { background: rgba(var(--forest-rgb),0.14); color: var(--forest); }
   .status-research .pip { background: var(--forest); }
+  .status-internal { background: rgba(145,105,185,0.14); color: #78579a; }
+  .status-internal .pip { background: #78579a; }
+  html[data-theme="dark"] .status-internal { background: rgba(195,165,235,0.14); color: #c9a9ed; } html[data-theme="dark"] .status-internal .pip { background:#c9a9ed; }
 
   .card h3 { font-family: var(--font-serif); font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
   .card .sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-3); margin-top: 4px; }
@@ -163,7 +166,7 @@
     <div class="head">
       <div class="head-kicker">Selected Work · 2023–2026</div>
       <h1>Tools I've <em>built</em>.</h1>
-      <p>Open-source tools I've built — each with its source, and a paper where there's research behind it.</p>
+      <p>Tools I've built — open-source projects, internal analysis workflows, and research-backed software.</p>
     </div>
 
     <div class="grid">
@@ -198,6 +201,19 @@
         <div class="links">
           <a class="link link-live" href="https://github.com/AgLyx3/skill-observability-hook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
         </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l3.5 8"/><path d="M17 7l-3.5 8"/><path d="M7 6h10"/></svg></div>
+          <span class="card-status status-internal"><span class="pip"></span>Internal Tool</span>
+        </div>
+        <div>
+          <h3>Conversation Topic Analysis Tool</h3>
+          <div class="sub">Semantic clustering for conversation exports</div>
+        </div>
+        <p>A Streamlit analysis tool for clustering messy conversation topic exports. Analysts upload CSVs, choose subtopics or big topics, filter by cohort, group chat, or phone-number rules, then tune DBSCAN over <code>all-MiniLM-L6-v2</code> embeddings to inspect topic clusters, compare populations, and export cluster summaries.</p>
+        <div class="tags"><span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">Sentence Transformers</span><span class="tag">DBSCAN</span></div>
       </article>
 
       <article class="card">
