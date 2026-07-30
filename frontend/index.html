@@ -170,6 +170,29 @@
     transform: translateY(-50%); background: #fff; box-shadow: 0 0 8px 3px rgba(255,255,255,0.7); }
   @keyframes shoot { 0% { opacity: 0; transform: rotate(25deg) translateX(0); }
     12% { opacity: 1; } 100% { opacity: 0; transform: rotate(25deg) translateX(560px); } }
+
+  /* ── doors as shapeless nebula glows (borderless, both themes) ── */
+  .doors { gap: 44px; }
+  .door { background: none !important; border: none !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    border-radius: 0; overflow: visible; padding: 34px 30px; }
+  .door::before { content: ''; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
+    transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
+  .door:hover { transform: translateY(-4px); }
+  /* dark: cool-blue nebula */
+  html[data-theme="dark"] .door::before { inset: -16% -12%; filter: blur(30px); opacity: 0.82;
+    background: radial-gradient(58% 54% at 50% 40%,
+      rgba(var(--forest-rgb),0.30) 0%, rgba(var(--forest-rgb),0.11) 44%, rgba(var(--forest-rgb),0) 74%); }
+  html[data-theme="dark"] .door:hover::before { opacity: 1; transform: scale(1.09); }
+  html[data-theme="dark"] .door-icon { background: rgba(var(--forest-rgb),0.16); border: 1px solid rgba(var(--forest-rgb),0.30);
+    box-shadow: 0 0 22px rgba(var(--forest-rgb),0.40); }
+  /* light: soft luminous cloud on warm paper */
+  html[data-theme="light"] .door::before { inset: -18% -14%; filter: blur(36px); opacity: 0.95;
+    background: radial-gradient(58% 54% at 50% 42%,
+      rgba(150,170,215,0.30) 0%, rgba(232,238,249,0.62) 30%, rgba(150,170,215,0.10) 58%, rgba(150,170,215,0) 78%); }
+  html[data-theme="light"] .door:hover::before { opacity: 1; transform: scale(1.08); }
+  html[data-theme="light"] .door-icon { background: var(--forest-soft); border: 1px solid rgba(var(--forest-rgb),0.22);
+    box-shadow: 0 0 22px rgba(var(--forest-rgb),0.18); }
 </style>
 </head>
 <body>
