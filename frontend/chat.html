@@ -218,26 +218,32 @@
       -webkit-backdrop-filter: none;
     }
 
-    /* ── Topbar — transparent, ink text ── */
+    /* ── Topbar ── */
     .chat-topbar {
-      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 26px;
-      background: transparent;
-      border-bottom: none;
+      padding: 18px clamp(24px, 5vw, 64px);
+      background: rgba(var(--paper-rgb), 0.72);
+      border-bottom: 1px solid rgba(var(--forest-rgb), 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .chat-brand {
-      font-family: var(--font-serif);
-      font-size: 17px;
-      font-weight: 400;
-      letter-spacing: -0.01em;
+      font-family: 'Autumn Brush', cursive;
+      font-size: 28px;
+      font-weight: normal;
+      letter-spacing: 0;
       color: var(--ink);
       text-decoration: none;
     }
-    .chat-brand:hover { opacity: 0.52; color: var(--ink); text-decoration: none; }
+    .chat-brand:hover { opacity: 0.6; color: var(--ink); text-decoration: none; }
 
     .chat-topbar-nav {
       display: flex;
@@ -247,14 +253,13 @@
     .chat-topbar-nav a {
       font-family: var(--font-mono);
       font-size: 12px;
-      font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--ink-3);
       text-decoration: none;
       transition: color 140ms;
     }
     .chat-topbar-nav a:hover { color: var(--ink); }
-    .chat-topbar-nav a[aria-current="page"] { color: var(--ink-2); }
+    .chat-topbar-nav a[aria-current="page"] { color: var(--ink); }
 
     /* ── Landing topbar ── */
     .landing-topbar {
@@ -266,8 +271,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 24px;
-      padding: 18px 26px;
+      padding: 18px clamp(24px, 5vw, 64px);
+      background: rgba(var(--paper-rgb), 0.72);
+      border-bottom: 1px solid rgba(var(--forest-rgb), 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       pointer-events: all;
       transition: opacity 200ms var(--ease-out);
     }
@@ -279,13 +287,13 @@
     .landing-topbar-nav a {
       font-family: var(--font-mono);
       font-size: 12px;
-      font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--ink-3);
       text-decoration: none;
       transition: color 140ms;
     }
     .landing-topbar-nav a:hover { color: var(--ink); }
+    .landing-topbar-nav a[aria-current="page"] { color: var(--ink); }
     body.state-landing .landing-topbar { opacity: 1; }
     body.state-chat .landing-topbar { opacity: 0; pointer-events: none; }
 
@@ -293,7 +301,7 @@
     .chat-thread {
       flex: 1;
       overflow-y: auto;
-      padding: 28px 28px 16px;
+      padding: 92px 28px 16px;
       display: flex;
       flex-direction: column;
       gap: 28px;
@@ -831,11 +839,6 @@
         height: 100vh; /* fallback */
         height: 100dvh;
       }
-      /* Keep topbar visible — solid background so it doesn't vanish over content */
-      .chat-topbar {
-        background: var(--paper);
-        z-index: 10;
-      }
       body.state-landing .chat-panel {
         transform: translateY(22px);
       }
@@ -876,9 +879,7 @@
       .landing-form { padding: 5px 5px 5px 18px; }
       .landing-input { font-size: 15px; }
       .landing-send { padding: 9px 16px; font-size: 12px; }
-      .landing-topbar { padding: 14px 18px; }
-      .chat-topbar { padding: 14px 18px; }
-      .chat-thread { padding: 20px 18px 12px; gap: 22px; }
+      .chat-thread { padding: 92px 18px 12px; gap: 22px; }
       .chat-composer { padding: 10px 14px 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
       .cta-footer { padding-bottom: env(safe-area-inset-bottom, 0px); height: calc(48px + env(safe-area-inset-bottom, 0px)); }
       .message-assistant .msg-text { font-size: 17px; }
@@ -1126,6 +1127,7 @@
   <header class="landing-topbar">
     <a class="chat-brand" href="index.html">Yixin Li</a>
     <nav class="landing-topbar-nav" aria-label="Primary">
+      <a href="chat.html" aria-current="page">Chat</a>
       <a href="portfolio.html">Portfolio</a>
       <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -1187,6 +1189,7 @@
     <header class="chat-topbar">
       <a class="chat-brand" href="index.html">Yixin Li</a>
       <nav class="chat-topbar-nav" aria-label="Chat navigation">
+        <a href="chat.html" aria-current="page">Chat</a>
         <a href="portfolio.html">Portfolio</a>
         <button class="topbar-topics-btn" id="topicsBtn" type="button">Topics</button>
         <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
