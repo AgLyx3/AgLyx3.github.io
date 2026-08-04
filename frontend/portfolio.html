@@ -130,11 +130,11 @@
   .link { font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-decoration: none;
     display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; transition: transform 150ms, background 150ms, border-color 150ms, color 150ms; }
   .link svg { width: 14px; height: 14px; }
-  .link-live { background: var(--forest); color: var(--paper); box-shadow: 0 4px 12px rgba(83,108,137,0.24); }
-  html[data-theme="dark"] .link-live { color: #0B1024; }
-  .link-live:hover { transform: translateY(-1px); background: var(--forest-hover); }
-  .link-repo { border: 1px solid rgba(var(--forest-rgb), 0.30); color: var(--ink-2); }
-  .link-repo:hover { border-color: var(--forest); color: var(--forest); }
+  .link-code, .link-code:visited { background: var(--forest); color: var(--paper); border: 1px solid transparent; box-shadow: 0 4px 12px rgba(83,108,137,0.24); }
+  html[data-theme="dark"] .link-code { color: #0B1024; }
+  .link-code:hover { transform: translateY(-1px); background: var(--forest-hover); }
+  .link-artifact { border: 1px solid rgba(var(--forest-rgb), 0.30); color: var(--ink-2); }
+  .link-artifact:hover { border-color: var(--forest); color: var(--forest); }
 
   .footer { position: relative; z-index: 2; text-align: center; padding: 30px 0 46px; font-family: var(--font-mono);
             font-size: 11px; letter-spacing: 0.05em; color: var(--ink-3); }
@@ -183,23 +183,40 @@
         <p>Local, notebook-first editor for Jupyter <code>.ipynb</code> files with scoped AI-agent editing. The agent proposes cell changes; the backend validates and applies them — it never mutates your notebook directly. Per-turn <strong>Blocking</strong> (edit only the cells you scope) or <strong>Trusted</strong> (whole-notebook add/delete/reorder/edit). Runs on localhost.</p>
         <div class="tags"><span class="tag">FastAPI</span><span class="tag">React</span><span class="tag">TypeScript</span><span class="tag">Claude</span></div>
         <div class="links">
-          <a class="link link-live" href="https://github.com/AgLyx3/we-love-jupyter-notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          <a class="link link-code" href="https://github.com/AgLyx3/we-love-jupyter-notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
         </div>
       </article>
 
       <article class="card">
         <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg></div>
-          <span class="card-status status-live"><span class="pip"></span>Open Source</span>
+          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l3-3 3 2 4-6"/><path d="M17 8h-3"/><path d="M17 8v3"/></svg></div>
+          <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
         </div>
         <div>
-          <h3>fire-or-not</h3>
-          <div class="sub">Context observability for coding agents</div>
+          <h3>Implicit Social Cognition Benchmark</h3>
+          <div class="sub">IRT-calibrated AGI evaluation for social reasoning</div>
         </div>
-        <p>A zero-dependency Python tool for auditing coding-agent sessions: it reads Claude Code and OpenAI Codex logs and shows, task by task, which skills, tools, MCP calls, and subagents fired, plus which available skills never activated. Built for debugging the gap between available context and what an agent actually used.</p>
-        <div class="tags"><span class="tag">Python</span><span class="tag">Agent Observability</span><span class="tag">Claude Code</span><span class="tag">Codex</span></div>
+        <p>Built a benchmark for measuring social cognition in frontier AI models across implicit norm detection, emotion recognition, cooperative breakdown detection, and group decision prediction. The benchmark uses Bayesian 2PL Item Response Theory to combine heterogeneous text and image tasks into a single ability score, keeping results comparable even when models answer only a subset of items.</p>
+        <div class="tags"><span class="tag">AI Evaluation</span><span class="tag">Social Cognition</span><span class="tag">IRT</span><span class="tag">Benchmarking</span></div>
         <div class="links">
-          <a class="link link-live" href="https://github.com/AgLyx3/skill-observability-hook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          <a class="link link-code" href="https://www.kaggle.com/code/zacknichols/new-benchmark-task-f729c/notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>Code</a>
+          <a class="link link-artifact" href="https://www.kaggle.com/competitions/kaggle-measuring-agi/writeups/new-writeup-1774288660477" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Writeup</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-2.8 7.7-7 9-4.2-1.3-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-5"/></svg></div>
+          <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
+        </div>
+        <div>
+          <h3>Continua Memory Evaluation</h3>
+          <div class="sub">Benchmark setup and failure analysis for long-term AI memory</div>
+        </div>
+        <p>Worked on LoCoMo evaluation for Continua’s long-term memory system, including benchmark setup, control-trace analysis, and failure-mode review. Analyzed how the benchmark design, scoring harness, retrieval traces, and answer-generation behavior affected results, helping separate memory-system performance from artifacts of prompts, judging, and evaluation setup.</p>
+        <div class="tags"><span class="tag">AI Evaluation</span><span class="tag">Memory Systems</span><span class="tag">Trace Analysis</span><span class="tag">Failure Analysis</span></div>
+        <div class="links">
+          <a class="link link-artifact" href="https://blog.continua.ai/p/the-locomo-fair-fight" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Blog Post</a>
         </div>
       </article>
 
@@ -218,8 +235,24 @@
 
       <article class="card">
         <div class="card-top">
+          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg></div>
+          <span class="card-status status-live"><span class="pip"></span>Open Source</span>
+        </div>
+        <div>
+          <h3>fire-or-not</h3>
+          <div class="sub">Context observability for coding agents</div>
+        </div>
+        <p>A zero-dependency Python tool for auditing coding-agent sessions: it reads Claude Code and OpenAI Codex logs and shows, task by task, which skills, tools, MCP calls, and subagents fired, plus which available skills never activated. Built for debugging the gap between available context and what an agent actually used.</p>
+        <div class="tags"><span class="tag">Python</span><span class="tag">Agent Observability</span><span class="tag">Claude Code</span><span class="tag">Codex</span></div>
+        <div class="links">
+          <a class="link link-code" href="https://github.com/AgLyx3/skill-observability-hook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
-          <span class="card-status status-research"><span class="pip"></span>Published</span>
+          <span class="card-status status-research"><span class="pip"></span>Research</span>
         </div>
         <div>
           <h3>Fix8</h3>
@@ -228,15 +261,15 @@
         <p>A GUI application for correcting drift in eye-tracking data from reading studies — manual, semi-automated, and fully automated methods, plus filtering, visualization, metrics, and format conversion (EyeLink, ASCII, CSV, JSON). Published in <em>Behavior Research Methods</em>, 2025.</p>
         <div class="tags"><span class="tag">Python</span><span class="tag">PyQt</span><span class="tag">Eye-tracking</span><span class="tag">Research</span></div>
         <div class="links">
-          <a class="link link-live" href="https://github.com/nalmadi/fix8" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-          <a class="link link-repo" href="https://doi.org/10.3758/s13428-025-02597-3" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
+          <a class="link link-code" href="https://github.com/nalmadi/fix8" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          <a class="link link-artifact" href="https://doi.org/10.3758/s13428-025-02597-3" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
         </div>
       </article>
 
       <article class="card">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/><path d="M18 16l2 2 3-4"/></svg></div>
-          <span class="card-status status-research"><span class="pip"></span>Published</span>
+          <span class="card-status status-research"><span class="pip"></span>Research</span>
         </div>
         <div>
           <h3>User Studies in Human-Feature-Integration</h3>
@@ -245,7 +278,7 @@
         <p>Co-designed, conducted, and analyzed two user studies on how people provide personal context to AI prediction systems. The surveys examined whether users could surface useful “human features,” how that process affected willingness to use the model, and how user-selected features compared with algorithmically selected ones. Published at <em>ACM IUI Workshops</em>, 2025.</p>
         <div class="tags"><span class="tag">Human-AI Interaction</span><span class="tag">Survey Design</span><span class="tag">Statistical Analysis</span><span class="tag">ML Evaluation</span></div>
         <div class="links">
-          <a class="link link-repo" href="https://ceur-ws.org/Vol-3957/AXAI-paper03.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
+          <a class="link link-artifact" href="https://ceur-ws.org/Vol-3957/AXAI-paper03.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
         </div>
       </article>
 
