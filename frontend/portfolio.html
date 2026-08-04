@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Yixin Li — What I've Built</title>
-<meta name="description" content="Tools and products Yixin Li has built — accessibility auditing, AI memory systems, and evaluation dashboards, with live demos and source.">
+<meta name="description" content="Selected work Yixin Li has built — AI benchmarks, memory evaluations, research systems, and developer tools.">
 
 <script>
   (function () {
@@ -88,6 +88,14 @@
   .head h1 em { font-style: italic; color: var(--forest); }
   .head p { font-family: var(--font-serif); font-size: 17px; color: var(--ink-2); line-height: 1.6; margin-top: 16px; }
 
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: -18px 0 26px; animation: rise 600ms var(--ease-out) both; animation-delay: 80ms; }
+  .filter-button { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-3);
+    padding: 7px 13px; border: 1px solid rgba(var(--forest-rgb), 0.26); border-radius: 999px; background: rgba(var(--paper-rgb), 0.48);
+    cursor: pointer; transition: color 150ms, background 150ms, border-color 150ms, transform 150ms; }
+  .filter-button:hover { color: var(--forest); border-color: rgba(var(--forest-rgb), 0.46); transform: translateY(-1px); }
+  .filter-button[aria-pressed="true"] { color: var(--paper); background: var(--forest); border-color: transparent; }
+  html[data-theme="dark"] .filter-button[aria-pressed="true"] { color: #0B1024; }
+
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; padding-bottom: 80px; }
 
   .card { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 22px;
@@ -96,6 +104,7 @@
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms;
     animation: rise 600ms var(--ease-out) both; }
+  .card[hidden] { display: none; }
   html[data-theme="dark"] .card { box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px rgba(0,0,0,0.45); }
   .card:hover { transform: translateY(-5px); border-color: rgba(var(--forest-rgb), 0.40);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 16px 40px rgba(var(--forest-rgb), 0.18); }
@@ -165,13 +174,19 @@
   <main class="container">
     <div class="head">
       <div class="head-kicker">Selected Work · 2023–2026</div>
-      <h1>Tools I've <em>built</em>.</h1>
-      <p>Tools I've built — open-source projects, internal analysis workflows, and research-backed software.</p>
+      <h1>What I've <em>built</em>.</h1>
+      <p>Selected work I've built — AI benchmarks, memory evaluations, research systems, and developer tools.</p>
+    </div>
+
+    <div class="filters" aria-label="Portfolio filters">
+      <button class="filter-button" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="filter-button" type="button" data-filter="ai-ml" aria-pressed="false">AI/ML</button>
+      <button class="filter-button" type="button" data-filter="dev-tool" aria-pressed="false">Dev Tool</button>
     </div>
 
     <div class="grid">
 
-      <article class="card">
+      <article class="card" data-category="dev-tool">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 13l2 2-2 2"/><path d="M13 17h3"/></svg></div>
           <span class="card-status status-live"><span class="pip"></span>Open Source</span>
@@ -187,7 +202,7 @@
         </div>
       </article>
 
-      <article class="card">
+      <article class="card" data-category="ai-ml">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l3-3 3 2 4-6"/><path d="M17 8h-3"/><path d="M17 8v3"/></svg></div>
           <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
@@ -204,7 +219,7 @@
         </div>
       </article>
 
-      <article class="card">
+      <article class="card" data-category="ai-ml">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-2.8 7.7-7 9-4.2-1.3-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-5"/></svg></div>
           <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
@@ -220,7 +235,7 @@
         </div>
       </article>
 
-      <article class="card">
+      <article class="card" data-category="dev-tool">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l3.5 8"/><path d="M17 7l-3.5 8"/><path d="M7 6h10"/></svg></div>
           <span class="card-status status-internal"><span class="pip"></span>Internal Tool</span>
@@ -233,7 +248,7 @@
         <div class="tags"><span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">Sentence Transformers</span><span class="tag">DBSCAN</span></div>
       </article>
 
-      <article class="card">
+      <article class="card" data-category="dev-tool">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg></div>
           <span class="card-status status-live"><span class="pip"></span>Open Source</span>
@@ -249,7 +264,7 @@
         </div>
       </article>
 
-      <article class="card">
+      <article class="card" data-category="dev-tool">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
           <span class="card-status status-research"><span class="pip"></span>Research</span>
@@ -266,7 +281,7 @@
         </div>
       </article>
 
-      <article class="card">
+      <article class="card" data-category="ai-ml">
         <div class="card-top">
           <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/><path d="M18 16l2 2 3-4"/></svg></div>
           <span class="card-status status-research"><span class="pip"></span>Research</span>
@@ -312,6 +327,25 @@
       function apply(t){ root.setAttribute('data-theme', t); try { localStorage.setItem('px_theme', t); } catch(e){} }
       document.querySelector('.theme-toggle').addEventListener('click', function(){
         apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+    })();
+    // portfolio filters
+    (function () {
+      var buttons = Array.prototype.slice.call(document.querySelectorAll('.filter-button'));
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-category]'));
+      if (!buttons.length || !cards.length) return;
+      buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          var selected = button.getAttribute('data-filter');
+          if (button.getAttribute('aria-pressed') === 'true') return;
+          buttons.forEach(function (item) {
+            item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+          });
+          cards.forEach(function (card) {
+            var matches = selected === 'all' || card.getAttribute('data-category') === selected;
+            card.hidden = !matches;
+          });
+        });
       });
     })();
   </script>
