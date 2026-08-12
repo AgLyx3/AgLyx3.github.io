@@ -498,3 +498,119 @@ The assistant should feel:
 - and human
 
 not like a generic RAG chatbot and not like a static resume.
+
+---
+
+## 16. Typography System Replacement (2026-08-12)
+
+Triggered by an `/impeccable critique` + `design-taste-frontend` audit of `index.html`,
+`portfolio.html`, and `chat.html`. Scored 22/36 on Nielsen heuristics.
+
+### Previous direction
+
+Three loaded type families, each with a role:
+
+- **Autumn Brush** (local `.otf`) for the name / logotype
+- **Playfair Display** (Google Fonts) for headings *and* body copy
+- **Geist Mono** (Google Fonts) for all UI chrome: kickers, tags, buttons, nav, footers
+
+### What changed
+
+Cut to **two** loaded families:
+
+- **Autumn Brush** stays, but is now restricted to the logotype only (`--font-display`)
+- **Satoshi** (Fontshare, variable 300-900 roman + italic, two files) replaces
+  *both* Playfair Display and Geist Mono (`--font-sans`)
+- Inline `<code>` moved to a system monospace stack (`--font-code`), no webfont
+
+Also removed as part of the same pass:
+
+- The mono-caps eyebrows: `ASK ANYTHING`, `SEE THE WORK` (index),
+  `SELECTED WORK · 2023-2026` (portfolio), and the uppercase treatment on
+  `.msg-role` and `.landing-foot` (chat)
+- All 6 em-dashes in visible copy and metadata
+- The portfolio subhead's restatement of its own `<h1>` and `<meta description>`
+
+Added: `:focus-visible` rules on `portfolio.html`, which previously had none anywhere.
+
+### Why it changed
+
+1. **The triad was the single loudest AI tell on the site.** High-contrast Didone
+   serif for "editorial" + mono for "technical" + script for "personal" is the
+   signature of generated portfolio design. The bundled detector independently
+   flagged Geist Mono as an overused face in all three files.
+2. **Playfair was doing work it is not built for.** It set card body copy at
+   14.5px; it is a display face and is fragile at reading sizes.
+3. **Monospace was a costume.** All 18 mono usages in `chat.html` were UI chrome.
+   None were code, data, or measurement.
+4. **Eyebrows are banned outright** by the craft floor, not merely discouraged.
+   The heading already carries the label's job.
+
+### New intended direction
+
+Two families, seven roles, one scale:
+
+| Role | Face | Size | Weight | Tracking |
+|---|---|---|---|---|
+| Logotype | Autumn Brush | clamp | 400 | - |
+| Display h1 | Satoshi | clamp(34-54px) | 600 | -0.03em |
+| Card heading | Satoshi | 21px | 600 | -0.02em |
+| Body / reading | Satoshi | 15.5px | 400 | 0 |
+| Lede | Satoshi | 17px | 400 | -0.005em |
+| Label / meta | Satoshi | 12.5px | 500 | 0, sentence case |
+| Control | Satoshi | 13px | 500 | 0 |
+| Code | system mono | 0.88em | 400 | 0 |
+
+Emphasis is italic or weight **within Satoshi**, never a second family.
+No uppercase + wide-tracking micro-labels anywhere.
+
+### Still open (not done in this pass)
+
+- **No images anywhere on the site.** Highest-value remaining fix; blocked on
+  screenshots Yixin will supply. Layout slots not yet cut.
+- Portfolio status pips introduce green + purple alongside the blue accent,
+  breaking the single-accent lock.
+- Radius scale is still mixed (doors 0, cards 20px, icon tiles 12-14px, pills).
+- Theme hard-codes `dark` and ignores `prefers-color-scheme` on all three pages.
+- `frontend/assets/styles.css` is dead: no HTML file links it.
+- Design tokens remain triplicated across the three files with no shared source.
+
+---
+
+## 17. Ambient Bubble Field on Portfolio (2026-08-12, experimental)
+
+### Previous direction
+
+`portfolio.html` had only the dark-mode starfield. The soft-orb visual language
+lived exclusively in `chat.html`, where bubbles are D3 force-simulated,
+interactive memory-topic nodes.
+
+### What changed
+
+Added `#bubblefield` to `portfolio.html`: eight ambient orbs using the same
+material as the chat bubbles (radial fill feathering to transparent, no outline),
+drifting slowly, layered in front of the starfield and behind the content column.
+
+Deliberate constraints:
+
+- **Not D3.** Portfolio does not load `d3.min.js`; 280KB for decoration is not worth it.
+- **Not interactive and not labeled.** These are planets, not nodes.
+- **Curated fixed layout, not random**, so orbs stay clear of the reading column
+  on every load. Hues lifted from the chat bubble palette (blue = work, warm = personal).
+- Transform-only animation, `pointer-events: none`, honored by the existing
+  blanket `prefers-reduced-motion` override.
+
+### Why it changed
+
+The galaxy is a deliberate concept, not decoration: the chat bubbles read as
+planets, so the starfield is the world they live in. The critique's initial
+recommendation to cut the galaxy was **retracted** on that basis. The real problem
+was that the landing and portfolio pages did not speak the visual language the
+chat page had already invented, so their backgrounds read as generic space.
+
+### New intended direction
+
+The bubble/planet field becomes the shared ambient layer across all three pages,
+turning decoration into identity. **Status: experimental on `portfolio.html` only,
+pending visual review.** If it holds, `index.html`'s cruder light-mode `.dot`
+field should be replaced with the same orb system.

@@ -21,17 +21,11 @@
     })();
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f%5B%5D=satoshi@1,2&f%5B%5D=britney@1&display=swap" rel="stylesheet">
 
   <style>
-    @font-face {
-      font-family: 'Autumn Brush';
-      src: url('assets/AutumnBrush.otf') format('opentype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-
     :root {
       --paper:        #F8F4EE;
       --paper-2:      #E9D9C9;
@@ -44,9 +38,10 @@
       --forest-hover: #425978;
       --forest-soft:  #D8E0EC;
       --ease-out:     cubic-bezier(0.2, 0.7, 0.2, 1);
-      --font-serif:   'Playfair Display', Georgia, serif;
-      --font-sans:    -apple-system, 'Helvetica Neue', sans-serif;
-      --font-mono:    'Geist Mono', ui-monospace, monospace;
+      /* Two families. Britney is the logotype and nothing else. */
+      --font-display: 'Britney', 'Satoshi', sans-serif;
+      --font-sans:    'Satoshi', -apple-system, 'Helvetica Neue', sans-serif;
+      --font-code:    ui-monospace, SFMono-Regular, Menlo, monospace;
 
       /* RGB component versions — use with rgba(var(--X-rgb), alpha) */
       --ink-rgb:       47, 44, 49;
@@ -124,17 +119,17 @@
     }
 
     .landing-name {
-      font-family: 'Autumn Brush', cursive;
-      font-weight: 400;
+      font-family: var(--font-display);
+      font-weight: 500;
       font-size: clamp(40px, 5.5vw, 72px);
       line-height: 1.1;
-      letter-spacing: 0.01em;
+      letter-spacing: -0.01em;
       color: var(--ink);
       pointer-events: none;
     }
 
     .landing-tagline {
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-style: normal;
       font-size: clamp(16px, 1.55vw, 19px);
       font-weight: 400;
@@ -173,7 +168,7 @@
 
     .landing-input {
       flex: 1;
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 16px;
       font-weight: 400;
       color: var(--ink);
@@ -185,7 +180,7 @@
     .landing-input::placeholder { color: var(--ink-4); font-style: italic; }
 
     .landing-send {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
       color: var(--paper);
@@ -236,10 +231,10 @@
     }
 
     .chat-brand {
-      font-family: 'Autumn Brush', cursive;
-      font-size: 28px;
-      font-weight: normal;
-      letter-spacing: 0;
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
       color: var(--ink);
       text-decoration: none;
     }
@@ -251,7 +246,7 @@
       align-items: center;
     }
     .chat-topbar-nav a {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       letter-spacing: 0.02em;
       color: var(--ink-3);
@@ -285,7 +280,7 @@
       gap: 22px;
     }
     .landing-topbar-nav a {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       letter-spacing: 0.02em;
       color: var(--ink-3);
@@ -325,16 +320,14 @@
     @keyframes msgRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
     .msg-role {
-      font-family: var(--font-mono);
-      font-size: 10px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
       font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
       color: var(--ink-3);
     }
 
     .message-user .msg-text {
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 16px;
       font-weight: 400;
       color: var(--ink-2);
@@ -350,7 +343,7 @@
     }
 
     .message-assistant .msg-text {
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 18px;
       font-weight: 400;
       color: var(--ink);
@@ -393,7 +386,7 @@
       margin-top: 6px;
     }
     .followup-chip {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 500;
       padding: 5px 12px;
@@ -424,7 +417,7 @@
       font-size: 12px;
       color: var(--ink-3);
       margin: 4px 0 0;
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
     }
 
     /* ── Typing indicator ── */
@@ -468,7 +461,7 @@
     }
     .composer-input {
       flex: 1;
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 15px;
       font-weight: 400;
       color: var(--ink);
@@ -479,7 +472,7 @@
     }
     .composer-input::placeholder { color: var(--ink-4); font-style: italic; }
     .composer-send {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 500;
       color: var(--paper);
@@ -495,10 +488,9 @@
     .composer-send:hover { transform: translateY(-1px); }
     .composer-send:disabled { opacity: 0.38; cursor: default; transform: none; }
     .composer-hint {
-      font-family: var(--font-mono);
-      font-size: 10px;
+      font-family: var(--font-sans);
+      font-size: 12px;
       color: var(--ink-3);
-      letter-spacing: 0.04em;
       margin-top: 7px;
       padding-left: 18px;
     }
@@ -520,10 +512,9 @@
       -webkit-backdrop-filter: blur(10px);
     }
     .cta-action {
-      font-family: var(--font-mono);
-      font-size: 11px;
+      font-family: var(--font-sans);
+      font-size: 13px;
       font-weight: 500;
-      letter-spacing: 0.04em;
       color: var(--ink-3);
       background: none;
       border: none;
@@ -626,7 +617,7 @@
       margin-bottom: 20px;
     }
     .modal-title {
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 19px;
       font-weight: 500;
       color: var(--ink);
@@ -644,7 +635,7 @@
     .modal-close:hover { color: var(--ink); }
     .modal-textarea {
       width: 100%;
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 15px;
       color: var(--ink);
       background: var(--paper);
@@ -673,7 +664,7 @@
       flex-shrink: 0;
     }
     .modal-check-label {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       color: var(--ink-3);
       line-height: 1.55;
@@ -681,7 +672,7 @@
     }
     .modal-submit {
       width: 100%;
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
       color: var(--paper);
@@ -695,7 +686,7 @@
     .modal-submit:hover { background: var(--forest-hover); }
     .modal-submit:disabled { opacity: 0.5; cursor: default; }
     .modal-success {
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 15px;
       color: var(--ink-2);
       text-align: center;
@@ -705,10 +696,9 @@
 
     /* ── Landing hint ── */
     .landing-hint {
-      font-family: var(--font-mono);
-      font-size: 11px;
+      font-family: var(--font-sans);
+      font-size: 13px;
       font-weight: 400;
-      letter-spacing: 0.05em;
       color: var(--ink-3);
       pointer-events: none;
       margin-top: -4px;
@@ -726,11 +716,10 @@
       gap: 10px;
       align-items: baseline;
       justify-content: center;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.05em;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 500;
       color: var(--ink-3);
-      text-transform: uppercase;
       pointer-events: all;
       transition: opacity 200ms var(--ease-out);
     }
@@ -758,10 +747,9 @@
     /* ── Inline CTA mention ── */
     .chat-cta-mention {
       margin-top: 10px;
-      font-family: var(--font-mono);
-      font-size: 11px;
+      font-family: var(--font-sans);
+      font-size: 13px;
       font-weight: 500;
-      letter-spacing: 0.04em;
       color: var(--forest);
       padding: 6px 12px;
       border: 1px solid rgba(var(--forest-rgb), 0.22);
@@ -787,7 +775,7 @@
 
     /* ── Topics peek button (mobile only) ── */
     .topbar-topics-btn {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 500;
       letter-spacing: 0.02em;
@@ -810,7 +798,7 @@
       opacity: 0;
       pointer-events: none;
       z-index: 30;
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 500;
       letter-spacing: 0.04em;
@@ -900,7 +888,7 @@
       padding: 8px 16px;
       background: var(--ink);
       color: var(--paper);
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
       border-radius: 4px;
@@ -1102,11 +1090,11 @@
       box-shadow: 0 0 24px 4px rgba(200,80,80,0.25);
     }
     .voice-status {
-      font-family: var(--font-mono); font-size: 13px; color: var(--ink-3);
+      font-family: var(--font-sans); font-size: 13px; color: var(--ink-3);
       letter-spacing: 0.04em; margin: 0; min-height: 20px;
     }
     .voice-transcript {
-      font-family: var(--font-serif); font-size: 17px; color: var(--ink-2);
+      font-family: var(--font-sans); font-size: 17px; color: var(--ink-2);
       text-align: center; max-width: 480px; margin: 0 24px; min-height: 28px; font-style: italic;
     }
     .voice-close {
@@ -1567,10 +1555,10 @@
         lines.forEach(function (line, i) {
           txt.append('tspan')
             .attr('x', 0).attr('y', startY + i * lh)
-            .attr('font-family', "'Playfair Display', Georgia, serif")
+            .attr('font-family', "'Satoshi', -apple-system, 'Helvetica Neue', sans-serif")
             .attr('font-weight', '600')
             .attr('font-size', fs)
-            .attr('letter-spacing', '-0.01em')
+            .attr('letter-spacing', '-0.02em')
             .attr('fill', textColor)
             .text(line);
         });

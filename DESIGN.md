@@ -46,31 +46,43 @@ Creates a subtle cool-blue bloom at the top-left corner fading to warm paper.
 
 ## Typography
 
-Three fonts, each with a distinct role. Never mix roles.
+**Two loaded fonts.** Replaced the previous three-family system (Autumn Brush +
+Playfair Display + Geist Mono) on 2026-08-12; see `design-decision-log.md` §16 for
+why. Playfair Display and Geist Mono are **retired** and must not be reintroduced.
 
-### Autumn Brush — display
-- Source: local `assets/AutumnBrush.otf`
-- Use: page `<h1>` display headings only ("Talk to me.", "Memory Graph", "Profile Memory")
-- Size: `clamp(36px, 5vw, 58px)` on content pages; `clamp(26px, 3.4vw, 42px)` on landing
+### Autumn Brush — logotype only
+- Source: local `assets/AutumnBrush.otf`, preloaded
+- Token: `--font-display: 'Autumn Brush', cursive`
+- Use: **the name "Yixin Li" and nothing else** (`.name`, `.brand`, `.chat-brand`, `.landing-name`)
 - Weight: 400 (only weight available)
-- Never use for body copy, labels, or UI chrome
+- Never use for headings, body copy, labels, or UI chrome
 
-### Playfair Display — reading serif
-- Source: Google Fonts `Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700`
-- Token: `--font-serif: 'Playfair Display', Georgia, serif`
-- Use: chat message bodies, raw context/profile text, reading-weight content, brand name in topbar, italic dates
-- Minimum weight: **400** (300 is unavailable — do not use)
-- No `font-variation-settings` (Playfair Display is not a variable font)
+### Satoshi — everything else
+- Source: Fontshare, `https://api.fontshare.com/v2/css?f%5B%5D=satoshi@1,2&display=swap`
+- Two variable files only: 300–900 roman + 300–900 italic
+- Token: `--font-sans: 'Satoshi', -apple-system, 'Helvetica Neue', sans-serif`
+- Carries display headings, body copy, labels, buttons, nav, metadata, and D3 bubble labels
 
-### Geist Mono — UI chrome
-- Source: Google Fonts `Geist+Mono:wght@400;500`
-- Token: `--font-mono: 'Geist Mono', ui-monospace, 'Courier New', monospace`
-- Use: nav links, eyebrow labels, buttons, mode toggles, card ID badges, chip tags, status text, metadata, footnotes
-- Sizes: 10–13px for labels; 12–14px for buttons/nav
+### Role scale
 
-### System sans — fallback only
-- Token: `--font-sans: -apple-system, 'Helvetica Neue', sans-serif`
-- Use: `body` base default and `<input>`/`<textarea>` defaults only. Individual components always override with serif or mono.
+| Role | Size | Weight | Tracking |
+|---|---|---|---|
+| Display `h1` | `clamp(34px, 5vw, 54px)` | 600 | -0.03em |
+| Card heading | 21px | 600 | -0.02em |
+| Lede | 17px | 400 | -0.005em |
+| Body / reading | 15.5px | 400 | 0 |
+| Control (button, nav, link) | 13px | 500 | 0 |
+| Label / metadata | 12.5px | 500 | 0 |
+
+### Hard rules
+- **Emphasis is italic or weight within Satoshi.** Never a second family.
+- **No uppercase + wide-tracking micro-labels.** No eyebrows above headings.
+- **No monospace as a "technical" costume.** Mono is for code only.
+
+### System mono — inline code only
+- Token: `--font-code: ui-monospace, SFMono-Regular, Menlo, monospace`
+- Use: `<code>` inside body copy (`.ipynb`, `all-MiniLM-L6-v2`). No webfont loaded.
+- Size: `0.88em` relative to surrounding text
 
 ---
 
