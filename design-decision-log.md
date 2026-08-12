@@ -614,3 +614,114 @@ The bubble/planet field becomes the shared ambient layer across all three pages,
 turning decoration into identity. **Status: experimental on `portfolio.html` only,
 pending visual review.** If it holds, `index.html`'s cruder light-mode `.dot`
 field should be replaced with the same orb system.
+
+---
+
+## 18. Logotype and Self-Hosted Fonts (2026-08-12)
+
+### Previous direction
+
+Autumn Brush (local 659KB `.otf`) as the logotype, with Satoshi and Britney
+loaded remotely from Fontshare via `<link>`.
+
+### What changed
+
+**Logotype: Autumn Brush → Britney → Ephesis.** Autumn Brush was rejected as a
+brush script; Britney was rejected once seen rendering correctly. Ephesis is a
+fine calligraphic script (a pen, not a brush), self-hosted at 9.6KB.
+
+**All fonts are now self-hosted** in `frontend/assets/fonts/`. This was not a
+preference. Two real defects forced it:
+
+1. **Fontshare serves protocol-relative URLs** (`//cdn.fontshare.com/...`). On a
+   `file://` page these resolve to `file://cdn.fontshare.com/...` and fail
+   silently. Every local review up to this point had been looking at system
+   fallback fonts, not the intended type.
+2. **Fontshare drops families from combined requests.** Requesting
+   `satoshi@1,2` and `britney@1` in one URL returned Satoshi only. This would
+   have shipped broken to production, not just to local preview.
+
+Discovered because Yixin sent a screenshot of the rendered page. Worth recording:
+the earlier verification checked file integrity and the absence of old font names,
+never that a font actually rendered. Font payload went 659KB → ~100KB.
+
+### Script-specific rules now encoded
+
+- **Weight 400 only.** Ephesis ships one weight; 500+ triggers synthetic bolding.
+- **Larger em.** Scripts have small x-heights; the landing runs
+  `clamp(46px, 13.5vw, 68px)` to `clamp(56px, 7.4vw, 112px)`.
+- **Descender headroom.** `line-height: 1.2` plus `padding-bottom: 0.06em`, since
+  "Yixin" carries a `y` descender.
+- Topbar lockup is 33px, larger than a sans would need at the same optical size.
+
+### New intended direction
+
+Two self-hosted families, never remote. Preview locally over HTTP, never
+`file://` — web fonts are always fetched in CORS mode and Chrome treats `file://`
+pages as opaque origins, so fonts silently fail there even when self-hosted.
+
+---
+
+## 19. Landing Rebuilt as an Asymmetric List (2026-08-12)
+
+### Previous direction
+
+Two symmetric cards side by side, each: icon tile in a rounded square → title →
+description → arrow CTA. A nebula glow had been painted over the cards, but the
+card anatomy underneath was untouched — `.door` was still fully styled as a glass
+card and then overridden with `!important`.
+
+### What changed
+
+Replaced with an **asymmetric two-column layout**: the name and tagline hold the
+left, two hairline-separated rows hold the right. No cards, no icon tiles, no
+symmetry, no arrows, and no hand-drawn SVG icons anywhere on the page.
+
+Marker iteration is worth recording, because two candidates were rejected for the
+same underlying reason:
+
+- **Arrow** — generic.
+- **4-point sparkle** — rejected: that glyph is the Gemini / Copilot "AI magic"
+  mark. Swapping one AI tell for another is not progress.
+- **Orb** (chosen) — the site's own bubble at glyph scale. Needs no SVG at all.
+
+Also considered and rejected for now: a split-halves layout with a moving divider
+(kept as reference in the decision history; the moving line can be driven by
+`transform` on an absolutely positioned rule, with each half's content following
+at half the travel, if it is ever revived).
+
+### Animation correctness
+
+The first implementation stuttered. Three genuine causes, all fixed:
+
+1. **A gradient carrying `currentColor` cannot be interpolated.** Gradients are
+   not transitionable, so the colour change repainted in discrete steps. The orb
+   is now a solid `background-color` with a `box-shadow` glow.
+2. **`padding-left` was animated on hover**, forcing a layout pass every frame.
+   The text now slides via `transform: translateX(13px)` while the row, its
+   hairlines, and the orb stay anchored. It also reads better.
+3. **Three overlapping durations** (340/340/460ms) meant nothing landed together.
+   All motion now shares `--way-dur: 420ms` and one easing curve.
+
+`filter: drop-shadow` was replaced with `box-shadow`, which does not
+re-rasterise the element on every frame of a scale.
+
+### Mobile
+
+- `body` is a flex column at `min-height: 100dvh`; `.wrap` takes `flex: 1 0 auto`.
+  Previously `.wrap` forced its own full viewport while content sat pinned to the
+  top, leaving a large void and pushing the footer past the fold.
+- **Full-bleed hairlines** below 640px: `.ways` gets negative inline margins so the
+  rules reach both screen edges, while text stays on the 22px margin.
+- `@media (hover: none)`: the orb renders in the accent colour at rest, and
+  neither text nor orb moves, so nothing shifts under a thumb.
+- Breakpoints at 860px (columns stack) and 640px (phone), not one breakpoint.
+
+Verified with headless Chrome at 360x640, 390x844, 768x1024, 1280x560 and
+1440x900: **overflow is 0 at every size**, rules measure full viewport width on
+phones, and row height is 89-107px against a 44px tap-target minimum.
+
+### Also fixed here
+
+`body { overflow: hidden }` (a P0-adjacent trap from the original audit) is gone;
+short viewports could previously clip content with no way to scroll to it.

@@ -50,18 +50,35 @@ Creates a subtle cool-blue bloom at the top-left corner fading to warm paper.
 Playfair Display + Geist Mono) on 2026-08-12; see `design-decision-log.md` §16 for
 why. Playfair Display and Geist Mono are **retired** and must not be reintroduced.
 
-### Autumn Brush — logotype only
-- Source: local `assets/AutumnBrush.otf`, preloaded
-- Token: `--font-display: 'Autumn Brush', cursive`
+### Ephesis — logotype only
+- Source: **self-hosted** `assets/fonts/Ephesis-Regular.woff2` (9.6KB), preloaded
+- Token: `--font-display: 'Ephesis', 'Snell Roundhand', cursive`
 - Use: **the name "Yixin Li" and nothing else** (`.name`, `.brand`, `.chat-brand`, `.landing-name`)
-- Weight: 400 (only weight available)
-- Never use for headings, body copy, labels, or UI chrome
+- **Weight 400 only.** Never request 500+ — the browser synthesises a bold and
+  destroys a fine calligraphic face.
+- A script needs a bigger em and descender headroom: landing is
+  `clamp(46px, 13.5vw, 68px)` on mobile up to `clamp(56px, 7.4vw, 112px)`,
+  `line-height: 1.2`, `padding-bottom: 0.06em`. Topbar lockup is 33px.
+- Superseded Autumn Brush, then Britney. See `design-decision-log.md` §16, §18.
 
 ### Satoshi — everything else
-- Source: Fontshare, `https://api.fontshare.com/v2/css?f%5B%5D=satoshi@1,2&display=swap`
-- Two variable files only: 300–900 roman + 300–900 italic
+- Source: **self-hosted** `assets/fonts/Satoshi-Variable.woff2` +
+  `Satoshi-VariableItalic.woff2` (300–900 roman and italic, 86KB together)
 - Token: `--font-sans: 'Satoshi', -apple-system, 'Helvetica Neue', sans-serif`
 - Carries display headings, body copy, labels, buttons, nav, metadata, and D3 bubble labels
+
+### Fonts are self-hosted, and must stay that way
+Do **not** reintroduce a remote `<link>` to Fontshare or Google Fonts. Two reasons,
+both found the hard way:
+1. Fontshare serves **protocol-relative** URLs (`//cdn.fontshare.com/...`), which
+   resolve to `file://cdn.fontshare.com/...` on a `file://` page and silently fail.
+2. Fontshare **drops families from combined requests** — asking for Satoshi and a
+   second family in one URL returned Satoshi only, which would have shipped broken.
+
+Total font payload is ~100KB, down from 659KB for Autumn Brush alone.
+
+Preview locally over HTTP (`python3 -m http.server`), never `file://`: web fonts are
+always fetched in CORS mode and Chrome treats `file://` pages as opaque origins.
 
 ### Role scale
 
@@ -95,7 +112,7 @@ Each bubble is a layered SVG `<g>` element:
 
 1. **Halo circle** — slightly larger than the bubble, low-opacity fill, appears on hover/focus to create a soft glow ring
 2. **Fill circle** — radial gradient fill, feathers to transparent at the edge (not a hard-edge circle)
-3. **Text label** — Playfair Display for topic names, Geist Mono for activation scores beneath
+3. **Text label** — Satoshi 600 for topic names, Satoshi for activation scores beneath
 
 ### Radial gradient fill pattern
 The gradient goes from ~90% opacity at center to 0% at the edge, creating a soft floating orb with no hard outline:
@@ -163,8 +180,8 @@ Desktop range: 48–85px. Mobile range: 32–56px.
 ### Key properties
 - **Bubbles are interactive** — each bubble is a named topic node (AI Agents, Memory Systems, Startup, etc.). Clicking one pre-fills the input with a starter question. Users may edit or send as-is.
 - **Bubble physics** — full-viewport D3 simulation with perpetual drift. Bubbles may partially bleed off screen edges. The graph is never static.
-- **Identity block** — horizontally and vertically centered: name in Autumn Brush → short tagline in Playfair Display → input bar below.
-- **Input bar** — wide pill, roughly 55–65% of viewport width. Playfair Display placeholder text `"Ask me anything…"`. Enter key or Send button submits.
+- **Identity block** — horizontally and vertically centered: name in Ephesis → short tagline in Satoshi → input bar below.
+- **Input bar** — wide pill, roughly 55–65% of viewport width. Satoshi placeholder text `"Ask me anything…"`. Enter key or Send button submits.
 - **No topbar** in this state. Navigation only appears after the chat panel opens.
 - **Background** — warm paper `#F8F4EE` with the standard top-left blue gradient bloom.
 - **Bubble state at landing** — all nodes at rest, equal visual weight (no highlights). The profile/center concept is conveyed by the identity text block, not a separate center node on landing.
@@ -206,12 +223,12 @@ When a visitor clicks a bubble:
 
 ### Key properties
 - **Chat panel** — centered column, `max-width ~760px`, full viewport height. Glassmorphism surface: `rgba(255,255,255,0.72)` + `backdrop-filter: blur(10px)`. Topbar inside the panel top.
-- **Message thread** — scrollable area between topbar and composer. Playfair Display for all message text. Alternating alignment: Yixin responses left-aligned (dark/paper style), user messages right-aligned (light/outlined style).
-- **Follow-up suggestions** — after each Yixin response, up to 3 chip-style suggestion buttons appear inline below the message. Geist Mono, `border-radius: 999px`. Clicking one pre-fills the composer.
-- **Composer** — same visual input bar from landing, now docked at the panel bottom. Playfair Display. Enter or Send button.
+- **Message thread** — scrollable area between topbar and composer. Satoshi for all message text. Alternating alignment: Yixin responses left-aligned (dark/paper style), user messages right-aligned (light/outlined style).
+- **Follow-up suggestions** — after each Yixin response, up to 3 chip-style suggestion buttons appear inline below the message. Satoshi 500, `border-radius: 999px`. Clicking one pre-fills the composer.
+- **Composer** — same visual input bar from landing, now docked at the panel bottom. Satoshi. Enter or Send button.
 - **Side bubbles** — bubble physics simulation continues on both flanks. Clicking any side bubble injects that topic into the conversation (same prefill behavior as landing). Explored/active bubbles are larger and more vivid; unvisited bubbles are smaller and muted.
 - **Bubble column width** — roughly 18–20% of viewport per side, leaving ~60% for the chat panel.
-- **CTA footer** — persistent strip below the chat panel (or docked to page bottom). Four actions always visible: LinkedIn · Send Message · Download Resume · Schedule Time. Geist Mono, small, unobtrusive. Fades in as part of the chat panel entrance.
+- **CTA footer** — persistent strip below the chat panel (or docked to page bottom). Four actions always visible: LinkedIn · Send Message · Download Resume · Schedule Time. Satoshi 500, small, unobtrusive. Fades in as part of the chat panel entrance.
 
 ### Dynamic bubble state in chat
 - **Visited/explored** — bubbles for topics already discussed grow slightly and increase opacity. Visual cue that the visitor has explored this area.
@@ -287,7 +304,7 @@ A persistent strip that remains visible below the chat panel throughout the sess
 | Schedule Time | Opens calendar scheduling link |
 
 ### Visual treatment
-- Geist Mono, `font-size: 11–12px`, `letter-spacing: 0.05em`
+- Satoshi 500, `font-size: 12.5px`, no letter-spacing (uppercase micro-labels are retired)
 - Minimal — does not compete with the chat panel
 - Fades in as part of the chat panel entrance (~440ms into transition)
 - Always visible; does not scroll away

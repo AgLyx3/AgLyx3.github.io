@@ -15,17 +15,36 @@
   })();
 </script>
 
-<link rel="preconnect" href="https://api.fontshare.com">
-<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
-<link href="https://api.fontshare.com/v2/css?f%5B%5D=satoshi@1,2&f%5B%5D=britney@1&display=swap" rel="stylesheet">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/Satoshi-Variable.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/Ephesis-Regular.woff2" crossorigin>
 <style>
+  /* Self-hosted. Fontshare serves protocol-relative URLs that break on file://,
+     and silently drops families from combined requests. */
+  @font-face {
+    font-family: 'Satoshi';
+    src: url('assets/fonts/Satoshi-Variable.woff2') format('woff2');
+    font-weight: 300 900; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'Satoshi';
+    src: url('assets/fonts/Satoshi-VariableItalic.woff2') format('woff2');
+    font-weight: 300 900; font-style: italic; font-display: swap;
+  }
+  /* Ephesis ships one weight only. Never ask for 500+ or the browser
+     synthesises a bold, which destroys a fine calligraphic face. */
+  @font-face {
+    font-family: 'Ephesis';
+    src: url('assets/fonts/Ephesis-Regular.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+
   :root {
     --paper:#F8F4EE; --paper-2:#E9D9C9; --paper-edge:#CFBEAE;
     --ink:#2F2C31; --ink-2:#4A4750; --ink-3:#716D73; --ink-4:#9D97A0;
     --forest:#536C89; --forest-hover:#425978; --forest-soft:#D8E0EC;
     --ease-out:cubic-bezier(0.2,0.7,0.2,1);
-    /* Two families. Britney is the logotype and nothing else. */
-    --font-display:'Britney','Satoshi',sans-serif;
+    /* Two families. Ephesis is the logotype and nothing else. */
+    --font-display:'Ephesis','Snell Roundhand',cursive;
     --font-sans:'Satoshi', -apple-system,'Helvetica Neue',sans-serif;
     --font-code:ui-monospace, SFMono-Regular, Menlo, monospace;
     --ink-rgb:47,44,49; --paper-rgb:248,244,238; --forest-rgb:83,108,137;
@@ -61,7 +80,8 @@
     padding: 18px clamp(24px, 5vw, 64px);
     background: rgba(var(--paper-rgb), 0.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(var(--forest-rgb), 0.12); }
-  .brand { font-family: var(--font-display); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+  .brand { font-family: var(--font-display); font-size: 33px; font-weight: 400; letter-spacing: 0.01em;
+           line-height: 1; color: var(--ink); text-decoration: none; }
   .brand:hover { opacity: 0.6; }
   .topnav { display: flex; gap: 22px; align-items: center; }
   .topnav a { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--ink-3); text-decoration: none; transition: color 140ms; }
