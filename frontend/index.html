@@ -155,22 +155,20 @@
   .way:hover .way-label, .way:hover .way-desc,
   .way:focus-visible .way-label, .way:focus-visible .way-desc { transform: translateX(13px); }
 
-  /* Orb marker: the site's own bubble at glyph scale. Every animated property
-     here is interpolatable — background-color, box-shadow, transform. No
-     gradient, because a gradient carrying currentColor cannot transition and
-     repaints in steps. */
+  /* Orb marker: the site's own bubble at glyph scale, and absent until the
+     cursor arrives. It blooms in rather than sitting there as decoration.
+     The 22px box is always reserved, so nothing reflows when it appears.
+     Only opacity and transform animate — both composite. */
   .orb-mark { flex-shrink: 0; width: 22px; height: 22px;
               display: flex; align-items: center; justify-content: center; }
-  .orb-mark i { width: 13px; height: 13px; border-radius: 50%; will-change: transform;
-    background: rgba(var(--ink-rgb), 0.30);
-    box-shadow: 0 0 0 0 rgba(var(--forest-rgb), 0);
-    transition: background-color var(--way-dur) var(--way-ease),
-                box-shadow      var(--way-dur) var(--way-ease),
-                transform       var(--way-dur) var(--way-ease); }
-  .way:hover .orb-mark i, .way:focus-visible .orb-mark i {
+  .orb-mark i { width: 13px; height: 13px; border-radius: 50%; will-change: transform, opacity;
     background: rgba(var(--forest-rgb), 1);
     box-shadow: 0 0 13px 2px rgba(var(--forest-rgb), 0.55);
-    transform: scale(1.24); }
+    opacity: 0; transform: scale(0.35);
+    transition: opacity   var(--way-dur) var(--way-ease),
+                transform var(--way-dur) var(--way-ease); }
+  .way:hover .orb-mark i, .way:focus-visible .orb-mark i {
+    opacity: 1; transform: scale(1); }
 
   .foot { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; gap: 14px;
           align-items: center; font-family: var(--font-sans); font-size: 12.5px; font-weight: 500; color: var(--ink-3); }
@@ -216,12 +214,13 @@
             gap: 12px; flex-wrap: wrap; justify-content: center; }
   }
 
-  /* Pointer-less devices never resolve :hover, so the orb has to read as
-     interactive at rest, and the text must not slide under a thumb. */
+  /* Pointer-less devices never resolve :hover, so a cursor-reveal can't fire.
+     Drop the orb entirely there rather than leave a dot that means nothing,
+     and don't slide the text under a thumb. The title and hairline already
+     carry the affordance. */
   @media (hover: none) {
-    .orb-mark i { background: rgba(var(--forest-rgb), 0.85); }
+    .orb-mark { display: none; }
     .way:hover .way-label, .way:hover .way-desc { transform: none; }
-    .way:hover .orb-mark i { transform: none; box-shadow: 0 0 0 0 rgba(var(--forest-rgb), 0); }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
