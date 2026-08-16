@@ -725,3 +725,40 @@ phones, and row height is 89-107px against a 44px tap-target minimum.
 
 `body { overflow: hidden }` (a P0-adjacent trap from the original audit) is gone;
 short viewports could previously clip content with no way to scroll to it.
+
+---
+
+## 20. Landing Portrait Becomes an Overlapping Print Pair (2026-08-16)
+
+### Previous direction
+
+One portrait sat behind the landing identity at low opacity, then resolved into a
+crisp angled print when the name or image was hovered, focused, or tapped.
+
+### What changed
+
+The landing now uses two overlapping portraits: the warm calligraphy photograph
+and a more formal full-length portrait. Both use the same intersecting horizontal
+and vertical alpha masks at rest, then crossfade into crisp, oppositely angled
+prints as one reveal group. Hovering an individual print raises it within the pair.
+
+### Why
+
+The pair shows two complementary sides of Yixin without adding explanatory copy
+or another page section. The overlapping-print treatment was selected over a
+scattered composition and a rigid side-by-side diptych because it preserves the
+landing's editorial character and keeps the photographs connected to the name.
+
+### Layout and interaction constraints
+
+- On desktop, the complete foreground pair must end before the navigation column;
+  it may overlap the name and tagline but not “Talk to me” or “See what I've built.”
+- On mobile, both prints remain above the action rows and inside the viewport.
+- Touch uses an explicit reveal state: tapping the name or either portrait opens
+  the pair; tapping either open portrait or any blank page area closes it.
+- Desktop hover and keyboard focus retain the same reveal behavior.
+
+### New intended direction
+
+The overlapping pair is the production landing treatment. Temporary comparison
+views are not part of the shipped navigation or product surface.
