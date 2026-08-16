@@ -40,6 +40,14 @@ test.describe('landing portrait reveal', () => {
     await expect(portraits.nth(1).locator('img')).toHaveJSProperty('complete', true);
     expect(await layoutBox(ways)).toEqual(waysBefore);
 
+    const nameBox = await name.boundingBox();
+    const activePortraitBoxes = await portraits.evaluateAll((nodes) => nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return { top: box.top, left: box.left, right: box.right };
+    }));
+    expect(Math.min(...activePortraitBoxes.map((box) => box.top)))
+      .toBeGreaterThanOrEqual(nameBox.y + nameBox.height);
+
     const waysBox = await ways.boundingBox();
     const portraitBoxes = await portraits.evaluateAll((nodes) => nodes.map((node) => {
       const box = node.getBoundingClientRect();
