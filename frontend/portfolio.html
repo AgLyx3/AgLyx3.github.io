@@ -17,6 +17,8 @@
 
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Satoshi-Variable.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Ephesis-Regular.woff2" crossorigin>
+<link rel="stylesheet" href="assets/pixel-system.css">
+<script defer src="assets/pixel-system.js"></script>
 <style>
   /* Self-hosted. Fontshare serves protocol-relative URLs that break on file://,
      and silently drops families from combined requests. */
@@ -191,7 +193,7 @@
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
-<body>
+<body class="pixel-site" data-pixel-page="portfolio">
   <div id="starfield" aria-hidden="true"></div>
   <div id="bubblefield" aria-hidden="true"></div>
 

@@ -35,7 +35,7 @@ test.describe('landing portrait reveal', () => {
     await expect.poll(() => layerOpacity(secondaryPortrait, '::before')).toBe('0');
     await expect(portrait.locator('img')).toHaveCSS('opacity', '1');
     expect(await portrait.evaluate((node) => getComputedStyle(node).boxShadow))
-      .toContain('rgba(216, 224, 236, 0.72)');
+      .toContain('rgba(216, 224, 236, 0.58)');
     await expect(portrait.locator('img')).toHaveJSProperty('complete', true);
     await expect(portraits.nth(1).locator('img')).toHaveJSProperty('complete', true);
     expect(await layoutBox(ways)).toEqual(waysBefore);

@@ -762,3 +762,9 @@ landing's editorial character and keeps the photographs connected to the name.
 
 The overlapping pair is the production landing treatment. Temporary comparison
 views are not part of the shipped navigation or product surface.
+## 21. Ambient pixel constellation system across the frontend (review branch)
+
+- Previous direction: The homepage used soft photographic masks and circular ambient marks, the portfolio used blurred glass cards and large gradient orbs, and the chat page used smooth D3 topic bubbles.
+- What changed: The `pixel-site-system` worktree applies the chat Cluster study as a shared visual system. Ambient decoration becomes low-opacity square-pixel constellations, interface surfaces use crisp geometry and restrained hard shadows, and metadata uses monospaced type while the calligraphic name and readable content typography remain intact.
+- Why: Repeating the same pixel atmosphere, geometry, and interaction language makes the three frontend experiences feel authored as one system without turning photographs or long-form content into retro pixel art.
+- New intended direction: Use pixels for atmosphere, boundaries, status marks, and relationship cues; preserve photography, the Ephesis identity mark, and Satoshi content text. Maintain explicit exclusion zones around interactive content and reduce pixel density on mobile.

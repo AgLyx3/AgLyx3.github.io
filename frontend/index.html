@@ -21,6 +21,8 @@
 
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Satoshi-Variable.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Ephesis-Regular.woff2" crossorigin>
+<link rel="stylesheet" href="assets/pixel-system.css">
+<script defer src="assets/pixel-system.js"></script>
 <style>
   /* Self-hosted. Fontshare serves protocol-relative URLs that break on file://,
      and silently drops families from combined requests. */
@@ -320,7 +322,7 @@
      painted onto; the glow now belongs to the star markers instead. */
 </style>
 </head>
-<body>
+<body class="pixel-site" data-pixel-page="home">
   <div id="starfield" aria-hidden="true"></div>
   <div id="galaxy-mw" aria-hidden="true"></div>
   <div class="field" id="field" aria-hidden="true"></div>
