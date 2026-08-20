@@ -106,6 +106,8 @@
     .bubble-traces .trace-line { stroke: var(--ink-3); }
     [data-theme=dark] .bubble-traces .trace-line { stroke: rgb(160, 200, 255); }
     .bubble-node { cursor: pointer; pointer-events: all; }
+    .bubble-hit-target { fill: transparent; pointer-events: all; }
+    .bubble-node text { pointer-events: all; }
     .bubble-node .node-halo {
       opacity: 0;
       transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
@@ -1468,7 +1470,7 @@
     var landingFoot   = document.getElementById('landingFoot');
     var bubblePreviewSwitcher = document.getElementById('bubblePreviewSwitcher');
 
-    /* Query-only design preview. The normal page remains on its original bubbles. */
+    /* Query-only design preview. The normal page uses the cluster treatment. */
     (function initBubblePreview() {
       var styles = ['original', 'dither', 'stepped', 'constellation'];
       var params = new URLSearchParams(window.location.search);
@@ -1809,6 +1811,11 @@
         .attr('aria-label', function (d) { return 'Explore: ' + d.label; })
         .attr('filter', 'url(#fshadow)');
 
+      /* Keep the sparse pixel treatment easy to activate between visible cells. */
+      nodeGroupsSel.append('circle')
+        .attr('class', 'bubble-hit-target')
+        .attr('r', function (d) { return d.radius + (mob ? 8 : 10); });
+
       var inner = nodeGroupsSel.append('g').attr('class', 'node-inner');
 
       var originalStyle = inner.append('g').attr('class', 'bubble-style bubble-style-original');
@@ -1845,7 +1852,7 @@
         var textColor = 'rgb(' + HUES[d.hue].text + ')';
         var txt = g.append('text')
           .attr('text-anchor', 'middle')
-          .attr('pointer-events', 'none');
+          .attr('pointer-events', 'all');
         lines.forEach(function (line, i) {
           txt.append('tspan')
             .attr('x', 0).attr('y', startY + i * lh)

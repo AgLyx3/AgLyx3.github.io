@@ -19,6 +19,51 @@ test.describe('portfolio chat', () => {
     await expect(page.locator('.bubble-node').first()).toBeVisible();
   });
 
+  test('pixel cluster labels activate hover, pointer, and keyboard behavior', async ({ page }) => {
+    await page.locator('.bubble-node').first().evaluate((node) => {
+      node.dataset.interactionTarget = 'true';
+    });
+    const bubble = page.locator('.bubble-node[data-interaction-target="true"]');
+    const label = bubble.locator('text');
+    await expect(page.locator('body')).toHaveAttribute('data-bubble-style', 'constellation');
+    await expect(bubble.locator('.bubble-hit-target')).toHaveAttribute('r', /\d/);
+    await expect(label).toHaveCSS('pointer-events', 'all');
+
+    await bubble.evaluate((node) => {
+      const datum = window.d3.select(node).datum();
+      datum.fx = datum.x;
+      datum.fy = datum.y;
+    });
+    await label.hover();
+    await expect(bubble).toHaveClass(/is-hovered/);
+    await label.click();
+    await expect(page.locator('.landing-input')).not.toHaveValue('');
+
+    await page.locator('.landing-input').fill('');
+    await bubble.evaluate((node) => node.focus());
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.landing-input')).not.toHaveValue('');
+  });
+
+  test('pixel clusters remain tappable on mobile', async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await context.newPage();
+    await page.goto('/chat.html');
+    await page.waitForSelector('.bubble-node', { timeout: 15_000 });
+
+    const bubble = page.locator('.bubble-node').first();
+    const box = await bubble.boundingBox();
+    expect(box).not.toBeNull();
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.locator('.landing-input')).not.toHaveValue('');
+
+    await context.close();
+  });
+
   test('bubble design preview switches styles without rebuilding the graph', async ({ page }) => {
     await page.goto('/chat.html?bubblePreview=1');
     await page.waitForSelector('.bubble-node', { timeout: 15_000 });
