@@ -725,3 +725,76 @@ phones, and row height is 89-107px against a 44px tap-target minimum.
 
 `body { overflow: hidden }` (a P0-adjacent trap from the original audit) is gone;
 short viewports could previously clip content with no way to scroll to it.
+
+---
+
+## 20. Landing Background: Constellation Field, Adapted from ThreeUI (2026-08-22)
+
+### Previous direction
+
+The landing page carried two mutually exclusive background layers:
+
+- **dark** — 150 absolutely-positioned `.star` spans twinkling on a CSS keyframe,
+  plus the milky-way band and periodic meteors
+- **light** — 14 blurred `.dot` spans drifting on an 18s loop, described in the
+  source as the "light-mode bubble motif"
+
+### What changed
+
+The light-mode dots are gone. Both themes now share a single `<canvas>` background
+(`frontend/assets/constellation.js`): 26–62 drifting nodes that draw a link
+whenever two fall within a viewport-scaled radius, with a gentle pull toward the
+cursor. The dark starfield, milky-way band, and meteors are untouched — the
+network now sits under them as a second, slower layer.
+
+The renderer is adapted from **ConstellationField** in
+[ThreeUI Community](https://github.com/MengTo/threeui) (MIT).
+
+### Why it changed
+
+- The dots read as dust rather than as anything. A node/link network reads as the
+  connective layer the site is actually about — "Human and AI", a retrieval graph
+  behind the chat agent — so the background finally says something.
+- Light mode had the weaker of the two treatments and now has parity with dark.
+- One canvas replaces 14 (light) / 150 (dark, partially) animated DOM nodes.
+
+### Why the library itself was not adopted
+
+ThreeUI ships as `@designcodeio/threeui`, a **React** package whose components
+wrap full standalone HTML demo documents in an iframe (each pulling Tailwind CDN,
+GSAP, and Iconify). This frontend is vanilla HTML/CSS/JS with no build step,
+deployed as static files. Taking the package would have meant introducing React,
+a bundler, and a build to the Vercel project in exchange for one background
+effect.
+
+Most of the catalogue is also not "3D" in the sense the name suggests — the
+constellation family is plain 2D canvas; only a subset (portal-field, wireframe
+forms) actually loads three.js.
+
+So: **borrow the renderer, not the dependency.** The lifted file is ~220 lines
+with zero dependencies and no build step. The same approach is available for any
+other component in that repo if one is wanted later.
+
+### Adaptations made to the upstream renderer
+
+- Colours read from `--forest-rgb` at runtime instead of a hard-coded gold, with
+  a `MutationObserver` on `data-theme` so the field re-tints on theme toggle
+  rather than restarting. Alphas differ per theme — ink on cream carries much
+  further than glow on navy.
+- Node count and link radius scale with viewport width (26 / 44 / 62).
+- `prefers-reduced-motion` paints one static frame instead of skipping the field
+  entirely, so the texture survives without motion. Upstream rendered nothing.
+- Loop parks on `visibilitychange`; DPR capped at 2; `resize` debounced 150ms.
+- Pointer gravity is gated on `(hover: hover)` — it was dead weight on touch.
+
+### Current intended direction
+
+The constellation is the landing page's background in both themes. The portfolio
+page was deliberately left alone: it already runs its own **bubble field** (§17),
+a motif shared with the chat page, and adding a network beneath it would be a
+third ambient layer competing with an intentional one. Two pages, two
+backgrounds, on purpose — revisit only if the bubble field is retired.
+
+Verified in headless Chrome at 1440x900 and 390x844, both themes, plus live theme
+toggle and `prefers-reduced-motion: reduce`: no console errors, no horizontal
+overflow, backing store correctly capped at 2x on a 3x device.
