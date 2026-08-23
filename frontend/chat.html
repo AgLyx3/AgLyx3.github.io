@@ -1792,32 +1792,6 @@
       }
     }
 
-    /* Traces stop at the edge of each cluster, not at its centre.
-       Pairing already works off the edge gap, but the line was drawn centre to
-       centre. That was invisible when the bubbles were solid gradient circles —
-       the fill covered it — but the constellation style is a sparse pixel field,
-       so half the trace ink (measured: 49.6%, worst lines ~90%) was drawn
-       through the cluster and across the label. The star track's spur has the
-       same job and stops at the card edge; this is that idea.
-
-       The cluster paints cells out to 1.18r, so the trim clears that plus a
-       small gap. A pair whose clusters already overlap has nothing to draw. */
-    var TRACE_INSET = 1.18, TRACE_GAP = 5;
-    function layTraces(sel) {
-      sel.each(function (d) {
-        var line = d3.select(this);
-        var dx = d.b.x - d.a.x, dy = d.b.y - d.a.y;
-        var len = Math.sqrt(dx * dx + dy * dy) || 1;
-        var ra = d.a.radius * TRACE_INSET + TRACE_GAP;
-        var rb = d.b.radius * TRACE_INSET + TRACE_GAP;
-        if (ra + rb >= len) { line.attr('opacity', 0); return; }
-        var ux = dx / len, uy = dy / len;
-        line.attr('x1', d.a.x + ux * ra).attr('y1', d.a.y + uy * ra)
-            .attr('x2', d.b.x - ux * rb).attr('y2', d.b.y - uy * rb)
-            .attr('opacity', d._op);
-      });
-    }
-
     function buildBubbles(topics) {
       var W = vw(), H = vh();
       var cx = W / 2, cy = H / 2;
@@ -2056,15 +2030,13 @@
           }
         }
       }
-      tracePairs.forEach(function (d) {
-        d._op = 0.12 + 0.45 * (1 - d.g / traceThresh);
-      });
-
       var traceLinesSel = traceGroup.selectAll('line').data(tracePairs).enter().append('line')
         .attr('class', 'trace-line')
         .attr('stroke-width', 0.7)
-        .attr('pointer-events', 'none');
-      layTraces(traceLinesSel);
+        .attr('opacity', function (d) { return 0.12 + 0.45 * (1 - d.g / traceThresh); })
+        .attr('pointer-events', 'none')
+        .attr('x1', function (d) { return d.a.x; }).attr('y1', function (d) { return d.a.y; })
+        .attr('x2', function (d) { return d.b.x; }).attr('y2', function (d) { return d.b.y; });
 
       /* Fade canvas in so any residual early motion isn't jarring */
       svgEl.style.opacity = '0';
@@ -2083,7 +2055,9 @@
           clampBubblePosition(n, W2, H2, mob);
         });
         nodeGroupsSel.attr('transform', function (d) { return 'translate(' + d.x + ',' + d.y + ')'; });
-        layTraces(traceLinesSel);
+        traceLinesSel
+          .attr('x1', function (d) { return d.a.x; }).attr('y1', function (d) { return d.a.y; })
+          .attr('x2', function (d) { return d.b.x; }).attr('y2', function (d) { return d.b.y; });
       });
       simulation.alpha(0.12).restart();
     }
