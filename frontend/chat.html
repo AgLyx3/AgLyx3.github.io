@@ -438,6 +438,10 @@
     .chat-thread {
       flex: 1;
       overflow-y: auto;
+      /* Anchor the conversation to the composer. A short exchange used to leave
+         ~470px of dead space between the last answer and the input. margin-top
+         on the first child (below) does this without the clipped-overflow that
+         justify-content: flex-end causes on a scroll container. */
       padding: 92px 28px 16px;
       display: flex;
       flex-direction: column;
@@ -448,6 +452,7 @@
       mask-image: linear-gradient(to bottom, transparent 0%, black 56px);
       -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 56px);
     }
+    .chat-thread > *:first-child { margin-top: auto; }
     .chat-thread::-webkit-scrollbar { width: 3px; }
     .chat-thread::-webkit-scrollbar-track { background: transparent; }
     .chat-thread::-webkit-scrollbar-thumb { background: rgba(var(--forest-rgb), 0.28); border-radius: 2px; }
@@ -721,6 +726,13 @@
       pointer-events: all;
       transition-delay: 440ms;
     }
+    /* On the landing the topics are the affordance and should carry the screen.
+       Once a question is asked they are background: at full strength the 21px
+       labels out-shouted the 18px answer they sit behind. Reaching for one
+       brings the field back, so it stays usable as a topic switcher.
+       Mobile hides the canvas outright in chat — see the max-width block. */
+    body.state-chat #bubbleCanvas { opacity: 0.32; }
+    body.state-chat #bubbleCanvas:hover { opacity: 0.6; }
 
     /* ── Message modal ── */
     .modal-overlay {
@@ -965,8 +977,11 @@
       }
       /* Use dynamic viewport height so iOS browser chrome doesn't push the panel */
       .chat-panel {
-        height: 100vh; /* fallback */
-        height: 100dvh;
+        /* Desktop reserves the CTA footer via calc(100vh - 48px); mobile did
+           not, so the fixed footer sat on top of the composer hint — a 14px
+           overlap at both 390x844 and 375x667. */
+        height: calc(100vh - 48px); /* fallback */
+        height: calc(100dvh - 48px - env(safe-area-inset-bottom, 0px));
       }
       body.state-landing .chat-panel {
         transform: translateY(22px);
@@ -1008,7 +1023,8 @@
       .landing-input { font-size: 15px; }
       .landing-send { padding: 9px 16px; font-size: 12px; }
       .chat-thread { padding: 92px 18px 12px; gap: 22px; }
-      .chat-composer { padding: 10px 14px 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+      /* the safe-area inset now belongs to .cta-footer, which sits below this */
+      .chat-composer { padding: 10px 14px 12px; }
       .cta-footer { padding-bottom: env(safe-area-inset-bottom, 0px); height: calc(48px + env(safe-area-inset-bottom, 0px)); }
       .message-assistant .msg-text { font-size: 17px; }
       .cta-action { font-size: 10px; padding: 0 10px; }
