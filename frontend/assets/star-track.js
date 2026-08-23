@@ -29,8 +29,8 @@
      (--track-gutter / 2). Desktop centres the track in the rail. */
   function geometry() {
     return narrow.matches
-      ? { baseX: 22, amp: 8,  wave: 300, spurMin: 9,  node: 4.5, px: 3 }
-      : { baseX: rail.clientWidth / 2, amp: 24, wave: 430, spurMin: 14, node: 4, px: 4 };
+      ? { baseX: 22, amp: 8,  wave: 300, spurMin: 9,  node: 4.5 }
+      : { baseX: rail.clientWidth / 2, amp: 24, wave: 430, spurMin: 14, node: 4 };
   }
 
   function xAt(y, g) {
@@ -75,62 +75,41 @@
     svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-    /* ── Pixel grid ──
-       The track is drawn as discrete cells on a fixed grid rather than as
-       stroked vectors, so it speaks the same language as the pixel clusters
-       and the chat bubbles. Snapping x to the grid is what turns the sine
-       into a staircase; without it the squares just trace a smooth curve and
-       the effect is lost. */
-    var PX = g.px;
-    function snap(v) { return Math.round(v / PX) * PX; }
+    /* Fade the line out at both ends so it reads as passing through the page
+       rather than starting and stopping at two hard edges. */
+    var defs = el('defs');
+    var grad = el('linearGradient', { id: 'trackFade', x1: '0', y1: '0', x2: '0', y2: '1' });
+    [[0, 0], [0.06, 1], [0.9, 1], [1, 0]].forEach(function (s) {
+      grad.appendChild(el('stop', { offset: s[0], 'stop-color': 'currentColor', 'stop-opacity': s[1] }));
+    });
+    defs.appendChild(grad);
+    svg.appendChild(defs);
 
-    /* Deterministic per-coordinate, matching the dust seed already used here,
-       so a redraw never reshuffles the pattern. */
-    function unit(n) {
-      var v = Math.sin(n * 12.9898) * 43758.5453;
-      return v - Math.floor(v);
-    }
+    /* Sampling every 7px is dense enough that a polyline reads as a curve,
+       and avoids hand-fitting beziers to a sine. */
+    var d = '', y;
+    for (y = 0; y <= h; y += 7) d += (y ? 'L' : 'M') + xAt(y, g).toFixed(2) + ' ' + y + ' ';
+    d += 'L' + xAt(h, g).toFixed(2) + ' ' + h;
 
-    /* Replaces the old linearGradient: the line used to fade at both ends via
-       stroke: url(#trackFade). Per-cell opacity does the same job and keeps
-       every mark a plain filled rect. */
-    function fade(t) {
-      if (t < 0.06) return t / 0.06;
-      if (t > 0.90) return Math.max(0, (1 - t) / 0.10);
-      return 1;
-    }
+    svg.appendChild(el('path', {
+      d: d, class: 'track-line', fill: 'none', stroke: 'url(#trackFade)'
+    }));
 
-    function cell(x, y, size, opacity, cls) {
-      return el('rect', {
-        class: cls, x: snap(x), y: snap(y), width: size, height: size,
-        opacity: opacity.toFixed(2)
-      });
-    }
-
-    /* The spine. One cell per grid row, x snapped so the meander reads as
-       steps. A deterministic 14% of cells are dropped and the rest vary in
-       weight, so the line has texture instead of reading as a solid bar. */
-    var y;
-    for (y = 0; y <= h; y += PX) {
-      var f = unit(y);
-      if (f > 0.86) continue;
-      var o = fade(y / h) * (0.34 + f * 0.5);
-      if (o <= 0.01) continue;
-      svg.appendChild(cell(xAt(y, g) - PX / 2, y, PX, o, 'track-px'));
-    }
-
-    /* Dust, same placement maths as before but square and grid-aligned. */
+    /* Dust along the track: deterministic per-y so a redraw doesn't reshuffle
+       the sky, and thinned out on narrow screens where there is less room. */
     var step = narrow.matches ? 34 : 26;
     for (y = 12; y < h; y += step) {
       var seed = Math.sin(y * 12.9898) * 43758.5453;
       var f1 = seed - Math.floor(seed);
       var f2 = (seed * 1.37) - Math.floor(seed * 1.37);
       var spread = narrow.matches ? 26 : 74;
-      svg.appendChild(cell(
-        xAt(y, g) + (f1 - 0.5) * 2 * spread,
-        y + (f2 - 0.5) * step,
-        f1 > 0.62 ? PX : Math.max(2, PX - 1),
-        0.2 + f2 * 0.5, 'track-px-dust'));
+      svg.appendChild(el('circle', {
+        class: 'track-dust',
+        cx: (xAt(y, g) + (f1 - 0.5) * 2 * spread).toFixed(2),
+        cy: (y + (f2 - 0.5) * step).toFixed(2),
+        r: (0.7 + f1 * 1.25).toFixed(2),
+        opacity: (0.2 + f2 * 0.5).toFixed(2)
+      }));
     }
 
     /* Nodes and spurs, measured off each station. The station carries no
@@ -144,29 +123,18 @@
       var edge = side === 'left' ? (r.right - railRect.left) : (r.left - railRect.left);
 
       /* Skip only the spur when the card edge already sits on the line — the
-         node still marks the station. */
+         node still marks the station. (On narrow screens every spur is short,
+         which is how a missing-node bug hid here.) */
       if (Math.abs(edge - nx) >= g.spurMin) {
-        var dir = edge > nx ? 1 : -1;
-        var run = Math.abs(edge - nx);
-        /* every other grid cell, so the spur reads as a dashed pixel run */
-        for (var d = PX * 2; d < run; d += PX * 2) {
-          svg.appendChild(cell(nx + dir * d - PX / 2, ny - PX / 2, PX,
-            0.34 * (1 - d / run) + 0.16, 'track-px-spur'));
-        }
+        var mid = (nx + edge) / 2;
+        svg.appendChild(el('path', {
+          class: 'track-spur', fill: 'none',
+          d: 'M' + nx.toFixed(2) + ' ' + ny.toFixed(2) +
+             ' Q' + mid.toFixed(2) + ' ' + ny.toFixed(2) + ' ' + edge.toFixed(2) + ' ' + ny.toFixed(2)
+        }));
       }
-
-      /* Station marker: a plus of cells around a 2x2 core. In dark mode the
-         node used to carry a drop-shadow filter — an SVG filter, the same
-         thing iOS Safari rasterises at the wrong scale — so the glow is now
-         concentric cells at falling opacity instead. */
-      var cx = nx - PX, cy = ny - PX;
-      svg.appendChild(cell(cx, cy, PX * 2, 1, 'track-px-node'));
-      [[-1, 0], [2, 0], [0, -1], [0, 2]].forEach(function (o) {
-        svg.appendChild(cell(cx + o[0] * PX, cy + o[1] * PX, PX, 0.72, 'track-px-node'));
-      });
-      [[-2, -1], [-2, 2], [3, -1], [3, 2], [-1, -2], [2, -2], [-1, 3], [2, 3]].forEach(function (o) {
-        svg.appendChild(cell(cx + o[0] * PX, cy + o[1] * PX, PX, 0.20, 'track-px-halo'));
-      });
+      svg.appendChild(el('circle', { class: 'track-halo', cx: nx.toFixed(2), cy: ny.toFixed(2), r: g.node * 2.4 }));
+      svg.appendChild(el('circle', { class: 'track-node', cx: nx.toFixed(2), cy: ny.toFixed(2), r: g.node }));
     });
   }
 
