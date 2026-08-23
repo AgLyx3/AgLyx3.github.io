@@ -805,3 +805,79 @@ backgrounds, on purpose — revisit only if the bubble field is retired.
 Verified in headless Chrome at 1440x900 and 390x844, both themes, plus live theme
 toggle and `prefers-reduced-motion: reduce`: no console errors, no horizontal
 overflow, backing store correctly capped at 2x on a 3x device.
+
+
+---
+
+## 21. Portfolio Rebuilt as a Star Track (2026-08-23)
+
+### Previous direction
+
+`portfolio.html` was a two-column card grid (`.grid`, `repeat(2, 1fr)`, 22px gap)
+over two ambient background layers: the 150-star dark starfield and the
+**ambient bubble field** from §17 — eight curated drifting orbs, the chat page's
+memory-orb motif reused as "planets in the same galaxy".
+
+### What changed
+
+The grid became a **path**. One meandering line runs down the page and the eight
+projects are strung along it as *stations*, alternating left and right, each
+joined to the line by a short spur that lands on a lit node.
+
+- **The track** is an SVG drawn in `frontend/assets/star-track.js` from
+  *measured* geometry — a sine meander (24px amplitude / 430px wavelength on
+  desktop, 8px / 300px narrow), sampled every 7px as a polyline, stroked through
+  a gradient that fades at both ends so it reads as passing through the page.
+  Faint dust is scattered along it, seeded per-y so a redraw does not reshuffle
+  the sky.
+- **Stations** each take their own grid row — sharing a row is what makes a
+  two-column grid; taking turns down the page is what makes a track. A -86px
+  interlock margin claws back the dead space that leaves, so consecutive cards
+  overlap along the spine.
+- **3D.** `.stations` carries `perspective: 1500px`. Each card rests at
+  `rotateY(3.4deg) rotate(1deg)`, hinged on the edge facing the track, so the
+  two sides read as panels opening off one spine. Hover squares the card up
+  (`rotateY(0) translateZ(30px)`); the mark and title sit at `translateZ(18px)`
+  so the card has real depth rather than being a flat rectangle that happens to
+  be rotated. Tilt is capped at ~4deg — past that, body text shimmers on a
+  low-DPI screen.
+- **The bubble field was removed.** With a lit track running down the page,
+  stars, a node network *and* drifting orbs was three ambient layers competing
+  for the same attention. The orb motif still lives on the chat page.
+- The **constellation field** (§20) was added here, and the starfield thinned to
+  70 dimmed stars, matching the landing page.
+
+### Narrow screens
+
+The track leaves the middle and runs down the left margin; every card sits to
+its right in one column. The meander flattens (8px), the tilt eases to 2deg and
+then 1.4deg below 560px, and the interlock margin goes to zero. `--track-gutter`
+in the stylesheet must stay twice `baseX` in `star-track.js` — the two are
+commented as a pair.
+
+### Why measured rather than hard-coded
+
+Card heights differ, fonts swap in after first paint, and the filter buttons
+change how many cards exist. Every node, spur and path point is computed from
+`getBoundingClientRect` on redraw, driven by a `ResizeObserver` on the rail plus
+a `portfolio:filtered` event the filter script dispatches. Sides and rows are
+assigned over the **visible** set, so filtering never leaves two cards on the
+same side of the spine.
+
+Two bugs this surfaced, both fixed:
+
+1. Nodes were skipped whenever the spur was shorter than `spurMin` — which is
+   *every* spur on a narrow screen, so mobile had no nodes at all. Only the spur
+   is skipped now; the node always marks the station.
+2. The interlock margin comes from `.station + .station`, which is DOM
+   adjacency. When a filter hid the first card, the next one inherited the
+   pull-up and rode into the filter row above it, covering the buttons. Only the
+   first *visible* station is exempt, and only JS knows which that is.
+
+### Current intended direction
+
+The portfolio is a scroll journey along one path, not a grid to scan. Verified
+in headless Chrome at 1440, 1024, 900 and 390 wide, both themes, through every
+filter cycle, plus hover and `prefers-reduced-motion: reduce` (cards sit square,
+entrance and perspective drop, the track stays — it is structure, not motion).
+No page errors, no horizontal overflow at any width.

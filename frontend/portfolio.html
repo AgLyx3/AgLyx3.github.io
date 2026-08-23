@@ -72,7 +72,7 @@
 
   #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; display: none; opacity: 0; transition: opacity 600ms var(--ease-out); }
   html[data-theme="dark"] #starfield { display: block; opacity: 1; }
-  .star { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 4px 1px rgba(255,255,255,0.55);
+  .star { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 4px 1px rgba(255,255,255,0.45);
           animation: twinkle var(--tw-dur, 4s) ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   @keyframes twinkle { 0%,100% { opacity: 0.18; } 50% { opacity: var(--tw-max, 0.9); } }
 
@@ -111,18 +111,74 @@
   .filter-button[aria-pressed="true"] { color: var(--paper); background: var(--forest); border-color: transparent; }
   html[data-theme="dark"] .filter-button[aria-pressed="true"] { color: #0B1024; }
 
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; padding-bottom: 80px; }
+  /* ── Star track ───────────────────────────────────────────────────────────
+     The two-column grid became a path. One meandering line runs down the page
+     and the work is strung along it as stations, alternating sides, each
+     joined to the line by a spur that lands on a lit node. The line, the
+     nodes and the spurs are all drawn from measured geometry in
+     assets/star-track.js — nothing here hard-codes a position. */
+  .rail { position: relative; padding-bottom: 92px; }
+  .rail-svg { position: absolute; inset: 0; width: 100%; height: 100%;
+              z-index: 0; pointer-events: none; color: var(--forest); overflow: visible; }
+  .track-line { stroke-width: 1.25; opacity: 0.42; }
+  .track-spur { stroke: var(--forest); stroke-width: 1; opacity: 0.30; }
+  .track-dust { fill: var(--forest); }
+  .track-halo { fill: var(--forest); opacity: 0.16; }
+  .track-node { fill: var(--forest); }
+  html[data-theme="dark"] .track-node { filter: drop-shadow(0 0 6px rgba(var(--forest-rgb), 0.85)); }
 
-  .card { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 22px;
+  /* The centre column is the track's own lane — cards never enter it. */
+  .stations { --track-gutter: 132px; --overlap: -86px;
+              position: relative; z-index: 1; display: grid;
+              grid-template-columns: 1fr var(--track-gutter) 1fr;
+              row-gap: 0; perspective: 1500px; }
+
+  /* One station per row, so the two sides take turns down the page rather
+     than pairing off. The negative top margin claws back the dead space that
+     leaves, letting consecutive cards interlock along the spine. */
+  .station + .station { margin-top: var(--overlap); }
+
+  .station { display: flex; opacity: 0; transform: translateY(22px);
+             transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+             transition-delay: var(--in-delay, 0ms); }
+  .station.in { opacity: 1; transform: none; }
+  .station[hidden] { display: none; }
+  .station[data-side="left"]  { grid-column: 1; }
+  .station[data-side="right"] { grid-column: 3; }
+
+  /* The resting tilt: each card is hinged on the edge that faces the track,
+     so the pair reads as two panels opening off one spine. Kept small —
+     past about 4deg the body text starts to shimmer on a low-DPI screen. */
+  .card { --ry: 3.4deg; --rz: 1deg;
+    position: relative; width: 100%; display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 22px;
     background: rgba(var(--paper-rgb), 0.68); border: 1px solid rgba(var(--forest-rgb), 0.18); border-radius: 20px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 26px rgba(var(--forest-rgb), 0.08);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms;
-    animation: rise 600ms var(--ease-out) both; }
-  .card[hidden] { display: none; }
+    transform-style: preserve-3d;
+    transition: transform 340ms var(--ease-out), box-shadow 340ms var(--ease-out), border-color 220ms; }
   html[data-theme="dark"] .card { box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px rgba(0,0,0,0.45); }
-  .card:hover { transform: translateY(-5px); border-color: rgba(var(--forest-rgb), 0.40);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 16px 40px rgba(var(--forest-rgb), 0.18); }
+
+  .station[data-side="left"]  .card { transform-origin: right center;
+    transform: rotateY(var(--ry)) rotate(calc(var(--rz) * -1)); }
+  .station[data-side="right"] .card { transform-origin: left center;
+    transform: rotateY(calc(var(--ry) * -1)) rotate(var(--rz)); }
+
+  /* Hover squares the card up to the reader and brings it forward. The tilt
+     existing at rest is what makes straightening feel like a response. */
+  .station[data-side] .card:hover,
+  .station[data-side] .card:focus-within {
+    transform: rotateY(0deg) rotate(0deg) translateZ(30px);
+    border-color: rgba(var(--forest-rgb), 0.40);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 22px 50px rgba(var(--forest-rgb), 0.20); }
+  html[data-theme="dark"] .station[data-side] .card:hover,
+  html[data-theme="dark"] .station[data-side] .card:focus-within {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 22px 54px rgba(0,0,0,0.55); }
+
+  /* The mark rides above the card face, so the card has real depth rather
+     than being a flat rectangle that happens to be rotated. */
+  .card-mark, .card h3 { transform: translateZ(18px); }
+  .card-mark { transition: box-shadow 340ms var(--ease-out); }
+  .card:hover .card-mark { box-shadow: 0 8px 18px rgba(var(--forest-rgb), 0.28); }
 
   .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .card-mark { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
@@ -168,32 +224,49 @@
   .filter-button:focus-visible, .link:focus-visible, .topnav a:focus-visible,
   .brand:focus-visible, .theme-toggle:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
 
-  /* ── Ambient bubble field ──
-     The chat page's memory-orbs, reused here as planets in the same galaxy.
-     Same material as the bubbles: radial fill feathering to transparent, no outline. */
-  #bubblefield { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .orb { position: absolute; border-radius: 50%; will-change: transform;
-    background: radial-gradient(circle at 38% 34%,
-      rgba(var(--hue), 0.90) 0%, rgba(var(--hue), 0.42) 40%, rgba(var(--hue), 0) 70%);
-    animation: orbDrift var(--dur, 30s) var(--ease-out) infinite alternate;
-    animation-delay: var(--delay, 0s); }
-  @keyframes orbDrift {
-    from { transform: translate3d(0, 0, 0); }
-    to   { transform: translate3d(var(--dx, 16px), var(--dy, -26px), 0); }
-  }
-  html[data-theme="dark"]  .orb { opacity: 0.32; filter: blur(9px); }
-  html[data-theme="light"] .orb { opacity: 0.55; filter: blur(14px); }
+  /* Constellation field, shared with the landing page. It replaced the ambient
+     bubble field that used to sit here: with a lit track running down the page,
+     stars, a node network AND drifting orbs was three ambient layers competing
+     for the same attention. The orb motif still lives on the chat page. */
+  #constellation { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+                   width: 100%; height: 100%; display: block; }
 
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-  .card:nth-child(2){animation-delay:60ms}.card:nth-child(3){animation-delay:120ms}.card:nth-child(4){animation-delay:180ms}.card:nth-child(5){animation-delay:240ms}.card:nth-child(6){animation-delay:300ms}
 
-  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  /* ── Narrow ──
+     The track leaves the middle and runs down the left margin; every card sits
+     to its right in one column. The meander flattens and the tilt eases off,
+     because at this width a card is most of the screen and a 3.4deg rotation
+     on body text is no longer subtle. --track-gutter must stay twice the
+     baseX in star-track.js. */
+  @media (max-width: 860px) {
+    .stations { --track-gutter: 46px; --overlap: 0px;
+                grid-template-columns: var(--track-gutter) 1fr; row-gap: 22px; }
+    .station[data-side="left"], .station[data-side="right"] { grid-column: 2; }
+    .card { --ry: 2deg; --rz: 0.6deg; padding: 22px 20px 20px; }
+    .station[data-side="left"] .card { transform-origin: left center;
+      transform: rotateY(calc(var(--ry) * -1)) rotate(var(--rz)); }
+    .card-mark, .card h3 { transform: translateZ(12px); }
+  }
+  @media (max-width: 560px) {
+    .stations { --track-gutter: 40px; }
+    .card { --ry: 1.4deg; --rz: 0.4deg; }
+  }
+
+  /* No perspective tricks for anyone who asked for stillness: the cards sit
+     square, the track stays (it is structure, not motion). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .station { opacity: 1; transform: none; }
+    .stations { perspective: none; }
+    .station[data-side] .card { transform: none !important; }
+    .card-mark, .card h3 { transform: none; }
+  }
 </style>
 </head>
 <body>
   <div id="starfield" aria-hidden="true"></div>
-  <div id="bubblefield" aria-hidden="true"></div>
+  <canvas id="constellation" aria-hidden="true"></canvas>
 
   <header class="topbar">
     <a class="brand" href="index.html">Yixin Li</a>
@@ -219,135 +292,154 @@
       <button class="filter-button" type="button" data-filter="dev-tool" aria-pressed="false">Dev Tool</button>
     </div>
 
-    <div class="grid">
+    <div class="rail" id="rail">
+      <svg class="rail-svg" id="railSvg" aria-hidden="true"></svg>
+      <div class="stations" id="stations">
 
-      <article class="card" data-category="ai-ml">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M9 5h6"/></svg></div>
-          <span class="card-status status-live"><span class="pip"></span>Open Source</span>
-        </div>
-        <div>
-          <h3>Remli</h3>
-          <div class="sub">On-device iOS app for source-cited health reminders</div>
-        </div>
-        <p>Built a privacy-first iOS app that turns fragmented patient-portal records into proactive medication, physical therapy, and diet reminders. Remli uses <strong>Gemma 4 E2B</strong> on device for narration while a deterministic core handles clinical facts, citations, reminder proposals, encrypted local storage, and safety checks so the app can explain what the record says without inventing medical advice.</p>
-        <div class="tags"><span class="tag">SwiftUI</span><span class="tag">On-device AI</span><span class="tag">FHIR</span><span class="tag">Privacy</span></div>
-        <div class="links">
-          <a class="link link-code" href="https://github.com/AgLyx3/Remli" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="ai-ml">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M9 5h6"/></svg></div>
+            <span class="card-status status-live"><span class="pip"></span>Open Source</span>
+          </div>
+          <div>
+            <h3>Remli</h3>
+            <div class="sub">On-device iOS app for source-cited health reminders</div>
+          </div>
+          <p>Built a privacy-first iOS app that turns fragmented patient-portal records into proactive medication, physical therapy, and diet reminders. Remli uses <strong>Gemma 4 E2B</strong> on device for narration while a deterministic core handles clinical facts, citations, reminder proposals, encrypted local storage, and safety checks so the app can explain what the record says without inventing medical advice.</p>
+          <div class="tags"><span class="tag">SwiftUI</span><span class="tag">On-device AI</span><span class="tag">FHIR</span><span class="tag">Privacy</span></div>
+          <div class="links">
+            <a class="link link-code" href="https://github.com/AgLyx3/Remli" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          </div>
+        </article>
+      </div>
 
-      <article class="card" data-category="dev-tool">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 13l2 2-2 2"/><path d="M13 17h3"/></svg></div>
-          <span class="card-status status-live"><span class="pip"></span>Open Source</span>
-        </div>
-        <div>
-          <h3>We Love Jupyter Notebook</h3>
-          <div class="sub">Scoped AI-agent notebook editor</div>
-        </div>
-        <p>Local, notebook-first editor for Jupyter <code>.ipynb</code> files with scoped AI-agent editing. The agent proposes cell changes; the backend validates and applies them. It never mutates your notebook directly. Per-turn <strong>Blocking</strong> (edit only the cells you scope) or <strong>Trusted</strong> (whole-notebook add/delete/reorder/edit).</p>
-        <div class="tags"><span class="tag">FastAPI</span><span class="tag">React</span><span class="tag">TypeScript</span><span class="tag">Claude</span></div>
-        <div class="links">
-          <a class="link link-code" href="https://github.com/AgLyx3/we-love-jupyter-notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="dev-tool">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 13l2 2-2 2"/><path d="M13 17h3"/></svg></div>
+            <span class="card-status status-live"><span class="pip"></span>Open Source</span>
+          </div>
+          <div>
+            <h3>We Love Jupyter Notebook</h3>
+            <div class="sub">Scoped AI-agent notebook editor</div>
+          </div>
+          <p>Local, notebook-first editor for Jupyter <code>.ipynb</code> files with scoped AI-agent editing. The agent proposes cell changes; the backend validates and applies them. It never mutates your notebook directly. Per-turn <strong>Blocking</strong> (edit only the cells you scope) or <strong>Trusted</strong> (whole-notebook add/delete/reorder/edit).</p>
+          <div class="tags"><span class="tag">FastAPI</span><span class="tag">React</span><span class="tag">TypeScript</span><span class="tag">Claude</span></div>
+          <div class="links">
+            <a class="link link-code" href="https://github.com/AgLyx3/we-love-jupyter-notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          </div>
+        </article>
+      </div>
 
-      <article class="card" data-category="ai-ml">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l3-3 3 2 4-6"/><path d="M17 8h-3"/><path d="M17 8v3"/></svg></div>
-          <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
-        </div>
-        <div>
-          <h3>Implicit Social Cognition Benchmark</h3>
-          <div class="sub">IRT-calibrated AGI evaluation for social reasoning</div>
-        </div>
-        <p>Built a benchmark for measuring social cognition in frontier AI models across implicit norm detection, emotion recognition, cooperative breakdown detection, and group decision prediction. The benchmark uses <strong>Bayesian 2PL Item Response Theory</strong> to combine heterogeneous text and image tasks into a single ability score, keeping results comparable even when models answer only a subset of items.</p>
-        <div class="tags"><span class="tag">AI Evaluation</span><span class="tag">Social Cognition</span><span class="tag">IRT</span><span class="tag">Benchmarking</span></div>
-        <div class="links">
-          <a class="link link-code" href="https://www.kaggle.com/code/zacknichols/new-benchmark-task-f729c/notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>Code</a>
-          <a class="link link-artifact" href="https://www.kaggle.com/competitions/kaggle-measuring-agi/writeups/new-writeup-1774288660477" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Writeup</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="ai-ml">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l3-3 3 2 4-6"/><path d="M17 8h-3"/><path d="M17 8v3"/></svg></div>
+            <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
+          </div>
+          <div>
+            <h3>Implicit Social Cognition Benchmark</h3>
+            <div class="sub">IRT-calibrated AGI evaluation for social reasoning</div>
+          </div>
+          <p>Built a benchmark for measuring social cognition in frontier AI models across implicit norm detection, emotion recognition, cooperative breakdown detection, and group decision prediction. The benchmark uses <strong>Bayesian 2PL Item Response Theory</strong> to combine heterogeneous text and image tasks into a single ability score, keeping results comparable even when models answer only a subset of items.</p>
+          <div class="tags"><span class="tag">AI Evaluation</span><span class="tag">Social Cognition</span><span class="tag">IRT</span><span class="tag">Benchmarking</span></div>
+          <div class="links">
+            <a class="link link-code" href="https://www.kaggle.com/code/zacknichols/new-benchmark-task-f729c/notebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>Code</a>
+            <a class="link link-artifact" href="https://www.kaggle.com/competitions/kaggle-measuring-agi/writeups/new-writeup-1774288660477" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Writeup</a>
+          </div>
+        </article>
+      </div>
 
-      <article class="card" data-category="ai-ml">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-2.8 7.7-7 9-4.2-1.3-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-5"/></svg></div>
-          <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
-        </div>
-        <div>
-          <h3>Continua Memory Evaluation</h3>
-          <div class="sub">Benchmark setup and failure analysis for long-term AI memory</div>
-        </div>
-        <p>Worked on <strong>LoCoMo</strong> evaluation for Continua’s long-term memory system, including benchmark setup, <strong>control-trace analysis</strong>, and failure-mode review. Analyzed how the benchmark design, scoring harness, retrieval traces, and answer-generation behavior affected results, helping separate memory-system performance from artifacts of prompts, judging, and evaluation setup.</p>
-        <div class="tags"><span class="tag">AI Evaluation</span><span class="tag">Memory Systems</span><span class="tag">Trace Analysis</span><span class="tag">Failure Analysis</span></div>
-        <div class="links">
-          <a class="link link-artifact" href="https://blog.continua.ai/p/the-locomo-fair-fight" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Blog Post</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="ai-ml">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-2.8 7.7-7 9-4.2-1.3-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-5"/></svg></div>
+            <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
+          </div>
+          <div>
+            <h3>Continua Memory Evaluation</h3>
+            <div class="sub">Benchmark setup and failure analysis for long-term AI memory</div>
+          </div>
+          <p>Worked on <strong>LoCoMo</strong> evaluation for Continua’s long-term memory system, including benchmark setup, <strong>control-trace analysis</strong>, and failure-mode review. Analyzed how the benchmark design, scoring harness, retrieval traces, and answer-generation behavior affected results, helping separate memory-system performance from artifacts of prompts, judging, and evaluation setup.</p>
+          <div class="tags"><span class="tag">AI Evaluation</span><span class="tag">Memory Systems</span><span class="tag">Trace Analysis</span><span class="tag">Failure Analysis</span></div>
+          <div class="links">
+            <a class="link link-artifact" href="https://blog.continua.ai/p/the-locomo-fair-fight" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Blog Post</a>
+          </div>
+        </article>
+      </div>
 
-      <article class="card" data-category="dev-tool">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l3.5 8"/><path d="M17 7l-3.5 8"/><path d="M7 6h10"/></svg></div>
-          <span class="card-status status-internal"><span class="pip"></span>Internal Tool</span>
-        </div>
-        <div>
-          <h3>Conversation Topic Analysis Tool</h3>
-          <div class="sub">Semantic clustering for conversation exports</div>
-        </div>
-        <p>A Streamlit analysis tool for clustering messy conversation topic exports. Analysts upload CSVs, choose subtopics or big topics, filter by cohort, group chat, or phone-number rules, then tune <strong>DBSCAN</strong> over <code>all-MiniLM-L6-v2</code> embeddings to inspect topic clusters, compare populations, and export cluster summaries.</p>
-        <div class="tags"><span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">Sentence Transformers</span><span class="tag">DBSCAN</span></div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="dev-tool">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l3.5 8"/><path d="M17 7l-3.5 8"/><path d="M7 6h10"/></svg></div>
+            <span class="card-status status-internal"><span class="pip"></span>Internal Tool</span>
+          </div>
+          <div>
+            <h3>Conversation Topic Analysis Tool</h3>
+            <div class="sub">Semantic clustering for conversation exports</div>
+          </div>
+          <p>A Streamlit analysis tool for clustering messy conversation topic exports. Analysts upload CSVs, choose subtopics or big topics, filter by cohort, group chat, or phone-number rules, then tune <strong>DBSCAN</strong> over <code>all-MiniLM-L6-v2</code> embeddings to inspect topic clusters, compare populations, and export cluster summaries.</p>
+          <div class="tags"><span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">Sentence Transformers</span><span class="tag">DBSCAN</span></div>
+        </article>
+      </div>
 
-      <article class="card" data-category="dev-tool">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg></div>
-          <span class="card-status status-live"><span class="pip"></span>Open Source</span>
-        </div>
-        <div>
-          <h3>fire-or-not</h3>
-          <div class="sub">Context observability for coding agents</div>
-        </div>
-        <p>A zero-dependency Python tool for auditing coding-agent sessions: it reads Claude Code and OpenAI Codex logs and shows, task by task, which skills, tools, MCP calls, and subagents fired, plus which available skills never activated. Built for debugging the gap between available context and what an agent actually used.</p>
-        <div class="tags"><span class="tag">Python</span><span class="tag">Agent Observability</span><span class="tag">Claude Code</span><span class="tag">Codex</span></div>
-        <div class="links">
-          <a class="link link-code" href="https://github.com/AgLyx3/skill-observability-hook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="dev-tool">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg></div>
+            <span class="card-status status-live"><span class="pip"></span>Open Source</span>
+          </div>
+          <div>
+            <h3>fire-or-not</h3>
+            <div class="sub">Context observability for coding agents</div>
+          </div>
+          <p>A zero-dependency Python tool for auditing coding-agent sessions: it reads Claude Code and OpenAI Codex logs and shows, task by task, which skills, tools, MCP calls, and subagents fired, plus which available skills never activated. Built for debugging the gap between available context and what an agent actually used.</p>
+          <div class="tags"><span class="tag">Python</span><span class="tag">Agent Observability</span><span class="tag">Claude Code</span><span class="tag">Codex</span></div>
+          <div class="links">
+            <a class="link link-code" href="https://github.com/AgLyx3/skill-observability-hook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          </div>
+        </article>
+      </div>
 
-      <article class="card" data-category="dev-tool">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
-          <span class="card-status status-research"><span class="pip"></span>Research</span>
-        </div>
-        <div>
-          <h3>Fix8</h3>
-          <div class="sub">Eye-tracking data correction toolkit</div>
-        </div>
-        <p>A GUI application for correcting drift in eye-tracking data from reading studies, using manual, semi-automated, and fully automated methods, plus filtering, visualization, metrics, and format conversion (EyeLink, ASCII, CSV, JSON). Published in <em>Behavior Research Methods</em>, 2025.</p>
-        <div class="tags"><span class="tag">Python</span><span class="tag">PyQt</span><span class="tag">Eye-tracking</span><span class="tag">Research</span></div>
-        <div class="links">
-          <a class="link link-code" href="https://github.com/nalmadi/fix8" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-          <a class="link link-artifact" href="https://doi.org/10.3758/s13428-025-02597-3" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="dev-tool">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
+            <span class="card-status status-research"><span class="pip"></span>Research</span>
+          </div>
+          <div>
+            <h3>Fix8</h3>
+            <div class="sub">Eye-tracking data correction toolkit</div>
+          </div>
+          <p>A GUI application for correcting drift in eye-tracking data from reading studies, using manual, semi-automated, and fully automated methods, plus filtering, visualization, metrics, and format conversion (EyeLink, ASCII, CSV, JSON). Published in <em>Behavior Research Methods</em>, 2025.</p>
+          <div class="tags"><span class="tag">Python</span><span class="tag">PyQt</span><span class="tag">Eye-tracking</span><span class="tag">Research</span></div>
+          <div class="links">
+            <a class="link link-code" href="https://github.com/nalmadi/fix8" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+            <a class="link link-artifact" href="https://doi.org/10.3758/s13428-025-02597-3" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
+          </div>
+        </article>
+      </div>
 
-      <article class="card" data-category="ai-ml">
-        <div class="card-top">
-          <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/><path d="M18 16l2 2 3-4"/></svg></div>
-          <span class="card-status status-research"><span class="pip"></span>Research</span>
-        </div>
-        <div>
-          <h3>User Studies in Human-Feature-Integration</h3>
-          <div class="sub">Human-AI survey research for ML prediction systems</div>
-        </div>
-        <p>Co-designed, conducted, and analyzed two user studies on how people provide personal context to AI prediction systems. The surveys examined whether users could surface useful “human features,” how that process affected willingness to use the model, and how user-selected features compared with algorithmically selected ones. Published at <em>ACM IUI Workshops</em>, 2025.</p>
-        <div class="tags"><span class="tag">Human-AI Interaction</span><span class="tag">Survey Design</span><span class="tag">Statistical Analysis</span><span class="tag">ML Evaluation</span></div>
-        <div class="links">
-          <a class="link link-artifact" href="https://ceur-ws.org/Vol-3957/AXAI-paper03.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
-        </div>
-      </article>
+      <div class="station">
+  <article class="card" data-category="ai-ml">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/><path d="M18 16l2 2 3-4"/></svg></div>
+            <span class="card-status status-research"><span class="pip"></span>Research</span>
+          </div>
+          <div>
+            <h3>User Studies in Human-Feature-Integration</h3>
+            <div class="sub">Human-AI survey research for ML prediction systems</div>
+          </div>
+          <p>Co-designed, conducted, and analyzed two user studies on how people provide personal context to AI prediction systems. The surveys examined whether users could surface useful “human features,” how that process affected willingness to use the model, and how user-selected features compared with algorithmically selected ones. Published at <em>ACM IUI Workshops</em>, 2025.</p>
+          <div class="tags"><span class="tag">Human-AI Interaction</span><span class="tag">Survey Design</span><span class="tag">Statistical Analysis</span><span class="tag">ML Evaluation</span></div>
+          <div class="links">
+            <a class="link link-artifact" href="https://ceur-ws.org/Vol-3957/AXAI-paper03.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper</a>
+          </div>
+        </article>
+      </div>
 
+      </div>
     </div>
   </main>
 
@@ -356,54 +448,23 @@
   </footer>
 
   <script>
-    // starfield
+    // Starfield. Thinned from 150 to 70 and dimmed to match the landing page:
+    // with the constellation field and the lit track both on screen, two more
+    // glowing layers at the old density read as speckle.
     (function () {
       var field = document.getElementById('starfield'); if (!field) return;
       var frag = document.createDocumentFragment();
-      for (var i = 0; i < 150; i++) {
+      for (var i = 0; i < 70; i++) {
         var s = document.createElement('span'); s.className = 'star';
         var size = (Math.random() * 1.6 + 0.6).toFixed(2);
         s.style.width = size + 'px'; s.style.height = size + 'px';
         s.style.top = (Math.random() * 100).toFixed(2) + '%'; s.style.left = (Math.random() * 100).toFixed(2) + '%';
         s.style.setProperty('--tw-dur', (Math.random() * 4 + 2.5).toFixed(2) + 's');
         s.style.setProperty('--tw-delay', (Math.random() * 5).toFixed(2) + 's');
-        s.style.setProperty('--tw-max', (Math.random() * 0.5 + 0.5).toFixed(2));
+        s.style.setProperty('--tw-max', (Math.random() * 0.4 + 0.42).toFixed(2));
         frag.appendChild(s);
       }
       field.appendChild(frag);
-    })();
-    // ambient bubble field — planets in the same galaxy as the chat page's memory orbs.
-    // Layout is curated, not random, so orbs stay clear of the reading column on reload.
-    (function () {
-      var host = document.getElementById('bubblefield');
-      if (!host) return;
-      // hues lifted from the chat page's bubble palette (blue = work, warm = personal)
-      var ORBS = [
-        { x: -6, y: 10, s: 300, hue: '168,185,214', dx:  18, dy: -30, dur: 34, delay: -4 },
-        { x: 86, y:  4, s: 210, hue: '196,208,228', dx: -22, dy:  26, dur: 29, delay: -11 },
-        { x: 74, y: 58, s: 340, hue: '149,164,189', dx:  16, dy: -22, dur: 38, delay: -19 },
-        { x:  2, y: 64, s: 170, hue: '233,217,201', dx: -14, dy: -28, dur: 26, delay: -7 },
-        { x: 38, y: 86, s: 240, hue: '220,228,239', dx:  20, dy: -18, dur: 32, delay: -23 },
-        { x: 91, y: 32, s: 120, hue: '223,212,198', dx: -18, dy:  20, dur: 24, delay: -2 },
-        { x: 12, y: 36, s: 100, hue: '214,204,194', dx:  22, dy:  18, dur: 28, delay: -15 },
-        { x: 55, y: 16, s: 140, hue: '168,185,214', dx: -16, dy: -24, dur: 36, delay: -9 }
-      ];
-      var frag = document.createDocumentFragment();
-      ORBS.forEach(function (o) {
-        var el = document.createElement('span');
-        el.className = 'orb';
-        el.style.width = o.s + 'px';
-        el.style.height = o.s + 'px';
-        el.style.left = o.x + '%';
-        el.style.top = o.y + '%';
-        el.style.setProperty('--hue', o.hue);
-        el.style.setProperty('--dx', o.dx + 'px');
-        el.style.setProperty('--dy', o.dy + 'px');
-        el.style.setProperty('--dur', o.dur + 's');
-        el.style.setProperty('--delay', o.delay + 's');
-        frag.appendChild(el);
-      });
-      host.appendChild(frag);
     })();
     // theme toggle (persisted)
     (function () {
@@ -413,25 +474,32 @@
         apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
       });
     })();
-    // portfolio filters
+    // Portfolio filters. Visibility moved from the card to its station: the
+    // station is the grid item, so hiding the card alone would leave an empty
+    // slot on the track. The track listens for the event to re-side the
+    // remaining cards and redraw itself.
     (function () {
       var buttons = Array.prototype.slice.call(document.querySelectorAll('.filter-button'));
-      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-category]'));
-      if (!buttons.length || !cards.length) return;
+      var stations = Array.prototype.slice.call(document.querySelectorAll('.station'));
+      if (!buttons.length || !stations.length) return;
       buttons.forEach(function (button) {
         button.addEventListener('click', function () {
-          var selected = button.getAttribute('data-filter');
           if (button.getAttribute('aria-pressed') === 'true') return;
+          var selected = button.getAttribute('data-filter');
           buttons.forEach(function (item) {
             item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
           });
-          cards.forEach(function (card) {
-            var matches = selected === 'all' || card.getAttribute('data-category') === selected;
-            card.hidden = !matches;
+          stations.forEach(function (station) {
+            var card = station.querySelector('.card[data-category]');
+            var matches = selected === 'all' || (card && card.getAttribute('data-category') === selected);
+            station.hidden = !matches;
           });
+          document.dispatchEvent(new CustomEvent('portfolio:filtered'));
         });
       });
     })();
   </script>
+  <script src="assets/constellation.js" defer></script>
+  <script src="assets/star-track.js" defer></script>
 </body>
 </html>
