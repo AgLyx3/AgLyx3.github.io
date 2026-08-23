@@ -16,6 +16,8 @@ open /Users/lyx_computer/Desktop/AgLyx3.github.io/frontend/index.html
 
 Check the golden path visually — do not rely on code review alone for UI/frontend work.
 
+**For every frontend design change, evaluate and visually verify both desktop and mobile layouts.** Check placement, overlap, text fit, interaction behavior, and touch behavior at representative viewport sizes; desktop-only validation is not sufficient.
+
 ## Deployment
 
 The frontend is a **separate Vercel project** (project ID `prj_0VQlazim8jLvy124ntEtUx4Ro97C`, `rootDirectory: frontend`).

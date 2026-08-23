@@ -1,0 +1,191 @@
+/* Shared ambient pixel language for the homepage and portfolio. */
+.pixel-site #starfield .star {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pixel-site .theme-toggle {
+  border-radius: 0;
+  box-shadow: 2px 2px 0 rgba(var(--forest-rgb), 0.10);
+}
+
+.pixel-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pixel-cluster {
+  position: absolute;
+  width: var(--cluster-size);
+  aspect-ratio: 1;
+  opacity: var(--cluster-opacity, 0.46);
+  transform: translate3d(0, 0, 0);
+  animation: pixelClusterDrift var(--cluster-duration, 24s) ease-in-out infinite alternate;
+  animation-delay: var(--cluster-delay, 0s);
+}
+
+.pixel-cell {
+  position: absolute;
+  width: var(--cell-size, 5px);
+  height: var(--cell-size, 5px);
+  background: rgb(var(--cluster-color));
+  opacity: var(--cell-opacity, 0.35);
+}
+
+@keyframes pixelClusterDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(var(--cluster-dx, 10px), var(--cluster-dy, -14px), 0); }
+}
+
+.pixel-site .field,
+.pixel-site #bubblefield {
+  display: none;
+}
+
+/* Homepage */
+.pixel-site .foot {
+  font-family: var(--font-code);
+}
+
+.pixel-site .ways {
+  font-family: var(--font-sans);
+}
+
+.pixel-site .way {
+  border-color: rgba(var(--forest-rgb), 0.24);
+}
+
+.pixel-site .way-title {
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.pixel-site .way-desc {
+  font-family: var(--font-sans);
+}
+
+.pixel-site .orb-mark,
+.pixel-site .orb-mark i {
+  border-radius: 0;
+}
+
+.pixel-site .orb-mark {
+  border-color: rgba(var(--forest-rgb), 0.38);
+  box-shadow: 2px 2px 0 rgba(var(--forest-rgb), 0.10);
+}
+
+.pixel-site .name-portrait,
+.pixel-site .name-portrait img {
+  border-radius: 0;
+}
+
+.pixel-site .name-reveal:hover .name-portrait,
+.pixel-site .name-reveal:focus-within .name-portrait,
+.pixel-site .name-reveal.is-revealed .name-portrait {
+  box-shadow: 0 0 0 2px rgba(216, 224, 236, 0.58),
+              3px 3px 0 rgba(var(--forest-rgb), 0.18);
+}
+
+/* Portfolio */
+.pixel-site .topbar {
+  background: rgba(var(--paper-rgb), 0.90);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.pixel-site .topnav,
+.pixel-site .head p,
+.pixel-site .filters,
+.pixel-site .card .sub,
+.pixel-site .card-status,
+.pixel-site .tags,
+.pixel-site .links,
+.pixel-site .footer {
+  font-family: var(--font-code);
+}
+
+.pixel-site .head h1,
+.pixel-site .head p,
+.pixel-site .card h3 {
+  letter-spacing: 0;
+}
+
+.pixel-site .filter-button,
+.pixel-site .card,
+.pixel-site .card-mark,
+.pixel-site .card-status,
+.pixel-site .tag,
+.pixel-site .link {
+  border-radius: 0;
+}
+
+.pixel-site .filter-button {
+  font-family: var(--font-code);
+  background: rgba(var(--paper-rgb), 0.76);
+  transition: color 150ms ease-out, background 150ms ease-out,
+              border-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.pixel-site .filter-button[aria-pressed="true"] {
+  box-shadow: 2px 2px 0 rgba(var(--ink-rgb), 0.16);
+}
+
+.pixel-site .card {
+  background: rgba(var(--paper-rgb), 0.82);
+  border-color: rgba(var(--forest-rgb), 0.22);
+  box-shadow: 2px 2px 0 rgba(var(--forest-rgb), 0.12);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out,
+              border-color 180ms ease-out;
+}
+
+.pixel-site .card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--forest-rgb), 0.42);
+  box-shadow: 4px 4px 0 rgba(var(--forest-rgb), 0.16);
+}
+
+.pixel-site .card-mark {
+  font-family: var(--font-code);
+  box-shadow: 2px 2px 0 rgba(var(--forest-rgb), 0.12);
+}
+
+.pixel-site .card-status .pip {
+  border-radius: 0;
+}
+
+.pixel-site .tag {
+  background: rgba(var(--forest-rgb), 0.10);
+  border: 1px solid rgba(var(--forest-rgb), 0.12);
+}
+
+.pixel-site .link-code {
+  box-shadow: 2px 2px 0 rgba(var(--ink-rgb), 0.16);
+}
+
+html[data-theme="dark"] .pixel-site .card {
+  box-shadow: 2px 2px 0 rgba(var(--forest-rgb), 0.12);
+}
+
+html[data-theme="dark"] .pixel-site .card:hover {
+  box-shadow: 4px 4px 0 rgba(var(--forest-rgb), 0.16);
+}
+
+@media (max-width: 640px) {
+  .pixel-cluster {
+    width: min(var(--cluster-size), 34vw);
+    opacity: calc(var(--cluster-opacity, 0.46) * 0.82);
+  }
+
+  .pixel-site .foot {
+    font-family: var(--font-sans);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-cluster { animation: none; }
+}

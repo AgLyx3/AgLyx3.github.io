@@ -725,3 +725,246 @@ phones, and row height is 89-107px against a 44px tap-target minimum.
 
 `body { overflow: hidden }` (a P0-adjacent trap from the original audit) is gone;
 short viewports could previously clip content with no way to scroll to it.
+
+---
+
+## 20. Landing Portrait Becomes an Overlapping Print Pair (2026-08-16)
+
+### Previous direction
+
+One portrait sat behind the landing identity at low opacity, then resolved into a
+crisp angled print when the name or image was hovered, focused, or tapped.
+
+### What changed
+
+The landing now uses two overlapping portraits: the warm calligraphy photograph
+and a more formal full-length portrait. Both use the same intersecting horizontal
+and vertical alpha masks at rest, then crossfade into crisp, oppositely angled
+prints as one reveal group. Hovering an individual print raises it within the pair.
+
+### Why
+
+The pair shows two complementary sides of Yixin without adding explanatory copy
+or another page section. The overlapping-print treatment was selected over a
+scattered composition and a rigid side-by-side diptych because it preserves the
+landing's editorial character and keeps the photographs connected to the name.
+
+### Layout and interaction constraints
+
+- On desktop, the complete foreground pair must end before the navigation column;
+  it may overlap the name and tagline but not “Talk to me” or “See what I've built.”
+- On mobile, both prints remain above the action rows and inside the viewport.
+- Touch uses an explicit reveal state: tapping the name or either portrait opens
+  the pair; tapping either open portrait or any blank page area closes it.
+- Desktop hover and keyboard focus retain the same reveal behavior.
+
+### New intended direction
+
+The overlapping pair is the production landing treatment. Temporary comparison
+views are not part of the shipped navigation or product surface.
+## 21. Ambient pixel constellation system across the frontend (review branch)
+
+- Previous direction: The homepage used soft photographic masks and circular ambient marks, the portfolio used blurred glass cards and large gradient orbs, and the chat page used smooth D3 topic bubbles.
+- What changed: The `pixel-site-system` worktree applies the chat Cluster study as a shared visual system. Ambient decoration becomes low-opacity square-pixel constellations, interface surfaces use crisp geometry and restrained hard shadows, and metadata uses monospaced type while the calligraphic name and readable content typography remain intact.
+- Why: Repeating the same pixel atmosphere, geometry, and interaction language makes the three frontend experiences feel authored as one system without turning photographs or long-form content into retro pixel art.
+- New intended direction: Use pixels for atmosphere, boundaries, status marks, and relationship cues; preserve photography, the Ephesis identity mark, and Satoshi content text. Maintain explicit exclusion zones around interactive content and reduce pixel density on mobile.
+## 22. Landing Background: Constellation Field, Adapted from ThreeUI (2026-08-22)
+
+> **Outcome (2026-08-23): adopted, alongside the pixel clusters rather than
+> instead of them.** The section below was written as a replacement for the
+> landing's background layers, which is no longer accurate. It was briefly
+> pulled from the homepage on the argument that the field and the ambient pixel
+> clusters were doing the same job in the same corners in conflicting shape
+> languages. The portfolio settled it: that page runs the constellation, the
+> clusters and the starfield together and reads well, so the homepage now uses
+> the same recipe — constellation canvas, four pixel clusters, and the starfield
+> at the thinned 70 (§23 covers the portfolio's own use of the renderer).
+
+
+### Previous direction
+
+The landing page carried two mutually exclusive background layers:
+
+- **dark** — 150 absolutely-positioned `.star` spans twinkling on a CSS keyframe,
+  plus the milky-way band and periodic meteors
+- **light** — 14 blurred `.dot` spans drifting on an 18s loop, described in the
+  source as the "light-mode bubble motif"
+
+### What changed
+
+The light-mode dots are gone. Both themes now share a single `<canvas>` background
+(`frontend/assets/constellation.js`): 26–62 drifting nodes that draw a link
+whenever two fall within a viewport-scaled radius, with a gentle pull toward the
+cursor. The dark starfield, milky-way band, and meteors are untouched — the
+network now sits under them as a second, slower layer.
+
+The starfield was **thinned from 150 stars to 70** at the same time, with peak
+twinkle opacity dropped from a 0.50–1.00 range to 0.42–0.82 and the halo from
+0.55 to 0.45 alpha. At the old density the two glowing layers read as speckle
+and the network lost its structure; the stars are the far layer now. Densities
+of 150 / 95 / 70 / 50 were compared in headless Chrome — 95 still speckles, 50
+stops reading as a sky.
+
+The renderer is adapted from **ConstellationField** in
+[ThreeUI Community](https://github.com/MengTo/threeui) (MIT).
+
+### Why it changed
+
+- The dots read as dust rather than as anything. A node/link network reads as the
+  connective layer the site is actually about — "Human and AI", a retrieval graph
+  behind the chat agent — so the background finally says something.
+- Light mode had the weaker of the two treatments and now has parity with dark.
+- One canvas replaces 14 (light) / 150 (dark, partially) animated DOM nodes.
+
+### Why the library itself was not adopted
+
+ThreeUI ships as `@designcodeio/threeui`, a **React** package whose components
+wrap full standalone HTML demo documents in an iframe (each pulling Tailwind CDN,
+GSAP, and Iconify). This frontend is vanilla HTML/CSS/JS with no build step,
+deployed as static files. Taking the package would have meant introducing React,
+a bundler, and a build to the Vercel project in exchange for one background
+effect.
+
+Most of the catalogue is also not "3D" in the sense the name suggests — the
+constellation family is plain 2D canvas; only a subset (portal-field, wireframe
+forms) actually loads three.js.
+
+So: **borrow the renderer, not the dependency.** The lifted file is ~220 lines
+with zero dependencies and no build step. The same approach is available for any
+other component in that repo if one is wanted later.
+
+### Adaptations made to the upstream renderer
+
+- Colours read from `--forest-rgb` at runtime instead of a hard-coded gold, with
+  a `MutationObserver` on `data-theme` so the field re-tints on theme toggle
+  rather than restarting. Alphas differ per theme — ink on cream carries much
+  further than glow on navy.
+- Node count and link radius scale with viewport width (26 / 44 / 62).
+- `prefers-reduced-motion` paints one static frame instead of skipping the field
+  entirely, so the texture survives without motion. Upstream rendered nothing.
+- Loop parks on `visibilitychange`; DPR capped at 2; `resize` debounced 150ms.
+- Pointer gravity is gated on `(hover: hover)` — it was dead weight on touch.
+
+### Current intended direction
+
+The constellation is the landing page's background in both themes. The portfolio
+page was deliberately left alone: it already runs its own **bubble field** (§17),
+a motif shared with the chat page, and adding a network beneath it would be a
+third ambient layer competing with an intentional one. Two pages, two
+backgrounds, on purpose — revisit only if the bubble field is retired.
+
+Verified in headless Chrome at 1440x900 and 390x844, both themes, plus live theme
+toggle and `prefers-reduced-motion: reduce`: no console errors, no horizontal
+overflow, backing store correctly capped at 2x on a 3x device.
+
+
+---
+
+## 23. Portfolio Rebuilt as a Star Track (2026-08-23)
+
+### Previous direction
+
+`portfolio.html` was a two-column card grid (`.grid`, `repeat(2, 1fr)`, 22px gap)
+over two ambient background layers: the 150-star dark starfield and the
+**ambient bubble field** from §17 — eight curated drifting orbs, the chat page's
+memory-orb motif reused as "planets in the same galaxy".
+
+### What changed
+
+The grid became a **path**. One meandering line runs down the page and the eight
+projects are strung along it as *stations*, alternating left and right, each
+joined to the line by a short spur that lands on a lit node.
+
+- **The track** is an SVG drawn in `frontend/assets/star-track.js` from
+  *measured* geometry — a sine meander (24px amplitude / 430px wavelength on
+  desktop, 8px / 300px narrow), sampled every 7px as a polyline, stroked through
+  a gradient that fades at both ends so it reads as passing through the page.
+  Faint dust is scattered along it, seeded per-y so a redraw does not reshuffle
+  the sky.
+- **Stations** each take their own grid row — sharing a row is what makes a
+  two-column grid; taking turns down the page is what makes a track. A -86px
+  interlock margin claws back the dead space that leaves, so consecutive cards
+  overlap along the spine.
+- **3D.** `.stations` carries `perspective: 1500px`. Each card rests at
+  `rotateY(3.4deg) rotate(1deg)`, hinged on the edge facing the track, so the
+  two sides read as panels opening off one spine. Hover squares the card up
+  (`rotateY(0) translateZ(30px)`); the mark and title sit at `translateZ(18px)`
+  so the card has real depth rather than being a flat rectangle that happens to
+  be rotated. Tilt is capped at ~4deg — past that, body text shimmers on a
+  low-DPI screen.
+- **The bubble field was removed.** With a lit track running down the page,
+  stars, a node network *and* drifting orbs was three ambient layers competing
+  for the same attention. The orb motif still lives on the chat page.
+- The **constellation field** (§20) was added here, and the starfield thinned to
+  70 dimmed stars, matching the landing page.
+
+### Narrow screens
+
+The track leaves the middle and runs down the left margin; every card sits to
+its right in one column. The meander flattens (8px), the tilt eases to 2deg and
+then 1.4deg below 560px, and the interlock margin goes to zero. `--track-gutter`
+in the stylesheet must stay twice `baseX` in `star-track.js` — the two are
+commented as a pair.
+
+### Why measured rather than hard-coded
+
+Card heights differ, fonts swap in after first paint, and the filter buttons
+change how many cards exist. Every node, spur and path point is computed from
+`getBoundingClientRect` on redraw, driven by a `ResizeObserver` on the rail plus
+a `portfolio:filtered` event the filter script dispatches. Sides and rows are
+assigned over the **visible** set, so filtering never leaves two cards on the
+same side of the spine.
+
+Two bugs this surfaced, both fixed:
+
+1. Nodes were skipped whenever the spur was shorter than `spurMin` — which is
+   *every* spur on a narrow screen, so mobile had no nodes at all. Only the spur
+   is skipped now; the node always marks the station.
+2. The interlock margin comes from `.station + .station`, which is DOM
+   adjacency. When a filter hid the first card, the next one inherited the
+   pull-up and rode into the filter row above it, covering the buttons. Only the
+   first *visible* station is exempt, and only JS knows which that is.
+
+### Current intended direction
+
+The portfolio is a scroll journey along one path, not a grid to scan. Verified
+in headless Chrome at 1440, 1024, 900 and 390 wide, both themes, through every
+filter cycle, plus hover and `prefers-reduced-motion: reduce` (cards sit square,
+entrance and perspective drop, the track stays — it is structure, not motion).
+No page errors, no horizontal overflow at any width.
+
+## 24. Chat Bubble Shadow Without an SVG Filter, and Inert Offscreen Surfaces (2026-08-22)
+
+### Previous direction
+
+Every `.bubble-node` carried `filter="url(#fshadow)"`, an `feDropShadow`, and the
+landing's offscreen surfaces (chat panel, CTA footer, both modals, voice overlay)
+were hidden with `opacity: 0` alone.
+
+### What changed
+
+The drop shadow is now a `<circle>` filled with a radial gradient, and every
+surface that is not currently visible carries `inert`.
+
+### Why it changed
+
+iOS Safari rasterises an SVG filter region into an offscreen buffer it does not
+scale to `devicePixelRatio`. On a 3x iPhone each bubble was painted at roughly
+1x and upscaled — visibly pixelated, labels included, because the filter wrapped
+the whole `<g>`. A gradient is vector geometry and resolves at whatever the
+device paints at.
+
+Separately, `opacity: 0` hides a surface visually but leaves its controls in the
+tab order. A keyboard user walked 17 invisible stops and never reached a topic
+within 26 tabs. `aria-hidden` on `#bubbleCanvas` compounded it by stripping all
+ten `role="button"` bubbles from the accessibility tree while `tabindex="0"` kept
+them focusable.
+
+### New intended direction
+
+No SVG filters on the bubble canvas — shadows are gradient geometry. Visibility
+and focusability stay in step: anything faded out is `inert`, synced off computed
+style rather than hand-maintained at each state transition. Bubble labels shrink
+to fit the circle's chord at each line's own y offset, since `wrapLabel` only
+breaks between words.
+
