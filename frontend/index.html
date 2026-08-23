@@ -21,6 +21,8 @@
 
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Satoshi-Variable.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Ephesis-Regular.woff2" crossorigin>
+<link rel="stylesheet" href="assets/pixel-system.css">
+<script defer src="assets/pixel-system.js"></script>
 <style>
   /* Self-hosted. Fontshare serves protocol-relative URLs that break on file://,
      and silently drops families from combined requests. */
@@ -127,17 +129,80 @@
   .asym { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(30px, 6vw, 76px);
           align-items: center; width: min(1000px, 100%); }
 
-  .asym-left { animation: rise 600ms 80ms var(--ease-out) both; }
+  .asym-left { position: relative; top: -18px; animation: rise 600ms 80ms var(--ease-out) both; }
+  .name-reveal { position: relative; display: inline-block; }
+  .name-reveal:hover,
+  .name-reveal:focus-within,
+  .name-reveal.is-revealed { z-index: 4; }
   /* Script: small x-height needs a bigger em, and the y-descender needs headroom. */
   .name { font-family: var(--font-display); font-weight: 400; font-size: clamp(56px, 7.4vw, 112px);
-          line-height: 1.2; letter-spacing: 0.01em; padding-bottom: 0.06em; color: var(--ink); }
+          position: relative; z-index: 1; line-height: 1.2; letter-spacing: 0.01em;
+          padding-bottom: 0.06em; color: var(--ink); }
+  .name-trigger { display: block; padding: 0; border: 0; font: inherit; line-height: inherit;
+                  letter-spacing: inherit; color: inherit; background: none; cursor: default; }
+  .name-trigger:focus-visible { outline: 2px solid var(--forest); outline-offset: 6px; border-radius: 2px; }
+
+  /* The portrait behaves like a loose print laid behind the page at rest,
+     then rises above the content when either it or the name is active. */
+  .name-portrait { --portrait-image: url('assets/yixin-portrait.jpg');
+                   --portrait-ambient-opacity: 0.24;
+                   --portrait-ratio: 993 / 1400;
+                   --portrait-rest: translate(6px, 12px) rotate(-2deg) scale(0.94);
+                   --portrait-active: translate(-8px, 18px) rotate(-4deg) scale(1);
+                   position: absolute; left: 42%; top: calc(54% + 42px); z-index: 0;
+                   width: clamp(158px, 15vw, 180px); aspect-ratio: var(--portrait-ratio);
+                   padding: 0; margin: 0; overflow: hidden; border: 0; border-radius: 3px;
+                   background: transparent;
+                   box-shadow: none; opacity: 1; pointer-events: auto;
+                   transform: var(--portrait-rest);
+                   transform-origin: 32% 10%;
+                   transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out); }
+  .name-portrait::before { content: ''; position: absolute; inset: 0; z-index: 0;
+                           background: var(--portrait-image) center / cover no-repeat;
+                           opacity: var(--portrait-ambient-opacity);
+                           -webkit-mask-image:
+                             linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%),
+                             linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+                           -webkit-mask-composite: source-in;
+                           mask-image:
+                             linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%),
+                             linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+                           mask-composite: intersect;
+                           filter: drop-shadow(0 18px 28px rgba(var(--forest-rgb), 0.16));
+                           transition: opacity 420ms var(--ease-out); }
+  .name-portrait img { position: relative; z-index: 1; display: block; width: 100%; height: 100%;
+                       object-fit: cover; border-radius: 1px; opacity: 0;
+                       transition: opacity 420ms var(--ease-out); }
+  .name-portrait-secondary { --portrait-image: url('assets/yixin-portrait-2.jpg');
+                             --portrait-ambient-opacity: 0.28;
+                             --portrait-ratio: 933 / 1400;
+                             --portrait-rest: translate(7px, 10px) rotate(2deg) scale(0.94);
+                             --portrait-active: translate(8px, 18px) rotate(4deg) scale(1);
+                             left: 92%; top: calc(50% + 48px);
+                             width: clamp(176px, 16.5vw, 200px); }
+  .name-reveal:hover .name-portrait,
+  .name-reveal:focus-within .name-portrait,
+  .name-reveal.is-revealed .name-portrait { z-index: 5; opacity: 1;
+                                            box-shadow: 0 0 0 4px rgba(216, 224, 236, 0.72),
+                                                        0 24px 64px rgba(var(--forest-rgb), 0.18),
+                                                        0 7px 22px rgba(var(--forest-rgb), 0.12);
+                                            transform: var(--portrait-active);
+                                            transition-delay: 0s; }
+  .name-reveal .name-portrait:hover { z-index: 6; }
+  .name-reveal:hover .name-portrait::before,
+  .name-reveal:focus-within .name-portrait::before,
+  .name-reveal.is-revealed .name-portrait::before { opacity: 0; }
+  .name-reveal:hover .name-portrait img,
+  .name-reveal:focus-within .name-portrait img,
+  .name-reveal.is-revealed .name-portrait img { opacity: 1; }
   .tagline { font-family: var(--font-sans); font-size: clamp(16px, 1.5vw, 19px); font-weight: 400;
-             letter-spacing: -0.005em; color: var(--ink-2); line-height: 1.55; max-width: 30ch; margin-top: 10px; }
+             position: relative; z-index: 1; letter-spacing: -0.005em; color: var(--ink-2);
+             line-height: 1.55; max-width: 30ch; margin-top: 10px; }
   .tagline .accent { font-style: italic; font-weight: 500; color: var(--forest); }
 
   /* One duration and one easing for every moving part, so the whole row
      resolves as a single gesture instead of three overlapping ones. */
-  .ways { --way-dur: 420ms; --way-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  .ways { --way-dur: 420ms; --way-ease: cubic-bezier(0.2, 0.7, 0.2, 1); position: relative; z-index: 1;
           animation: rise 600ms 220ms var(--ease-out) both; }
 
   .way { display: block; text-decoration: none; padding: 22px 0;
@@ -200,7 +265,14 @@
   @media (max-width: 640px) {
     .wrap { padding: 44px 22px 26px; }
     .asym { gap: 26px; }
+    .asym-left { top: -12px; }
     .name { font-size: clamp(46px, 13.5vw, 68px); }
+    .name-portrait { --portrait-rest: translate(4px, 8px) rotate(-2deg) scale(0.94);
+                     --portrait-active: translate(-2px, 4px) rotate(-4deg) scale(1);
+                     left: 38px; top: -158px; width: min(34vw, 136px); }
+    .name-portrait-secondary { --portrait-rest: translate(5px, 8px) rotate(2deg) scale(0.94);
+                               --portrait-active: translate(4px, 8px) rotate(4deg) scale(1);
+                               left: 166px; top: -162px; width: min(37vw, 146px); }
     .tagline { font-size: 16px; margin-top: 8px; }
 
     /* Full-bleed rules: the hairlines reach both screen edges and organise the
@@ -223,6 +295,12 @@
   @media (hover: none) {
     .orb-mark { display: none; }
     .way:hover .way-label, .way:hover .way-desc { transform: none; }
+    .name-reveal:not(.is-revealed) .name-portrait {
+      z-index: 0; box-shadow: none;
+      transform: var(--portrait-rest);
+    }
+    .name-reveal:not(.is-revealed) .name-portrait::before { opacity: var(--portrait-ambient-opacity); }
+    .name-reveal:not(.is-revealed) .name-portrait img { opacity: 0; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
@@ -246,7 +324,7 @@
      painted onto; the glow now belongs to the star markers instead. */
 </style>
 </head>
-<body>
+<body class="pixel-site" data-pixel-page="home">
   <div id="starfield" aria-hidden="true"></div>
   <div id="galaxy-mw" aria-hidden="true"></div>
   <canvas id="constellation" aria-hidden="true"></canvas>
@@ -254,7 +332,15 @@
   <main class="wrap">
     <div class="asym">
       <div class="asym-left">
-        <h1 class="name">Yixin Li</h1>
+        <div class="name-reveal">
+          <h1 class="name"><button class="name-trigger" type="button" aria-label="Show a portrait of Yixin Li" aria-expanded="false">Yixin Li</button></h1>
+          <figure class="name-portrait" aria-hidden="true">
+            <img src="assets/yixin-portrait.jpg" alt="" width="993" height="1400">
+          </figure>
+          <figure class="name-portrait name-portrait-secondary" aria-hidden="true">
+            <img src="assets/yixin-portrait-2.jpg" alt="" width="933" height="1400">
+          </figure>
+        </div>
         <p class="tagline">I build products at the intersection of Human and <span class="accent">AI</span>.</p>
       </div>
 
@@ -318,6 +404,30 @@
       function apply(t){ root.setAttribute('data-theme', t); try { localStorage.setItem('px_theme', t); } catch(e){} }
       document.querySelector('.theme-toggle').addEventListener('click', function(){
         apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+    })();
+    // Touch devices use an explicit reveal state because mobile browsers can
+    // retain :hover after a tap. Tapping either target toggles; elsewhere closes.
+    (function () {
+      var reveal = document.querySelector('.name-reveal');
+      var trigger = document.querySelector('.name-trigger');
+      var touch = window.matchMedia && window.matchMedia('(hover: none)');
+      if (!reveal || !trigger || !touch) return;
+
+      function setRevealed(open) {
+        reveal.classList.toggle('is-revealed', open);
+        trigger.setAttribute('aria-expanded', String(open));
+        if (!open) trigger.blur();
+      }
+
+      document.addEventListener('click', function (event) {
+        if (!touch.matches) return;
+        var target = event.target.closest('.name-trigger, .name-portrait');
+        if (target && reveal.contains(target)) {
+          setRevealed(!reveal.classList.contains('is-revealed'));
+          return;
+        }
+        setRevealed(false);
       });
     })();
     // galaxy: milky-way band + periodic meteors

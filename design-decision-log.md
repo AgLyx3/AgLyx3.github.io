@@ -728,7 +728,47 @@ short viewports could previously clip content with no way to scroll to it.
 
 ---
 
-## 20. Landing Background: Constellation Field, Adapted from ThreeUI (2026-08-22)
+## 20. Landing Portrait Becomes an Overlapping Print Pair (2026-08-16)
+
+### Previous direction
+
+One portrait sat behind the landing identity at low opacity, then resolved into a
+crisp angled print when the name or image was hovered, focused, or tapped.
+
+### What changed
+
+The landing now uses two overlapping portraits: the warm calligraphy photograph
+and a more formal full-length portrait. Both use the same intersecting horizontal
+and vertical alpha masks at rest, then crossfade into crisp, oppositely angled
+prints as one reveal group. Hovering an individual print raises it within the pair.
+
+### Why
+
+The pair shows two complementary sides of Yixin without adding explanatory copy
+or another page section. The overlapping-print treatment was selected over a
+scattered composition and a rigid side-by-side diptych because it preserves the
+landing's editorial character and keeps the photographs connected to the name.
+
+### Layout and interaction constraints
+
+- On desktop, the complete foreground pair must end before the navigation column;
+  it may overlap the name and tagline but not “Talk to me” or “See what I've built.”
+- On mobile, both prints remain above the action rows and inside the viewport.
+- Touch uses an explicit reveal state: tapping the name or either portrait opens
+  the pair; tapping either open portrait or any blank page area closes it.
+- Desktop hover and keyboard focus retain the same reveal behavior.
+
+### New intended direction
+
+The overlapping pair is the production landing treatment. Temporary comparison
+views are not part of the shipped navigation or product surface.
+## 21. Ambient pixel constellation system across the frontend (review branch)
+
+- Previous direction: The homepage used soft photographic masks and circular ambient marks, the portfolio used blurred glass cards and large gradient orbs, and the chat page used smooth D3 topic bubbles.
+- What changed: The `pixel-site-system` worktree applies the chat Cluster study as a shared visual system. Ambient decoration becomes low-opacity square-pixel constellations, interface surfaces use crisp geometry and restrained hard shadows, and metadata uses monospaced type while the calligraphic name and readable content typography remain intact.
+- Why: Repeating the same pixel atmosphere, geometry, and interaction language makes the three frontend experiences feel authored as one system without turning photographs or long-form content into retro pixel art.
+- New intended direction: Use pixels for atmosphere, boundaries, status marks, and relationship cues; preserve photography, the Ephesis identity mark, and Satoshi content text. Maintain explicit exclusion zones around interactive content and reduce pixel density on mobile.
+## 22. Landing Background: Constellation Field, Adapted from ThreeUI (2026-08-22)
 
 ### Previous direction
 
@@ -809,7 +849,7 @@ overflow, backing store correctly capped at 2x on a 3x device.
 
 ---
 
-## 21. Portfolio Rebuilt as a Star Track (2026-08-23)
+## 23. Portfolio Rebuilt as a Star Track (2026-08-23)
 
 ### Previous direction
 
@@ -881,3 +921,39 @@ in headless Chrome at 1440, 1024, 900 and 390 wide, both themes, through every
 filter cycle, plus hover and `prefers-reduced-motion: reduce` (cards sit square,
 entrance and perspective drop, the track stays — it is structure, not motion).
 No page errors, no horizontal overflow at any width.
+
+## 24. Chat Bubble Shadow Without an SVG Filter, and Inert Offscreen Surfaces (2026-08-22)
+
+### Previous direction
+
+Every `.bubble-node` carried `filter="url(#fshadow)"`, an `feDropShadow`, and the
+landing's offscreen surfaces (chat panel, CTA footer, both modals, voice overlay)
+were hidden with `opacity: 0` alone.
+
+### What changed
+
+The drop shadow is now a `<circle>` filled with a radial gradient, and every
+surface that is not currently visible carries `inert`.
+
+### Why it changed
+
+iOS Safari rasterises an SVG filter region into an offscreen buffer it does not
+scale to `devicePixelRatio`. On a 3x iPhone each bubble was painted at roughly
+1x and upscaled — visibly pixelated, labels included, because the filter wrapped
+the whole `<g>`. A gradient is vector geometry and resolves at whatever the
+device paints at.
+
+Separately, `opacity: 0` hides a surface visually but leaves its controls in the
+tab order. A keyboard user walked 17 invisible stops and never reached a topic
+within 26 tabs. `aria-hidden` on `#bubbleCanvas` compounded it by stripping all
+ten `role="button"` bubbles from the accessibility tree while `tabindex="0"` kept
+them focusable.
+
+### New intended direction
+
+No SVG filters on the bubble canvas — shadows are gradient geometry. Visibility
+and focusability stay in step: anything faded out is `inert`, synced off computed
+style rather than hand-maintained at each state transition. Bubble labels shrink
+to fit the circle's chord at each line's own y offset, since `wrapLabel` only
+breaks between words.
+
