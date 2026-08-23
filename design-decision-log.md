@@ -768,16 +768,18 @@ views are not part of the shipped navigation or product surface.
 - What changed: The `pixel-site-system` worktree applies the chat Cluster study as a shared visual system. Ambient decoration becomes low-opacity square-pixel constellations, interface surfaces use crisp geometry and restrained hard shadows, and metadata uses monospaced type while the calligraphic name and readable content typography remain intact.
 - Why: Repeating the same pixel atmosphere, geometry, and interaction language makes the three frontend experiences feel authored as one system without turning photographs or long-form content into retro pixel art.
 - New intended direction: Use pixels for atmosphere, boundaries, status marks, and relationship cues; preserve photography, the Ephesis identity mark, and Satoshi content text. Maintain explicit exclusion zones around interactive content and reduce pixel density on mobile.
-## 22. Constellation Field, Adapted from ThreeUI — Portfolio Only (2026-08-22)
+## 22. Landing Background: Constellation Field, Adapted from ThreeUI (2026-08-22)
 
-> **Outcome (2026-08-23): not adopted on the homepage.** The field was built to
-> replace the landing's background layers, and the section below describes that
-> intent. In review the homepage already carried the ambient pixel clusters, and
-> the two did the same job in the same corners with a conflicting shape language
-> — squares against nodes and edges. The homepage keeps its existing background
-> unchanged; `constellation.js` ships only as the backdrop for the portfolio star
-> track (§23). The original reasoning is kept below because it still explains why
-> the renderer looks the way it does.
+> **Outcome (2026-08-23): adopted, alongside the pixel clusters rather than
+> instead of them.** The section below was written as a replacement for the
+> landing's background layers, which is no longer accurate. It was briefly
+> pulled from the homepage on the argument that the field and the ambient pixel
+> clusters were doing the same job in the same corners in conflicting shape
+> languages. The portfolio settled it: that page runs the constellation, the
+> clusters and the starfield together and reads well, so the homepage now uses
+> the same recipe — constellation canvas, four pixel clusters, and the starfield
+> at the thinned 70 (§23 covers the portfolio's own use of the renderer).
+
 
 ### Previous direction
 
