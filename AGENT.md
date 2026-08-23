@@ -38,11 +38,22 @@ To deploy **backend** changes:
 cd /Users/lyx_computer/Desktop/AgLyx3.github.io/backend && vercel deploy --prod
 ```
 
-Then verify the live site has the new code:
+Then verify the live site has the new code by diffing what production serves
+against what you just built:
 
 ```bash
-curl -s "https://www.yixinli.me/assets/app.js" | grep "backend-green"
+cd /Users/lyx_computer/Desktop/AgLyx3.github.io
+for f in index.html portfolio.html chat.html; do
+  diff -q <(curl -s "https://www.yixinli.me/$f") "frontend/$f" \
+    && echo "$f: live matches local" || echo "$f: LIVE IS STALE"
+done
 ```
+
+Do not grep `assets/app.js`. No page has loaded it since the chat UI moved
+inline into `chat.html`, but the dead file is still deployed and still contains
+`backend-green`, so that check passes whether or not the deploy worked. A diff
+against the local file is the only thing that proves the code you built is the
+code being served.
 
 Do not tell the user something is deployed until `vercel deploy --prod` finishes and curl confirms the new code is live.
 The root `.vercel/` project (`ag-lyx3-github-io`) is separate and not the live frontend.
