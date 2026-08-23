@@ -121,7 +121,12 @@
     }
     .bubble-node:hover .node-halo,
     .bubble-node.is-hovered .node-halo { opacity: 1; }
-    .bubble-node:hover .node-inner,
+    /* :hover sticks after a tap on iOS, so a tapped bubble stayed "popped"
+       until you touched somewhere else. Pointer devices only; touch focus is
+       handled by .is-hovered, which JS clears. */
+    @media (hover: hover) {
+      .bubble-node:hover .node-inner { transform: scale(1.04); }
+    }
     .bubble-node.is-hovered .node-inner { transform: scale(1.04); }
 
     /* Bubble studies are rendered together so preview switching does not reset
@@ -1004,6 +1009,14 @@
         transition-delay: 180ms;
       }
       body.state-chat #bubbleCanvas { opacity: 0; pointer-events: none; }
+
+      /* Typing on a phone opens the keyboard, which collapses the visual
+         viewport to roughly half. window.innerHeight does not change on iOS, so
+         nothing reflows: the topics keep their positions while the name and the
+         prompt bar are pushed up into them, and the labels land on top of the
+         name. Rather than chase a viewport the layout cannot see, drop the
+         field while the caret is in an input and bring it back on blur. */
+      body.is-typing #bubbleCanvas { opacity: 0; pointer-events: none; }
 
       /* Topics button visible on mobile */
       .topbar-topics-btn { display: block; }
@@ -2168,6 +2181,19 @@
     }
 
     /* ── Bubble click ── */
+    /* Only the phone layout hides the field; the class is harmless elsewhere. */
+    ['focusin', 'focusout'].forEach(function (evt) {
+      document.addEventListener(evt, function (e) {
+        var el = e.target;
+        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+        bodyEl.classList.toggle('is-typing', evt === 'focusin');
+      });
+    });
+
+    function clearBubbleHover() {
+      if (nodeGroupsSel) nodeGroupsSel.classed('is-hovered', false);
+    }
+
     function onBubbleClick(d) {
       var prev = topicWeights[d.id] || 0;
       topicWeights[d.id] = prev + (prev > 0 ? 5 : 10);
@@ -2185,6 +2211,9 @@
       } else {
         target.focus();
       }
+      /* Touch fires mouseenter on tap, which leaves the bubble enlarged and
+         raised above its neighbours once focus moves to the input. */
+      clearBubbleHover();
     }
 
     /* ── State transition: landing → chat ── */
