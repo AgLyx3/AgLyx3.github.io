@@ -107,17 +107,15 @@
   /* starfield (dark only) */
   #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; display: none; opacity: 0; transition: opacity 600ms var(--ease-out); }
   html[data-theme="dark"] #starfield { display: block; opacity: 1; }
-  .star { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 4px 1px rgba(255,255,255,0.45);
+  .star { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 4px 1px rgba(255,255,255,0.55);
           animation: twinkle var(--tw-dur, 4s) ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   @keyframes twinkle { 0%,100% { opacity: 0.18; } 50% { opacity: var(--tw-max, 0.9); } }
 
-  /* Constellation field (both themes). One canvas replaced the light-mode
-     floating dots outright and sits under the stars in dark mode: a network
-     of drifting nodes reads as the connective layer the page is about, where
-     the dots read as dust. Colours come from --forest-rgb, so it flips with
-     the theme without a second palette. */
-  #constellation { position: fixed; inset: 0; z-index: 0; pointer-events: none;
-                   width: 100%; height: 100%; display: block; }
+  /* soft floating dots (light-mode bubble motif) */
+  .field { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  html[data-theme="dark"] .field { display: none; }
+  .dot { position: absolute; border-radius: 50%; background: rgba(var(--forest-rgb), 0.10); animation: drift 18s ease-in-out infinite; }
+  @keyframes drift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-22px); } }
 
   /* flex:1 lets the wrap absorb the leftover height instead of forcing a full
      viewport of its own, which is what made the mobile page overrun. */
@@ -327,7 +325,7 @@
 <body class="pixel-site" data-pixel-page="home">
   <div id="starfield" aria-hidden="true"></div>
   <div id="galaxy-mw" aria-hidden="true"></div>
-  <canvas id="constellation" aria-hidden="true"></canvas>
+  <div class="field" id="field" aria-hidden="true"></div>
 
   <main class="wrap">
     <div class="asym">
@@ -380,23 +378,30 @@
   </footer>
 
   <script>
-    // Starfield. Thinned from 150 to 70 and dimmed when the constellation
-    // field landed: two glowing layers at the old density read as speckle and
-    // the network lost its structure. The stars are the far layer now.
+    // starfield
     (function () {
       var field = document.getElementById('starfield'); if (!field) return;
       var frag = document.createDocumentFragment();
-      for (var i = 0; i < 70; i++) {
+      for (var i = 0; i < 150; i++) {
         var s = document.createElement('span'); s.className = 'star';
         var size = (Math.random() * 1.6 + 0.6).toFixed(2);
         s.style.width = size + 'px'; s.style.height = size + 'px';
         s.style.top = (Math.random() * 100).toFixed(2) + '%'; s.style.left = (Math.random() * 100).toFixed(2) + '%';
         s.style.setProperty('--tw-dur', (Math.random() * 4 + 2.5).toFixed(2) + 's');
         s.style.setProperty('--tw-delay', (Math.random() * 5).toFixed(2) + 's');
-        s.style.setProperty('--tw-max', (Math.random() * 0.4 + 0.42).toFixed(2));
+        s.style.setProperty('--tw-max', (Math.random() * 0.5 + 0.5).toFixed(2));
         frag.appendChild(s);
       }
       field.appendChild(frag);
+    })();
+    // floating dots (light mode)
+    (function () {
+      var f = document.getElementById('field');
+      for (var i=0;i<14;i++){ var d=document.createElement('span'); d.className='dot';
+        var s=(Math.random()*70+20).toFixed(0); d.style.width=s+'px'; d.style.height=s+'px';
+        d.style.top=(Math.random()*100).toFixed(1)+'%'; d.style.left=(Math.random()*100).toFixed(1)+'%';
+        d.style.animationDelay=(Math.random()*-18).toFixed(1)+'s';
+        d.style.animationDuration=(Math.random()*10+14).toFixed(1)+'s'; f.appendChild(d); }
     })();
     // theme toggle (persisted, shared key with chat app)
     (function () {
@@ -449,6 +454,5 @@
       setTimeout(loop, 1000);
     })();
   </script>
-  <script src="assets/constellation.js" defer></script>
 </body>
 </html>
