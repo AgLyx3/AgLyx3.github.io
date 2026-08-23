@@ -122,12 +122,20 @@
   .rail { position: relative; padding-bottom: 92px; }
   .rail-svg { position: absolute; inset: 0; width: 100%; height: 100%;
               z-index: 0; pointer-events: none; color: var(--forest); overflow: visible; }
-  .track-line { stroke-width: 1.25; opacity: 0.42; }
-  .track-spur { stroke: var(--forest); stroke-width: 1; opacity: 0.30; }
-  .track-dust { fill: var(--forest); }
-  .track-halo { fill: var(--forest); opacity: 0.16; }
-  .track-node { fill: var(--forest); }
-  html[data-theme="dark"] .track-node { filter: drop-shadow(0 0 6px rgba(var(--forest-rgb), 0.85)); }
+  /* The track is drawn as grid cells, not strokes — crispEdges keeps them from
+     being antialiased back into soft rectangles at fractional device ratios. */
+  .rail-svg rect { shape-rendering: crispEdges; }
+  .track-px { fill: var(--forest); opacity: 0.42; }
+  .track-px-dust { fill: var(--forest); }
+  .track-px-spur { fill: var(--forest); }
+  .track-px-halo { fill: var(--forest); }
+  .track-px-node { fill: var(--forest); }
+  /* Dark mode used a drop-shadow here. That is an SVG filter, which iOS Safari
+     rasterises into a buffer it does not scale to devicePixelRatio — the same
+     bug that pixelated the chat bubbles. The glow is cells now (see the halo
+     ring in star-track.js), so brightening the core is all that is needed. */
+  html[data-theme="dark"] .track-px-node { fill: rgb(var(--forest-rgb)); }
+  html[data-theme="dark"] .track-px { opacity: 0.52; }
 
   /* The centre column is the track's own lane — cards never enter it. */
   .stations { --track-gutter: 132px; --overlap: -86px;
