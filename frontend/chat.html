@@ -132,6 +132,19 @@
     body[data-bubble-style="stepped"] .bubble-style-stepped,
     body[data-bubble-style="constellation"] .bubble-style-constellation { display: block; }
     .bubble-pixel { shape-rendering: crispEdges; }
+    /* The pastel hue fills are near-invisible on the cream paper — that is why
+       the shadow below was propping them up. Light mode paints the cells in the
+       hue's ink tone instead, which is the same colour the label already uses,
+       so contrast comes from the pixels themselves. Dark mode keeps the pastel,
+       which reads correctly against the navy. */
+    .bubble-pixel { fill: var(--hue-ink); }
+    html[data-theme="dark"] .bubble-pixel { fill: var(--hue-fill); }
+
+    /* .node-shadow replaced an feDropShadow that iOS rasterised at the wrong
+       scale. A filter shadows the actual marks; a circle cannot, so behind a
+       pixel cluster it invented a round smudge the content does not have. Keep
+       it only for the round style it was drawn for. */
+    body:not([data-bubble-style="original"]) .node-shadow { display: none; }
     .bubble-pixel-fleck {
       transform-box: fill-box;
       transform-origin: center;
@@ -1859,6 +1872,8 @@
         .data(allNodes).enter()
         .append('g')
         .attr('class', 'bubble-node')
+        .style('--hue-fill', function (d) { return 'rgb(' + HUES[d.hue].fill + ')'; })
+        .style('--hue-ink', function (d) { return 'rgb(' + HUES[d.hue].text + ')'; })
         .attr('tabindex', '0')
         .attr('role', 'button')
         .attr('aria-label', function (d) { return 'Explore: ' + d.label; });

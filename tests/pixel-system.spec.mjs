@@ -1,10 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('site-wide pixel system', () => {
-  test('homepage keeps the pixel atmosphere behind the existing portrait interaction', async ({ page }) => {
+  test('homepage carries the constellation, not the pixel clusters, behind the portrait interaction', async ({ page }) => {
     await page.goto('/index.html');
-    await expect(page.locator('.pixel-cluster')).toHaveCount(4);
-    await expect(page.locator('.pixel-cell').first()).toBeVisible();
+    // The ambient clusters were removed: with the constellation field present
+    // the two competed in the same corners. The pixel *design language* stays —
+    // .pixel-site rules in pixel-system.css — only the atmosphere is gone.
+    await expect(page.locator('.pixel-cluster')).toHaveCount(0);
+    await expect(page.locator('canvas')).toHaveCount(1);
 
     const name = page.locator('.name-trigger');
     const portraits = page.locator('.name-portrait');
@@ -20,11 +23,15 @@ test.describe('site-wide pixel system', () => {
 
   test('portfolio uses crisp project surfaces and filtering still works', async ({ page }) => {
     await page.goto('/portfolio.html');
-    await expect(page.locator('.pixel-cluster')).toHaveCount(4);
+    await expect(page.locator('.pixel-cluster')).toHaveCount(0);
+    await expect(page.locator('canvas')).toHaveCount(1);
     await expect(page.locator('.card').first()).toHaveCSS('border-radius', '0px');
 
     await page.locator('[data-filter="dev-tool"]').click();
-    await expect(page.locator('.card:not([hidden])')).toHaveCount(4);
+    // The star track wraps each card in a .station and filtering toggles
+    // [hidden] on the station, never on the card — so .card:not([hidden]) has
+    // matched all 8 since the rebuild. Assert on what filtering actually drives.
+    await expect(page.locator('.station:not([hidden])')).toHaveCount(4);
     await expect(page.locator('[data-filter="dev-tool"]')).toHaveAttribute('aria-pressed', 'true');
   });
 
