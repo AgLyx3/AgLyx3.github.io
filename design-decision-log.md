@@ -747,6 +747,13 @@ whenever two fall within a viewport-scaled radius, with a gentle pull toward the
 cursor. The dark starfield, milky-way band, and meteors are untouched — the
 network now sits under them as a second, slower layer.
 
+The starfield was **thinned from 150 stars to 70** at the same time, with peak
+twinkle opacity dropped from a 0.50–1.00 range to 0.42–0.82 and the halo from
+0.55 to 0.45 alpha. At the old density the two glowing layers read as speckle
+and the network lost its structure; the stars are the far layer now. Densities
+of 150 / 95 / 70 / 50 were compared in headless Chrome — 95 still speckles, 50
+stops reading as a sky.
+
 The renderer is adapted from **ConstellationField** in
 [ThreeUI Community](https://github.com/MengTo/threeui) (MIT).
 
