@@ -1274,7 +1274,7 @@
   <div id="starfield" aria-hidden="true"></div>
 
   <!-- ── Full-screen bubble canvas ── -->
-  <svg id="bubbleCanvas" aria-hidden="true"></svg>
+  <svg id="bubbleCanvas" role="group" aria-label="Conversation topics"></svg>
 
   <div class="bubble-preview-switcher" id="bubblePreviewSwitcher" role="group" aria-label="Bubble appearance" hidden>
     <button class="bubble-preview-option" type="button" data-bubble-style="original">Original</button>
@@ -1317,11 +1317,6 @@
     <a href="https://www.linkedin.com/in/yixin-li-796994280/" target="_blank" rel="noopener">LinkedIn</a>
     <span class="lf-dot">&middot;</span>
     <a href="portfolio.html">Portfolio</a>
-    <span class="lf-dot">&middot;</span>
-    <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
-    </button>
   </div>
 
   <!-- ── Chat panel ── -->
@@ -1653,6 +1648,39 @@
       return rMin + t * (rMax - rMin);
     }
 
+    /* wrapLabel breaks between words only, so a word longer than maxCh — or a
+       webfont swapping in wider than the fallback — still overruns. A line is
+       bounded by the circle's chord at its own y offset, not the diameter, so
+       the top and bottom lines have the least room. "Entrepreneurship" was
+       spilling its chord by 21px on mobile. Shrink until every line clears. */
+    function fitLabelToCircle(txt, radius, fs, fsMin) {
+      var tspans = txt.selectAll('tspan').nodes();
+      if (!tspans.length) return fs;
+      var rim = 6; /* keep glyphs off the curve */
+      for (var pass = 0; pass < 12; pass++) {
+        var lh = fs * 1.18;
+        var startY = -(tspans.length * lh / 2) + lh * 0.5;
+        var worst = 1;
+        for (var i = 0; i < tspans.length; i++) {
+          var dy = startY + i * lh;
+          var chord = Math.abs(dy) < radius ? 2 * Math.sqrt(radius * radius - dy * dy) : 0;
+          var avail = Math.max(1, chord - rim);
+          var w = tspans[i].getComputedTextLength();
+          if (w / avail > worst) worst = w / avail;
+        }
+        if (worst <= 1) break;
+        var next = Math.max(fsMin, fs / worst);
+        if (next >= fs - 0.05) break; /* at the floor, cannot shrink further */
+        fs = next;
+        var lh2 = fs * 1.18;
+        var sy2 = -(tspans.length * lh2 / 2) + lh2 * 0.5;
+        for (var j = 0; j < tspans.length; j++) {
+          d3.select(tspans[j]).attr('font-size', fs).attr('y', sy2 + j * lh2);
+        }
+      }
+      return fs;
+    }
+
     function wrapLabel(label, radius) {
       var words = label.split(' ');
       var maxCh = Math.max(7, Math.floor(radius / 5.5));
@@ -1761,11 +1789,20 @@
         });
       });
 
-      var flt = defs.append('filter').attr('id', 'fshadow')
-        .attr('x', '-30%').attr('y', '-30%').attr('width', '160%').attr('height', '160%');
-      flt.append('feDropShadow')
-        .attr('dx', 0).attr('dy', 10).attr('stdDeviation', 10)
-        .attr('flood-color', '#1C1E18').attr('flood-opacity', 0.12);
+      /* Bubble shadow as a radial gradient, NOT an SVG filter.
+         iOS Safari rasterises a filter region into an offscreen buffer it does
+         not scale to devicePixelRatio, so on a 3x iPhone every filtered bubble
+         was drawn at ~1x and upscaled — visibly pixelated, and the labels with
+         it, because the filter wrapped the whole <g> including the <text>.
+         A gradient is vector geometry and resolves at whatever the device
+         paints at. Stops approximate the old dy=10, stdDeviation=10,
+         0.12-opacity drop shadow. */
+      var sh = defs.append('radialGradient').attr('id', 'bshadow')
+        .attr('cx', '50%').attr('cy', '50%').attr('r', '50%');
+      [[0, 0.13], [52, 0.125], [72, 0.075], [88, 0.025], [100, 0]].forEach(function (st) {
+        sh.append('stop').attr('offset', st[0] + '%')
+          .attr('stop-color', '#1C1E18').attr('stop-opacity', st[1]);
+      });
 
       var ringR = Math.min(W * 0.42, H * 0.46);
       /* Mobile: place bubbles in top/bottom strips so they never overlap the center text */
@@ -1800,7 +1837,7 @@
         };
       });
 
-      var traceGroup = svg.append('g').attr('class', 'bubble-traces');
+      var traceGroup = svg.append('g').attr('class', 'bubble-traces').attr('aria-hidden', 'true');
 
       nodeGroupsSel = svg.selectAll('.bubble-node')
         .data(allNodes).enter()
@@ -1808,8 +1845,16 @@
         .attr('class', 'bubble-node')
         .attr('tabindex', '0')
         .attr('role', 'button')
-        .attr('aria-label', function (d) { return 'Explore: ' + d.label; })
-        .attr('filter', 'url(#fshadow)');
+        .attr('aria-label', function (d) { return 'Explore: ' + d.label; });
+
+      /* Outside .node-inner so it neither joins that group's fill-box (which
+         anchors the hover scale) nor grows the pointer target. */
+      nodeGroupsSel.append('circle')
+        .attr('class', 'node-shadow')
+        .attr('cy', 10)
+        .attr('r', function (d) { return d.radius * 1.24 + 10; })
+        .attr('fill', 'url(#bshadow)')
+        .attr('pointer-events', 'none');
 
       /* Keep the sparse pixel treatment easy to activate between visible cells. */
       nodeGroupsSel.append('circle')
@@ -1863,6 +1908,7 @@
             .attr('fill', textColor)
             .text(line);
         });
+        fitLabelToCircle(txt, d.radius, fs, fsMin);
       });
 
       nodeGroupsSel
@@ -2559,6 +2605,46 @@
       } catch (_) { /* keep TOPICS */ }
       buildBubbles(topics);
     }
+
+    /* Surfaces hidden only with opacity keep their controls in the tab order,
+       so a keyboard user on the landing page walked 17 invisible stops (chat
+       panel, CTA footer, both modals, voice overlay) and never reached a topic
+       at all. Mark whatever is currently not visible as inert. Driven off
+       computed style and re-synced on any class/style change or transition
+       end, so it cannot drift out of step with the state machine. */
+    var INERT_SURFACES = ['.landing-topbar', '.landing-overlay', '.landing-foot',
+                          '.chat-panel', '.cta-footer', '.topics-back-pill',
+                          '#msgModal', '#voiceOverlay'];
+    function syncInert() {
+      INERT_SURFACES.forEach(function (sel) {
+        Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) {
+          var cs = getComputedStyle(el);
+          var hidden = cs.display === 'none' || cs.visibility === 'hidden' ||
+                       parseFloat(cs.opacity) === 0;
+          if (hidden) {
+            /* never inert an ancestor of what the user is currently on */
+            if (el.contains(document.activeElement) && document.activeElement !== document.body) return;
+            if (!el.hasAttribute('inert')) el.setAttribute('inert', '');
+          } else if (el.hasAttribute('inert')) {
+            el.removeAttribute('inert');
+          }
+        });
+      });
+    }
+    var _inertQueued = false;
+    function queueSyncInert() {
+      if (_inertQueued) return;
+      _inertQueued = true;
+      requestAnimationFrame(function () { _inertQueued = false; syncInert(); });
+    }
+    /* class flips start the fade; transitionend catches the settled value */
+    new MutationObserver(queueSyncInert).observe(document.documentElement, {
+      attributes: true, subtree: true, attributeFilter: ['class', 'style']
+    });
+    document.addEventListener('transitionend', function (e) {
+      if (e.propertyName === 'opacity') queueSyncInert();
+    }, true);
+    queueSyncInert();
 
     /* Redraw on resize */
     var _resizeT;
