@@ -135,6 +135,13 @@
       }
       svg.appendChild(el('circle', { class: 'track-halo', cx: nx.toFixed(2), cy: ny.toFixed(2), r: g.node * 2.4 }));
       svg.appendChild(el('circle', { class: 'track-node', cx: nx.toFixed(2), cy: ny.toFixed(2), r: g.node }));
+
+      /* Published in rail coordinates so the screenshot preview can hang a
+         second spur off the same node, on the far side of the line. It has to
+         come from here: the node's x is a sample of the meander, which only
+         this file knows the shape of. */
+      s.dataset.nodeX = nx.toFixed(2);
+      s.dataset.nodeY = ny.toFixed(2);
     });
   }
 
@@ -161,7 +168,10 @@
   var pending = null;
   function redraw() {
     if (pending) cancelAnimationFrame(pending);
-    pending = requestAnimationFrame(function () { pending = null; assignSides(); draw(); });
+    pending = requestAnimationFrame(function () {
+      pending = null; assignSides(); draw();
+      document.dispatchEvent(new CustomEvent('portfolio:trackdrawn'));
+    });
   }
 
   assignSides();

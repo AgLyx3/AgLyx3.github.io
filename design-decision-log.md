@@ -968,3 +968,89 @@ style rather than hand-maintained at each state transition. Bubble labels shrink
 to fit the circle's chord at each line's own y offset, since `wrapLabel` only
 breaks between words.
 
+
+---
+
+## Portfolio screenshots: the node becomes a junction
+
+### Previous direction
+
+Every portfolio card was text-only: glyph, status pill, title, one paragraph,
+tags, links. Adding images meant either cutting prose to make room or admitting
+a visible hole on the roughly half of the work that has no screenshot.
+
+### What changed
+
+Screenshots are an optional overlay layer rather than a field in the card. Each
+card carries a `data-shot` path; the script preloads it and only upgrades the
+card once the file actually decodes. On success the 44px glyph tile becomes a
+thumbnail button. Hovering the card opens a preview **on the other side of the
+track**, in the column the alternating layout leaves empty at that row, joined
+to the same node the card hangs off by its own spur. The tile also taps through
+to a lightbox. No prose was removed.
+
+An earlier pass floated the preview outward into the page margin instead. That
+was wrong: the container caps at 1080px, so the margin is only ~244px at a
+1440px screen, and the preview had to either shrink to a stamp or sit on top of
+the card title. The opposite column is ~410px at every desktop width, because
+it is sized off the container rather than off the viewport, and the reveal
+below ~1360px no longer has to switch itself off.
+
+### Why it changed
+
+Four constraints drove the shape:
+
+1. **Not all work has an image, and it must not show.** Authoring image markup
+   per-card would make a card without one look unfinished. Deciding at runtime,
+   on whether the file loads, makes a missing screenshot indistinguishable from
+   a project that never had one — and makes adding one later a matter of
+   dropping a file into `assets/shots/`, touching no HTML.
+
+2. **The rail is drawn from measured card geometry.** `star-track.js` anchors
+   each node at `ANCHOR = 48` (26px padding + half the 44px mark) and redraws
+   from `getBoundingClientRect`. Any reveal that changed a card's height or
+   widened its top row would drag every node below it off its spur. So the
+   trigger reuses the mark's existing box instead of sitting beside it, and the
+   preview is absolutely positioned. Nothing in this feature can reflow.
+
+3. **The preview cannot live inside the card.** The card is rotated in 3D and
+   straightens on hover, so anything inside it inherits a transform that no
+   spur drawn in the flat SVG underneath could ever meet. The preview is a
+   child of the station, which carries no transform — the same reason
+   `star-track.js` measures the station rather than the card.
+
+4. **Hover-only content does not exist on a phone.** The same tile is a real
+   button to a lightbox, which is the path that works on every input.
+
+### New intended direction
+
+The track is no longer only a spine to hang cards off — a node can be a
+junction, with prose on one side of the line and the artifact on the other.
+`star-track.js` now publishes each node's measured position on its station
+(`data-node-x` / `data-node-y`) and fires `portfolio:trackdrawn` after every
+redraw, so other features can attach to the track's geometry without
+duplicating the meander maths. The hover spur is drawn into its own overlay SVG
+rather than the rail's, because `draw()` empties that one on every redraw and
+would otherwise erase the spur mid-hover.
+
+Below 861px there is no opposite column — the track moves to the left margin
+and one column of cards runs beside it — so the preview and its spur are
+dropped and the screenshot goes **inline in the card**, under the title, above
+the prose, tapping through to the lightbox for detail.
+
+Mobile is not a degraded desktop here, it is a different affordance. The first
+pass left the phone with only the 44px tile, and a 44px tile with a 9px corner
+tick is not something anyone taps — the images would have been invisible to
+every phone visitor, which defeats the reason for adding them. Inline spends
+scroll, the cheap resource on a phone, and the tile reverts to the project's
+glyph because a thumbnail of a picture sitting 20px below it is noise.
+
+Reflowing the card inline is safe *because it is static*: the rail measures card
+heights and a ResizeObserver redraws, so the track follows. The desktop preview
+could never be inline for the same reason it could never live inside the card —
+it changes height per hover, and the track cannot chase a pointer. Every image
+carries its intrinsic width/height from the preload probe so it reserves its
+aspect ratio and never shoves the track after first paint.
+Transient overlap of a *neighbouring* card is accepted: stations interlock by
+-86px, so a preview will sometimes cover the tags of the card above it. It is
+opaque, bordered and on top, and it belongs to whatever is being hovered.
