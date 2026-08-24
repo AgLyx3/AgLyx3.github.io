@@ -139,9 +139,12 @@
      leaves, letting consecutive cards interlock along the spine. */
   .station + .station { margin-top: var(--overlap); }
 
-  .station { display: flex; opacity: 0; transform: translateY(22px);
+  .station { position: relative; z-index: 1; display: flex; opacity: 0; transform: translateY(22px);
              transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
              transition-delay: var(--in-delay, 0ms); }
+  /* Consecutive cards interlock, so the one being read has to win the stack
+     or its preview slides under the card below. */
+  .station:hover, .station:focus-within { z-index: 5; }
   .station.in { opacity: 1; transform: none; }
   .station[hidden] { display: none; }
   .station[data-side="left"]  { grid-column: 1; }
@@ -217,6 +220,123 @@
   .link-artifact { border: 1px solid rgba(var(--forest-rgb), 0.30); color: var(--ink-2); }
   .link-artifact:hover { border-color: var(--forest); color: var(--forest); }
 
+  /* ── Screenshots ──
+     Not every project has one, and a card without a shot must not look like a
+     card that is missing something. So nothing here is authored per-card: the
+     script preloads each `data-shot` and only upgrades the card once the file
+     has actually decoded. A missing file is indistinguishable from a project
+     that never had an image.
+
+     The trigger REPLACES the 44px mark instead of sitting next to it. That is
+     geometry, not taste — star-track.js anchors every node at 26px of padding
+     plus half the mark (ANCHOR = 48), so widening that row would drag the
+     track off the cards it points at. Same box, different fill. */
+  .card-mark.has-shot { padding: 0; overflow: hidden; }
+  .card-mark.has-shot > svg { display: none; }
+  .shot-trigger { display: block; width: 100%; height: 100%; padding: 0; border: 0;
+    background: none; cursor: zoom-in; position: relative; border-radius: inherit; overflow: hidden; }
+  /* `contain`, not `cover`. A 44px centre-crop of a 2880px UI screenshot is a
+     meaningless texture; the whole frame letterboxed into the tile still reads
+     as a screen, which is the signal the tile needs to send. */
+  .shot-trigger img { width: 100%; height: 100%; object-fit: contain; display: block;
+    transition: transform 340ms var(--ease-out); }
+  .card:hover .shot-trigger img { transform: scale(1.06); }
+  /* A corner tick, so the tile reads as openable rather than decorative. */
+  .shot-trigger::after { content: ''; position: absolute; right: 3px; bottom: 3px; width: 9px; height: 9px;
+    border-right: 1.5px solid var(--paper); border-bottom: 1.5px solid var(--paper);
+    border-bottom-right-radius: 3px; opacity: 0.85;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.55)); }
+
+  /* The preview opens on the OTHER SIDE OF THE TRACK, in the column the
+     alternating layout leaves empty at this row, and hangs off the same node
+     the card does. The node stops being a marker and becomes a junction: prose
+     on one side, the thing itself on the other.
+
+     This is why it is not floated into the page margin instead. The container
+     caps at 1080px, so the margin is ~244px at a 1440px screen and the preview
+     had to either shrink to a stamp or sit on top of the card. The opposite
+     column is a full ~410px at every desktop width, because it is sized off
+     the container rather than off the viewport.
+
+     It is a child of the STATION, not the card. The card is rotated in 3D and
+     straightens on hover; anything inside it inherits that transform and could
+     never line up with a spur drawn in the flat SVG underneath. The station
+     carries no transform, which is the same reason star-track.js measures it. */
+  .shot-preview { position: absolute; top: 0; width: 100%;
+    border-radius: 14px; overflow: hidden; z-index: 3; pointer-events: none;
+    border: 1px solid rgba(var(--forest-rgb), 0.28); background: var(--paper);
+    box-shadow: 0 18px 44px rgba(var(--forest-rgb), 0.22);
+    opacity: 0; visibility: hidden; transform: scale(0.96);
+    transition: opacity 300ms var(--ease-out), transform 300ms var(--ease-out), visibility 0s linear 300ms; }
+  html[data-theme="dark"] .shot-preview { box-shadow: 0 18px 48px rgba(0,0,0,0.6); }
+  .shot-preview img { display: block; width: 100%; height: auto; }
+  /* Mirrored across the track, and growing FROM the track, so the reveal reads
+     as coming up the line rather than fading in where it happens to sit. */
+  .station[data-side="left"]  .shot-preview { left:  calc(100% + var(--track-gutter)); transform-origin: left top; }
+  .station[data-side="right"] .shot-preview { right: calc(100% + var(--track-gutter)); transform-origin: right top; }
+
+  /* The spur out to the preview, drawn in its own overlay so a track redraw
+     (resize, filter, font swap) cannot wipe it mid-hover. Styled off
+     .track-spur so the two arms of the junction are the same line. */
+  .shot-spur-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
+    pointer-events: none; color: var(--forest); overflow: visible;
+    opacity: 0; transition: opacity 300ms var(--ease-out); }
+  .shot-spur-svg.on { opacity: 1; }
+
+  /* Hover-only content does not exist on a phone, and below 861px there is no
+     opposite column to open into — the track has moved to the left margin and
+     the cards take the whole width. There the tile taps straight to the
+     lightbox, which overlays the page and is bigger than any inline preview
+     could be. */
+  @media (hover: hover) and (pointer: fine) and (min-width: 861px) {
+    .station:hover .shot-preview,
+    .station:has(.shot-trigger:focus-visible) .shot-preview {
+      opacity: 1; visibility: visible; transform: scale(1);
+      transition-delay: 0s, 0s, 0s; }
+  }
+
+  /* On a phone the screenshot goes INLINE, in the card, instead. There is no
+     hover to reveal it with and no opposite column to reveal it into, and a
+     44px tile with a 9px corner tick is not an affordance anyone taps — the
+     images would have been effectively invisible to every phone visitor.
+     Inline spends scroll, which is the cheap resource on a phone.
+
+     Reflowing the card is safe here precisely because it is static: the rail
+     measures card heights and a ResizeObserver redraws it, so the track
+     follows. The desktop preview could never be inline — it changes height per
+     hover, and the track cannot chase a pointer. */
+  .shot-inline { display: none; }
+  @media (max-width: 860px) {
+    .shot-inline { display: block; width: 100%; padding: 0; cursor: zoom-in;
+      border: 1px solid rgba(var(--forest-rgb), 0.22); border-radius: 12px; overflow: hidden;
+      background: rgba(var(--forest-rgb), 0.06); }
+    .shot-inline img { display: block; width: 100%; height: auto; }
+    /* The tile goes back to the project's glyph. With the picture sitting in
+       the card, a thumbnail of it 20px above is noise. */
+    .card-mark.has-shot .shot-trigger { display: none; }
+    .card-mark.has-shot > svg { display: block; }
+  }
+
+  /* ── Lightbox ── the touch path, and the only way to see a shot at size. */
+  .shot-box { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
+    padding: clamp(16px, 5vw, 56px); background: rgba(10,12,20,0.72);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity: 0; visibility: hidden; transition: opacity 220ms var(--ease-out), visibility 0s linear 220ms; }
+  .shot-box.open { opacity: 1; visibility: visible; transition-delay: 0s, 0s; }
+  .shot-box figure { margin: 0; max-width: 1000px; width: 100%; }
+  .shot-box img { display: block; width: 100%; height: auto; max-height: 78vh; object-fit: contain;
+    border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: var(--paper);
+    transform: scale(0.97); transition: transform 220ms var(--ease-out); }
+  .shot-box.open img { transform: scale(1); }
+  .shot-box figcaption { font-family: var(--font-sans); font-size: 13px; color: rgba(255,255,255,0.78);
+    text-align: center; margin-top: 14px; }
+  .shot-box-close { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); color: #fff; }
+  .shot-box-close svg { width: 18px; height: 18px; }
+  .shot-box-close:hover { background: rgba(255,255,255,0.16); }
+  .shot-trigger:focus-visible, .shot-box-close:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+
   .footer { position: relative; z-index: 2; text-align: center; padding: 30px 0 46px; font-family: var(--font-sans);
             font-size: 12.5px; font-weight: 500; color: var(--ink-3); }
   .footer a { color: var(--ink-3); text-decoration: none; } .footer a:hover { color: var(--forest); }
@@ -243,6 +363,11 @@
   @media (max-width: 860px) {
     .stations { --track-gutter: 46px; --overlap: 0px;
                 grid-template-columns: var(--track-gutter) 1fr; row-gap: 22px; }
+    /* There is no opposite column here — the track has moved to the left
+       margin and one column of cards runs beside it. Dropped rather than just
+       hidden, so an offscreen panel cannot widen the page. The tile still taps
+       through to the lightbox. */
+    .shot-preview, .shot-spur-svg { display: none; }
     .station[data-side="left"], .station[data-side="right"] { grid-column: 2; }
     .card { --ry: 2deg; --rz: 0.6deg; padding: 22px 20px 20px; }
     .station[data-side="left"] .card { transform-origin: left center;
@@ -262,6 +387,9 @@
     .stations { perspective: none; }
     .station[data-side] .card { transform: none !important; }
     .card-mark, .card h3 { transform: none; }
+    .shot-preview { transform: none !important; }
+    .shot-spur-svg { transition: none; }
+    .card:hover .shot-trigger img { transform: none; }
   }
 </style>
 </head>
@@ -298,25 +426,7 @@
       <div class="stations" id="stations">
 
       <div class="station">
-  <article class="card" data-category="ai-ml">
-          <div class="card-top">
-            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M9 5h6"/></svg></div>
-            <span class="card-status status-live"><span class="pip"></span>Open Source</span>
-          </div>
-          <div>
-            <h3>Remli</h3>
-            <div class="sub">On-device iOS app for source-cited health reminders</div>
-          </div>
-          <p>Built a privacy-first iOS app that turns fragmented patient-portal records into proactive medication, physical therapy, and diet reminders. Remli uses <strong>Gemma 4 E2B</strong> on device for narration while a deterministic core handles clinical facts, citations, reminder proposals, encrypted local storage, and safety checks so the app can explain what the record says without inventing medical advice.</p>
-          <div class="tags"><span class="tag">SwiftUI</span><span class="tag">On-device AI</span><span class="tag">FHIR</span><span class="tag">Privacy</span></div>
-          <div class="links">
-            <a class="link link-code" href="https://github.com/AgLyx3/Remli" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-          </div>
-        </article>
-      </div>
-
-      <div class="station">
-  <article class="card" data-category="dev-tool">
+  <article class="card" data-category="dev-tool" data-shot="assets/shots/we-love-jupyter-notebook.png" data-shot-alt="The notebook editor with the scoped Notebook Agent panel on the right, a turn scope of zero editable cells, and a tuning-controls dialog over a histogram cell">
           <div class="card-top">
             <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 13l2 2-2 2"/><path d="M13 17h3"/></svg></div>
             <span class="card-status status-live"><span class="pip"></span>Open Source</span>
@@ -334,7 +444,25 @@
       </div>
 
       <div class="station">
-  <article class="card" data-category="ai-ml">
+  <article class="card" data-category="ai-ml" data-shot="assets/shots/remli.png" data-shot-alt="Remli on iPhone, showing a medication reminder with the source line from the patient record it was drawn from">
+          <div class="card-top">
+            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M9 5h6"/></svg></div>
+            <span class="card-status status-live"><span class="pip"></span>Open Source</span>
+          </div>
+          <div>
+            <h3>Remli</h3>
+            <div class="sub">On-device iOS app for source-cited health reminders</div>
+          </div>
+          <p>Built a privacy-first iOS app that turns fragmented patient-portal records into proactive medication, physical therapy, and diet reminders. Remli uses <strong>Gemma 4 E2B</strong> on device for narration while a deterministic core handles clinical facts, citations, reminder proposals, encrypted local storage, and safety checks so the app can explain what the record says without inventing medical advice.</p>
+          <div class="tags"><span class="tag">SwiftUI</span><span class="tag">On-device AI</span><span class="tag">FHIR</span><span class="tag">Privacy</span></div>
+          <div class="links">
+            <a class="link link-code" href="https://github.com/AgLyx3/Remli" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="station">
+  <article class="card" data-category="ai-ml" data-shot="assets/shots/implicit-social-cognition-benchmark.png" data-shot-alt="Item-response curves for the benchmark, plotting model accuracy against calibrated item difficulty">
           <div class="card-top">
             <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l3-3 3 2 4-6"/><path d="M17 8h-3"/><path d="M17 8v3"/></svg></div>
             <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
@@ -353,7 +481,7 @@
       </div>
 
       <div class="station">
-  <article class="card" data-category="ai-ml">
+  <article class="card" data-category="ai-ml" data-shot="assets/shots/continua-memory-evaluation.png" data-shot-alt="The LOCOMO evaluation results, broken down by memory failure mode">
           <div class="card-top">
             <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-2.8 7.7-7 9-4.2-1.3-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-5"/></svg></div>
             <span class="card-status status-research"><span class="pip"></span>Benchmark</span>
@@ -371,7 +499,7 @@
       </div>
 
       <div class="station">
-  <article class="card" data-category="dev-tool">
+  <article class="card" data-category="dev-tool" data-shot="assets/shots/conversation-topic-analysis.png" data-shot-alt="The Streamlit tool showing conversation exports grouped into semantic clusters">
           <div class="card-top">
             <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l3.5 8"/><path d="M17 7l-3.5 8"/><path d="M7 6h10"/></svg></div>
             <span class="card-status status-internal"><span class="pip"></span>Internal Tool</span>
@@ -385,26 +513,9 @@
         </article>
       </div>
 
-      <div class="station">
-  <article class="card" data-category="dev-tool">
-          <div class="card-top">
-            <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg></div>
-            <span class="card-status status-live"><span class="pip"></span>Open Source</span>
-          </div>
-          <div>
-            <h3>fire-or-not</h3>
-            <div class="sub">Context observability for coding agents</div>
-          </div>
-          <p>A zero-dependency Python tool for auditing coding-agent sessions: it reads Claude Code and OpenAI Codex logs and shows, task by task, which skills, tools, MCP calls, and subagents fired, plus which available skills never activated. Built for debugging the gap between available context and what an agent actually used.</p>
-          <div class="tags"><span class="tag">Python</span><span class="tag">Agent Observability</span><span class="tag">Claude Code</span><span class="tag">Codex</span></div>
-          <div class="links">
-            <a class="link link-code" href="https://github.com/AgLyx3/skill-observability-hook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Source</a>
-          </div>
-        </article>
-      </div>
 
       <div class="station">
-  <article class="card" data-category="dev-tool">
+  <article class="card" data-category="dev-tool" data-shot="assets/shots/fix8.jpg" data-shot-alt="The Fix8 desktop app: a reading trial with fixation circles and saccade lines drawn over the text, beside the visualization controls">
           <div class="card-top">
             <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
             <span class="card-status status-research"><span class="pip"></span>Research</span>
@@ -423,7 +534,7 @@
       </div>
 
       <div class="station">
-  <article class="card" data-category="ai-ml">
+  <article class="card" data-category="ai-ml" data-shot="assets/shots/human-feature-research-poster.jpg" data-shot-alt="Research poster for "Designing Human Experiments for Integrating Human Features into Machine Learning", showing the study design, a DBSCAN cluster plot, and a word cloud of participant-named features">
           <div class="card-top">
             <div class="card-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/><path d="M18 16l2 2 3-4"/></svg></div>
             <span class="card-status status-research"><span class="pip"></span>Research</span>
@@ -447,6 +558,13 @@
   <footer class="footer">
     Yixin Li · 2026 &nbsp;·&nbsp; <a href="mailto:yixinli.a@gmail.com">Email</a> &nbsp;·&nbsp; <a href="https://github.com/AgLyx3" target="_blank" rel="noopener">GitHub</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/yixin-li-796994280/" target="_blank" rel="noopener">LinkedIn</a>
   </footer>
+
+  <div class="shot-box" id="shotBox" role="dialog" aria-modal="true" aria-label="Project screenshot" hidden>
+    <button class="shot-box-close" type="button" aria-label="Close screenshot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <figure><img alt=""><figcaption></figcaption></figure>
+  </div>
 
   <script>
     // Starfield. Thinned from 150 to 70 and dimmed to match the landing page:
@@ -497,6 +615,171 @@
           });
           document.dispatchEvent(new CustomEvent('portfolio:filtered'));
         });
+      });
+    })();
+
+    /* Screenshots. Every card carries a `data-shot` path, but only the ones
+       whose file actually decodes are upgraded — so a project with no image
+       renders exactly as it did before this existed, and adding one later is
+       a matter of dropping the file into assets/shots/ and nothing else.
+       Failing quietly is the whole design: half the work here has no shot.
+
+       Nothing this script inserts affects layout. The trigger reuses the
+       mark's existing 44px box and the preview is absolutely positioned,
+       because star-track.js draws the rail from measured card geometry and a
+       reveal that changed a card's height would pull every node below it off
+       its spur. */
+    (function () {
+      var box = document.getElementById('shotBox');
+      var boxImg = box && box.querySelector('img');
+      var boxCap = box && box.querySelector('figcaption');
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-shot]'));
+      if (!box || !cards.length) return;
+
+      var lastTrigger = null;
+
+      function openBox(src, alt) {
+        boxImg.src = src; boxImg.alt = alt || ''; boxCap.textContent = alt || '';
+        box.hidden = false;
+        requestAnimationFrame(function () { box.classList.add('open'); });
+        box.querySelector('.shot-box-close').focus();
+        document.body.style.overflow = 'hidden';
+      }
+      function closeBox() {
+        if (box.hidden) return;
+        box.classList.remove('open');
+        document.body.style.overflow = '';
+        setTimeout(function () { box.hidden = true; boxImg.src = ''; }, 240);
+        if (lastTrigger) lastTrigger.focus();
+      }
+      box.addEventListener('click', function (e) {
+        if (e.target === box || e.target.closest('.shot-box-close')) closeBox();
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeBox(); });
+
+      /* The preview hangs off the outer edge of the card, which on a narrower
+         desktop can push it past the edge of the window. Nudge it back inward
+         by exactly the overflow, rather than picking one width that is safe on
+         every screen and therefore small on every screen.
+
+         Measured off the STATION, not the card or the preview: both of those
+         carry a 3D transform that is mid-flight at the moment hover fires, so
+         their rects are whatever the animation happened to be doing. The
+         station is untransformed, which is the same reason star-track.js
+         measures it. */
+      /* The spur across the track. star-track.js publishes each node's position
+         on the station, because the node's x is a sample of the meander and
+         only that file knows its shape; everything else here is measured off
+         the station, which carries no transform.
+
+         Drawn into a separate overlay rather than the rail's own SVG: draw()
+         empties that one on every redraw, which would erase the spur out from
+         under a hover on resize or a font swap. */
+      var rail = document.getElementById('rail');
+      var stationsEl = document.getElementById('stations');
+      var spurSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      spurSvg.setAttribute('class', 'shot-spur-svg');
+      spurSvg.setAttribute('aria-hidden', 'true');
+      if (rail) rail.appendChild(spurSvg);
+
+      function gutter() {
+        return parseFloat(getComputedStyle(stationsEl).getPropertyValue('--track-gutter')) || 0;
+      }
+
+      function drawSpur(station) {
+        if (!rail || !station.dataset.nodeX) return;
+        var railRect = rail.getBoundingClientRect();
+        var r = station.getBoundingClientRect();
+        var nx = parseFloat(station.dataset.nodeX);
+        var ny = parseFloat(station.dataset.nodeY);
+        /* The far edge of the preview's column, which CSS places one full
+           gutter beyond the station on the opposite side. */
+        var edge = station.getAttribute('data-side') === 'right'
+          ? (r.left - railRect.left) - gutter()
+          : (r.right - railRect.left) + gutter();
+
+        spurSvg.setAttribute('viewBox', '0 0 ' + rail.clientWidth + ' ' + rail.clientHeight);
+        while (spurSvg.firstChild) spurSvg.removeChild(spurSvg.firstChild);
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'track-spur');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('d', 'M' + nx.toFixed(2) + ' ' + ny.toFixed(2) + ' L' + edge.toFixed(2) + ' ' + ny.toFixed(2));
+        spurSvg.appendChild(path);
+        spurSvg.classList.add('on');
+      }
+      function clearSpur() { spurSvg.classList.remove('on'); }
+
+      /* Only where the reveal itself is live — see the matching media query. */
+      var wide = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 861px)');
+
+      cards.forEach(function (card) {
+        var src = card.getAttribute('data-shot');
+        var alt = card.getAttribute('data-shot-alt') || '';
+        var probe = new Image();
+        probe.onload = function () {
+          var mark = card.querySelector('.card-mark');
+          if (!mark) return;
+
+          var trigger = document.createElement('button');
+          trigger.type = 'button';
+          trigger.className = 'shot-trigger';
+          trigger.setAttribute('aria-label', 'View screenshot of ' + (card.querySelector('h3') || {}).textContent);
+          var thumb = new Image();
+          thumb.src = src; thumb.alt = '';
+
+          /* Intrinsic size from the probe, so every copy reserves its aspect
+             ratio before it paints. Without this the inline image pops in at
+             its natural height on mobile and shoves the card — and the track —
+             down after first paint. */
+          function sized(img) {
+            if (probe.naturalWidth) { img.width = probe.naturalWidth; img.height = probe.naturalHeight; }
+            return img;
+          }
+          trigger.appendChild(sized(thumb));
+
+          /* The glyph stays in the DOM — mobile shows it instead of the
+             thumbnail, so this cannot destroy it. */
+          mark.appendChild(trigger);
+          mark.classList.add('has-shot');
+
+          var station = card.closest('.station');
+          var preview = document.createElement('div');
+          preview.className = 'shot-preview';
+          var big = new Image();
+          big.src = src; big.alt = alt;
+          preview.appendChild(sized(big));
+          /* On the station, not the card — the card's 3D transform would carry
+             the preview with it and no flat spur could ever meet its edge. */
+          station.appendChild(preview);
+
+          /* The mobile copy: in the flow of the card, under the title, above
+             the prose. Hidden by the stylesheet on desktop. */
+          var inline = document.createElement('button');
+          inline.type = 'button';
+          inline.className = 'shot-inline';
+          inline.setAttribute('aria-label', trigger.getAttribute('aria-label'));
+          var flat = new Image();
+          flat.src = src; flat.alt = alt;
+          inline.appendChild(sized(flat));
+          var prose = card.querySelector('p');
+          if (prose) card.insertBefore(inline, prose); else card.appendChild(inline);
+          inline.addEventListener('click', function () { lastTrigger = inline; openBox(src, alt); });
+
+          function show() { if (wide.matches) drawSpur(station); }
+          station.addEventListener('mouseenter', show);
+          station.addEventListener('mouseleave', clearSpur);
+          trigger.addEventListener('focus', show);
+          trigger.addEventListener('blur', clearSpur);
+          trigger.addEventListener('click', function () { lastTrigger = trigger; openBox(src, alt); });
+        };
+        probe.src = src;
+      });
+
+      /* Filtering re-sides the cards and the whole track moves. Anything on
+         screen at that moment is now pointing at nothing. */
+      document.addEventListener('portfolio:trackdrawn', function () {
+        var live = document.querySelector('.station:hover .shot-preview');
+        if (live) drawSpur(live.closest('.station')); else clearSpur();
       });
     })();
   </script>
