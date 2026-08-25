@@ -82,11 +82,12 @@
   border-radius: 0;
 }
 
-.pixel-site .name-reveal:hover .name-portrait,
-.pixel-site .name-reveal:focus-within .name-portrait,
-.pixel-site .name-reveal.is-revealed .name-portrait {
-  box-shadow: 0 0 0 2px rgba(216, 224, 236, 0.58),
-              3px 3px 0 rgba(var(--forest-rgb), 0.18);
+/* Restyle the frame through the variable rather than re-stating the reveal
+   selectors: a .pixel-site-prefixed :hover rule outranks the touch handling
+   in index.html and would keep the frame painted after a tap dismisses it. */
+.pixel-site .name-portrait {
+  --portrait-frame: 0 0 0 2px rgba(216, 224, 236, 0.58),
+                    3px 3px 0 rgba(var(--forest-rgb), 0.18);
 }
 
 /* Portfolio */

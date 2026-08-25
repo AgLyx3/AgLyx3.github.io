@@ -132,7 +132,6 @@
 
   .asym-left { position: relative; top: -18px; animation: rise 600ms 80ms var(--ease-out) both; }
   .name-reveal { position: relative; display: inline-block; }
-  .name-reveal:hover,
   .name-reveal:focus-within,
   .name-reveal.is-revealed { z-index: 4; }
   /* Script: small x-height needs a bigger em, and the y-descender needs headroom. */
@@ -150,6 +149,9 @@
                    --portrait-ratio: 993 / 1400;
                    --portrait-rest: translate(6px, 12px) rotate(-2deg) scale(0.94);
                    --portrait-active: translate(-8px, 18px) rotate(-4deg) scale(1);
+                   --portrait-frame: 0 0 0 4px rgba(216, 224, 236, 0.72),
+                                     0 24px 64px rgba(var(--forest-rgb), 0.18),
+                                     0 7px 22px rgba(var(--forest-rgb), 0.12);
                    position: absolute; left: 42%; top: calc(54% + 42px); z-index: 0;
                    width: clamp(158px, 15vw, 180px); aspect-ratio: var(--portrait-ratio);
                    padding: 0; margin: 0; overflow: hidden; border: 0; border-radius: 3px;
@@ -181,21 +183,29 @@
                              --portrait-active: translate(8px, 18px) rotate(4deg) scale(1);
                              left: 92%; top: calc(50% + 48px);
                              width: clamp(176px, 16.5vw, 200px); }
-  .name-reveal:hover .name-portrait,
+  /* Touch browsers latch :hover on whatever was last tapped and never clear
+     it, so a tap that dismisses the portrait would leave the frame drawn.
+     Hover only participates where a pointer can actually leave again; touch
+     runs entirely off .is-revealed, which the tap handler owns. */
   .name-reveal:focus-within .name-portrait,
   .name-reveal.is-revealed .name-portrait { z-index: 5; opacity: 1;
-                                            box-shadow: 0 0 0 4px rgba(216, 224, 236, 0.72),
-                                                        0 24px 64px rgba(var(--forest-rgb), 0.18),
-                                                        0 7px 22px rgba(var(--forest-rgb), 0.12);
+                                            box-shadow: var(--portrait-frame);
                                             transform: var(--portrait-active);
                                             transition-delay: 0s; }
-  .name-reveal .name-portrait:hover { z-index: 6; }
-  .name-reveal:hover .name-portrait::before,
   .name-reveal:focus-within .name-portrait::before,
   .name-reveal.is-revealed .name-portrait::before { opacity: 0; }
-  .name-reveal:hover .name-portrait img,
   .name-reveal:focus-within .name-portrait img,
   .name-reveal.is-revealed .name-portrait img { opacity: 1; }
+  @media (hover: hover) {
+    .name-reveal:hover { z-index: 4; }
+    .name-reveal:hover .name-portrait { z-index: 5; opacity: 1;
+                                        box-shadow: var(--portrait-frame);
+                                        transform: var(--portrait-active);
+                                        transition-delay: 0s; }
+    .name-reveal .name-portrait:hover { z-index: 6; }
+    .name-reveal:hover .name-portrait::before { opacity: 0; }
+    .name-reveal:hover .name-portrait img { opacity: 1; }
+  }
   .tagline { font-family: var(--font-sans); font-size: clamp(16px, 1.5vw, 19px); font-weight: 400;
              position: relative; z-index: 1; letter-spacing: -0.005em; color: var(--ink-2);
              line-height: 1.55; max-width: 30ch; margin-top: 10px; }
@@ -296,12 +306,6 @@
   @media (hover: none) {
     .orb-mark { display: none; }
     .way:hover .way-label, .way:hover .way-desc { transform: none; }
-    .name-reveal:not(.is-revealed) .name-portrait {
-      z-index: 0; box-shadow: none;
-      transform: var(--portrait-rest);
-    }
-    .name-reveal:not(.is-revealed) .name-portrait::before { opacity: var(--portrait-ambient-opacity); }
-    .name-reveal:not(.is-revealed) .name-portrait img { opacity: 0; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
