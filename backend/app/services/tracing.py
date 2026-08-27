@@ -13,6 +13,7 @@ block, not before the StreamingResponse is returned.
 
 from __future__ import annotations
 
+import json
 import logging
 from contextlib import contextmanager
 from typing import Any, Iterator
@@ -26,13 +27,47 @@ _init_attempted = False
 
 # Payload keys whose values are visitor-authored rather than Yixin's own
 # content. Redacted before leaving the box when LANGFUSE_MASK_PII is on.
-_PII_KEYS = frozenset({"visitor_context", "user_message", "transcript"})
+# `query` is the retrieval query, which is the visitor's message; the two
+# `visitor_*` keys and `visitor_question` appear inside the prompt payload.
+_PII_KEYS = frozenset({
+    "visitor_context",
+    "visitor_question",
+    "user_message",
+    "transcript",
+    "query",
+})
 _REDACTED = "[redacted]"
+
+
+def _mask_message(message: dict) -> dict:
+    """Redact a visitor turn without discarding Yixin's own prompt content.
+
+    The current user turn is a JSON payload carrying both the visitor's
+    question and the retrieved memory blocks. Blanking the whole string would
+    take the memory context with it — that context is not visitor data, and
+    reading it is the main reason to look at a prompt at all — so parse the
+    payload and redact only the visitor-authored fields inside it.
+    """
+    if message.get("role") != "user":
+        # System prompt and assistant turns are Yixin's content and the bot's
+        # own output. Keeping them is what makes a masked trace still useful.
+        return message
+    content = message.get("content")
+    if isinstance(content, str):
+        try:
+            parsed = json.loads(content)
+        except (json.JSONDecodeError, ValueError):
+            # Plain-text history turn: nothing to preserve inside it.
+            return {**message, "content": _REDACTED}
+        return {**message, "content": json.dumps(_mask(data=parsed))}
+    return {**message, "content": _REDACTED}
 
 
 def _mask(*, data: Any, **_kwargs: Any) -> Any:
     """Recursively redact visitor-authored fields. See MaskFunction protocol."""
     if isinstance(data, dict):
+        if "role" in data and "content" in data:
+            return _mask_message(data)
         return {
             key: (_REDACTED if key in _PII_KEYS and value else _mask(data=value))
             for key, value in data.items()

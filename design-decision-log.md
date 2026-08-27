@@ -1130,6 +1130,17 @@ trace. Getting this wrong loses traces silently, which is indistinguishable
 from the integration not working.
 
 Tracing stays off until `LANGFUSE_ENABLED=true` and the keys are set, and
-`LANGFUSE_MASK_PII` (on by default) redacts visitor-authored fields —
-`user_message`, `visitor_context`, `transcript` — before anything leaves the
-box. Visitors are strangers who did not opt into a third-party trace store.
+`LANGFUSE_MASK_PII` (on by default) redacts visitor-authored text before
+anything leaves the box. Visitors are strangers who did not opt into a
+third-party trace store.
+
+Masking by key name alone was not enough, and the first pass shipped that way:
+it caught the root span's `user_message` but missed the two places the visitor's
+words actually travel — the retrieval query, and the prompt itself, where the
+message sits inside `messages[].content`. The mask now also walks chat messages.
+A visitor's plain-text history turn is dropped wholesale; the current turn is
+parsed as the JSON payload it is, and only `visitor_question` and
+`visitor_context` are blanked inside it. The system prompt, the assistant's own
+prior turns, and the retrieved `profile_context` / `experience_context` all
+survive — none of that is visitor data, and it is the reason to read a prompt at
+all. A trace that redacted everything would be private and useless.

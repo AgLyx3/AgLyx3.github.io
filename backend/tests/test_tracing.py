@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import itertools
+import json
 from unittest.mock import patch
 
 import pytest
@@ -84,6 +85,7 @@ def _langfuse_test_client():
         secret_key="sk-lf-test",
         tracing_enabled=True,
         span_exporter=exporter,
+        mask=tracing._mask,
     )
     return client, exporter
 
@@ -208,6 +210,51 @@ def test_tracing_is_a_no_op_when_unconfigured():
         assert tracing.tracing_enabled() is False
 
 
+def test_mask_redacts_the_real_prompt_payload():
+    """The prompt is a JSON string holding both visitor text and Yixin's memory.
+
+    Blanking the whole string would be safe but useless; the memory context is
+    the reason to read a prompt at all.
+    """
+    from app.services.llm import build_portfolio_chat_user_prompt
+
+    prompt = build_portfolio_chat_user_prompt(
+        user_message="I run ML infra at a startup, what does Yixin do?",
+        profile_context=["Yixin is a product manager at Continua AI."],
+        experience_context=["Built eval tooling for conversational agents."],
+        visitor_context="I work on ML infra",
+    )
+    masked = tracing._mask(data=[
+        {"role": "system", "content": "You are the portfolio chat assistant."},
+        {"role": "user", "content": "an earlier plain-text question"},
+        {"role": "assistant", "content": "Yixin is a product manager."},
+        {"role": "user", "content": prompt},
+    ])
+
+    system, old_user, assistant, current = masked
+    # Yixin's own content survives.
+    assert system["content"] == "You are the portfolio chat assistant."
+    assert assistant["content"] == "Yixin is a product manager."
+    # Visitor-authored history is dropped wholesale - nothing to preserve.
+    assert old_user["content"] == "[redacted]"
+
+    payload = json.loads(current["content"])
+    # Visitor text inside the payload is gone...
+    assert payload["visitor_question"] == "[redacted]"
+    assert payload["visitor_context"] == "[redacted]"
+    assert "ML infra" not in current["content"]
+    # ...but the retrieved memory, which is not visitor data, is intact.
+    assert payload["profile_context"] == ["Yixin is a product manager at Continua AI."]
+    assert payload["experience_context"] == [
+        "Built eval tooling for conversational agents."
+    ]
+
+
+def test_mask_redacts_the_retrieval_query():
+    masked = tracing._mask(data={"query": "what does Yixin do?"})
+    assert masked["query"] == "[redacted]"
+
+
 def test_mask_redacts_visitor_authored_fields():
     masked = tracing._mask(
         data={
@@ -261,3 +308,15 @@ def test_voice_turn_report_is_inert_when_tracing_disabled():
     with patch.object(tracing, "_get_client", return_value=None):
         result = voice_turn_report(VoiceTurnReport(turn_id="turn-1", confidence=0.9))
     assert result["accepted"] is False
+
+
+def test_visitor_message_is_redacted_in_exported_spans(captured_spans):
+    """End-to-end: the SDK must actually apply the mask, not just hold it."""
+    secret = "I run ML infra at a hedge fund"
+    _run_turn(ChatRequest(message=secret, session_id="mask-session"))
+
+    blob = "".join(
+        str(dict(span.attributes)) for span in captured_spans.get_finished_spans()
+    )
+    assert secret not in blob, "visitor message leaked into an exported span"
+    assert "[redacted]" in blob
