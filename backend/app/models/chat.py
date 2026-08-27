@@ -49,6 +49,9 @@ class ChatRequest(BaseModel):
     cta_rejected: bool = False
     viewport_width: Optional[int] = Field(default=None, ge=1, le=10000)
     voice_mode: bool = False
+    # Client-generated id for one voice turn. Seeds a deterministic trace id so
+    # the separate /voice/tts and /voice/transcript calls join this turn's trace.
+    turn_id: Optional[str] = Field(default=None, max_length=64)
 
     @model_validator(mode="after")
     def normalize_history(self) -> "ChatRequest":

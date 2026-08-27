@@ -1054,3 +1054,82 @@ aspect ratio and never shoves the track after first paint.
 Transient overlap of a *neighbouring* card is accepted: stations interlock by
 -86px, so a preview will sometimes cover the tags of the card above it. It is
 opaque, bordered and on top, and it belongs to whatever is being hovered.
+
+## 25. Pipeline Observability: Langfuse Cloud (2026-08-27)
+
+### Previous direction
+
+The only record of what the chat agent did was `analytics_events` in Postgres
+(`services/analytics.py`) — event names and small payloads, written for product
+funnel questions: how many turns, did the CTA fire, was a topic opened.
+
+Nothing captured the agent's internals. When an answer came out wrong there was
+no way to tell whether retrieval had handed the model nothing, whether the
+scores had fallen just under `retrieval_min_top_score`, or which memory blocks
+were in the prompt. The `MEMORY_FALLBACK_RESPONSE` path — the bot saying "I
+don't have enough real context" — was completely unmeasured, despite being the
+clearest single signal that the memory graph has a hole.
+
+### What changed
+
+Langfuse Cloud is now the store for pipeline internals. `analytics_events`
+stays exactly as it was; the two answer different questions and neither
+replaces the other.
+
+Langfuse over LangSmith, on three counts. Retention: 30 days on the free tier
+against 14, which is the window to notice a bad answer and turn it into a test
+case. Portability: Langfuse is OpenTelemetry-native, so instrumentation is not
+locked to the vendor and can move to a self-hosted instance if visitor-data
+residency ever becomes a hard requirement rather than a preference. Fit:
+LangSmith's real advantage is depth of LangChain/LangGraph integration, and
+this backend uses neither — `services/llm.py` calls Chat Completions with raw
+`urllib`, so that advantage is dead weight here.
+
+Self-hosting Langfuse was considered and rejected for now. v4 needs Postgres,
+ClickHouse, Redis and blob storage across two containers — none of which runs
+on Vercel — so it means renting and maintaining a box for a portfolio site.
+
+### New intended direction
+
+`services/tracing.py` is a shim, not a direct SDK dependency scattered through
+the app. Every helper is a no-op when the keys are absent, the package is
+missing, or the SDK raises. Observability must never be able to take the chat
+endpoint down, and instrumentation call sites must not need an `if` around
+them.
+
+**Text mode** is one trace per turn: a `chat-turn` root, a `retrieval` child
+recording top score, score gap and the thresholds it was judged against, and a
+`chat-completion` generation carrying prompt, output and token usage. Every
+turn is scored `memory_fallback` 0 or 1, so the fallback rate is a rate rather
+than an anecdote.
+
+**Voice mode needed a different shape.** One voice turn is three HTTP requests
+plus a browser-to-AssemblyAI WebSocket the backend never sees, so there is no
+server-side object tying it together. The browser now mints a `turn_id` per
+turn and sends it on `/chat` and `/voice/tts`; the backend derives a
+deterministic trace id from it (`create_trace_id(seed=…)`), so the separate
+requests land on one trace.
+
+Two deliberate asymmetries there. Speech-to-text is reported back by the client
+to `POST /voice/turn` rather than traced server-side, because otherwise the most
+common cause of a bad voice answer — a misheard question — leaves no evidence
+at all; the transcript's confidence is attached as a score. And text-to-speech
+is called once per sentence, so tracing every call would triple a voice turn's
+trace cost to learn nothing: successful synthesis is summarised in a single
+`tts` span for the turn, while failures get their own span, because an answer
+that never becomes audio is exactly the bug that is otherwise silent.
+
+The cost of that shape: spans created at report time do not carry true
+wall-clock timing, so durations are recorded as metadata instead.
+
+**Flushing is the sharp edge.** Vercel freezes the instance once a response
+finishes and the SDK batches spans on a background thread, so `flush()` runs in
+the SSE generator's `finally` — not before the `StreamingResponse` is returned,
+and in a `finally` so a visitor closing the tab mid-answer still ships the
+trace. Getting this wrong loses traces silently, which is indistinguishable
+from the integration not working.
+
+Tracing stays off until `LANGFUSE_ENABLED=true` and the keys are set, and
+`LANGFUSE_MASK_PII` (on by default) redacts visitor-authored fields —
+`user_message`, `visitor_context`, `transcript` — before anything leaves the
+box. Visitors are strangers who did not opt into a third-party trace store.

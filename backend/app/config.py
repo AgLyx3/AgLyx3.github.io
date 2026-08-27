@@ -63,6 +63,12 @@ class Settings:
     resend_api_key: str = ""
     contact_from_email: str = "onboarding@resend.dev"
     contact_to_email: str = "yixinli.a@gmail.com"
+    langfuse_enabled: bool = False
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_environment: str = "production"
+    langfuse_mask_pii: bool = True
 
 
 def _parse_csv(value: str | None, fallback: List[str]) -> List[str]:
@@ -122,4 +128,10 @@ def get_settings() -> Settings:
         resend_api_key=os.getenv("RESEND_API_KEY", ""),
         contact_from_email=os.getenv("CONTACT_FROM_EMAIL", "onboarding@resend.dev"),
         contact_to_email=os.getenv("CONTACT_TO_EMAIL", "yixinli.a@gmail.com"),
+        langfuse_enabled=os.getenv("LANGFUSE_ENABLED", "false").lower() == "true",
+        langfuse_public_key=os.getenv("LANGFUSE_PUBLIC_KEY", ""),
+        langfuse_secret_key=os.getenv("LANGFUSE_SECRET_KEY", ""),
+        langfuse_host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+        langfuse_environment=os.getenv("LANGFUSE_ENVIRONMENT", "production"),
+        langfuse_mask_pii=os.getenv("LANGFUSE_MASK_PII", "true").lower() == "true",
     )

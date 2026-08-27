@@ -4,6 +4,7 @@ import asyncio
 import functools
 import json
 import re
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -44,6 +45,10 @@ from app.services import (
     should_offer_cta,
     snooze_ask_back,
     _strip_markdown_for_voice,
+    MEMORY_FALLBACK_RESPONSE,
+    flush_tracing,
+    observe,
+    trace_id_for,
     topic_exploration_hint,
     touch_session,
     truncate_text_to_token_limit,
@@ -83,6 +88,34 @@ async def chat_endpoint(
     payload: ChatRequest,
     request: Request,
     settings: Settings = Depends(get_settings),
+) -> StreamingResponse:
+    """Open the turn's trace, then delegate to the pipeline.
+
+    The whole pipeline runs before the StreamingResponse is returned (the SSE
+    generator only replays an answer that already exists), so the root span
+    closes here and the buffered spans are flushed from the generator.
+    """
+    client_key = request.client.host if request.client else "unknown"
+    with observe(
+        "voice-turn" if payload.voice_mode else "chat-turn",
+        trace_id=trace_id_for(payload.turn_id) if payload.turn_id else None,
+        session_id=payload.session_id or client_key,
+        tags=["voice" if payload.voice_mode else "text"],
+        input={"user_message": payload.message},
+        metadata={
+            "message_index": payload.message_index,
+            "prefill_origin": payload.prefill_origin,
+            "active_topic_id": payload.active_topic_id,
+        },
+    ) as turn:
+        return await _run_chat_turn(payload, request, settings, turn)
+
+
+async def _run_chat_turn(
+    payload: ChatRequest,
+    request: Request,
+    settings: Settings,
+    turn: Any,
 ) -> StreamingResponse:
     client_key = request.client.host if request.client else "unknown"
     session_id = payload.session_id or client_key
@@ -266,11 +299,33 @@ async def chat_endpoint(
             else:
                 retrieval_query = clean_message
 
-            combined_result = combined_memory_retrieve(
-                retrieval_query,
-                profile_limit=settings.profile_retrieval_top_k,
-                experience_limit=settings.retrieval_top_k,
-            )
+            with observe(
+                "retrieval",
+                input={"query": retrieval_query},
+                metadata={
+                    "min_top_score": settings.retrieval_min_top_score,
+                    "min_score_gap": settings.retrieval_min_score_gap,
+                    "strong_top_score": settings.retrieval_strong_top_score,
+                    "profile_min_top_score": settings.profile_retrieval_min_top_score,
+                },
+            ) as retrieval_span:
+                combined_result = combined_memory_retrieve(
+                    retrieval_query,
+                    profile_limit=settings.profile_retrieval_top_k,
+                    experience_limit=settings.retrieval_top_k,
+                )
+                retrieval_span.update(
+                    output={
+                        "experience_top_score": combined_result.experience.top_score,
+                        "experience_second_score": combined_result.experience.second_score,
+                        "experience_score_gap": (
+                            combined_result.experience.top_score
+                            - combined_result.experience.second_score
+                        ),
+                        "profile_top_score": combined_result.profile.top_score,
+                        "profile_blocks": len(combined_result.profile.context_blocks),
+                    }
+                )
             profile_result = combined_result.profile
             experience_result = combined_result.experience
             score_gap = experience_result.top_score - experience_result.second_score
@@ -464,7 +519,21 @@ async def chat_endpoint(
     else:
         response_mode = None
 
-    async def event_stream():
+    turn.update(
+        output=answer,
+        metadata={
+            "route": route,
+            "memory_sources": memory_sources,
+            "response_mode": response_mode,
+            "output_tokens": output_tokens,
+        },
+    )
+    # The metric that currently has no home: how often the bot falls back to
+    # "I don't have enough real context". Scored on every turn so the Langfuse
+    # UI shows a rate, not just a count.
+    turn.score("memory_fallback", 1 if answer == MEMORY_FALLBACK_RESPONSE else 0)
+
+    async def _stream_events():
         if payload.voice_mode:
             clean_answer = _strip_markdown_for_voice(answer)
             for word in clean_answer.split():
@@ -504,5 +573,15 @@ async def chat_endpoint(
             highlight_terms=highlight_terms,
         )
         yield f"event: final\ndata: {metadata.model_dump_json()}\n\n"
+
+    async def event_stream():
+        # Serverless: Vercel can freeze the instance the moment this generator
+        # is done, so buffered spans must go out here or they are lost. The
+        # finally also covers a visitor closing the tab mid-stream.
+        try:
+            async for chunk in _stream_events():
+                yield chunk
+        finally:
+            flush_tracing()
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

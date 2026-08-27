@@ -11,6 +11,7 @@ from urllib import error, request
 from app.config import Settings
 from app.models import Citation, CTAMention, TopicSuggestion
 from app.models.chat import ChatMessage
+from app.services.tracing import observe, score_current_trace, tracing_enabled
 
 MEMORY_FALLBACK_RESPONSE = (
     "I don't have enough real context to answer that confidently, and I'm not going to make something up. Try a different angle, or use the footer to send Yixin a direct message or email her."
@@ -163,6 +164,26 @@ def build_portfolio_chat_user_prompt(
     return json.dumps(prompt_payload, ensure_ascii=True, indent=2)
 
 
+def _usage_details(usage: dict[str, Any] | None) -> dict[str, int] | None:
+    """Map an OpenAI usage block to Langfuse's usage_details shape."""
+    if not usage:
+        return None
+    mapped = {
+        "input": usage.get("prompt_tokens"),
+        "output": usage.get("completion_tokens"),
+        "total": usage.get("total_tokens"),
+    }
+    return {key: value for key, value in mapped.items() if value is not None} or None
+
+
+def _model_parameters(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: payload[key]
+        for key in ("temperature", "max_tokens")
+        if key in payload
+    }
+
+
 def _post_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> str:
     req = request.Request(
         f"{settings.chat_api_base.rstrip('/')}/chat/completions",
@@ -173,13 +194,23 @@ def _post_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> str
             "Content-Type": "application/json",
         },
     )
-    try:
-        with request.urlopen(req, timeout=settings.chat_timeout_seconds) as response:
-            raw = response.read().decode("utf-8")
-        parsed = json.loads(raw)
-        return str(parsed["choices"][0]["message"]["content"]).strip()
-    except (TimeoutError, error.URLError, error.HTTPError, KeyError, IndexError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"LLM chat generation failed: {exc}") from exc
+    with observe(
+        "chat-completion",
+        as_type="generation",
+        model=payload.get("model"),
+        input=payload.get("messages"),
+        model_parameters=_model_parameters(payload),
+    ) as generation:
+        try:
+            with request.urlopen(req, timeout=settings.chat_timeout_seconds) as response:
+                raw = response.read().decode("utf-8")
+            parsed = json.loads(raw)
+            answer = str(parsed["choices"][0]["message"]["content"]).strip()
+        except (TimeoutError, error.URLError, error.HTTPError, KeyError, IndexError, json.JSONDecodeError) as exc:
+            generation.update(level="ERROR", status_message=str(exc))
+            raise RuntimeError(f"LLM chat generation failed: {exc}") from exc
+        generation.update(output=answer, usage_details=_usage_details(parsed.get("usage")))
+        return answer
 
 
 def generate_small_talk_answer(
@@ -288,6 +319,11 @@ def _strip_markdown_for_voice(text: str) -> str:
 
 def _stream_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> Iterator[str]:
     streaming_payload = {**payload, "stream": True}
+    if tracing_enabled():
+        # Streamed responses omit token counts unless asked. This field is
+        # OpenAI-specific, so only send it when something will read the numbers
+        # — chat_api_base is configurable and may point at another provider.
+        streaming_payload["stream_options"] = {"include_usage": True}
     req = request.Request(
         f"{settings.chat_api_base.rstrip('/')}/chat/completions",
         data=json.dumps(streaming_payload).encode("utf-8"),
@@ -297,23 +333,45 @@ def _stream_chat_completion(*, settings: Settings, payload: dict[str, Any]) -> I
             "Content-Type": "application/json",
         },
     )
-    try:
-        with request.urlopen(req, timeout=settings.chat_timeout_seconds) as response:
-            for raw_line in response:
-                line = raw_line.decode("utf-8").strip()
-                if not line.startswith("data: "):
-                    continue
-                data = line[6:]
-                if data == "[DONE]":
-                    return
-                try:
-                    delta = json.loads(data)["choices"][0]["delta"].get("content", "")
+    with observe(
+        "chat-completion-stream",
+        as_type="generation",
+        model=payload.get("model"),
+        input=payload.get("messages"),
+        model_parameters=_model_parameters(payload),
+    ) as generation:
+        chunks: list[str] = []
+        usage: dict[str, Any] | None = None
+        try:
+            with request.urlopen(req, timeout=settings.chat_timeout_seconds) as response:
+                for raw_line in response:
+                    line = raw_line.decode("utf-8").strip()
+                    if not line.startswith("data: "):
+                        continue
+                    data = line[6:]
+                    if data == "[DONE]":
+                        return
+                    try:
+                        parsed = json.loads(data)
+                    except json.JSONDecodeError:
+                        continue
+                    if parsed.get("usage"):
+                        usage = parsed["usage"]
+                    try:
+                        delta = parsed["choices"][0]["delta"].get("content", "")
+                    except (KeyError, IndexError):
+                        continue
                     if delta:
+                        chunks.append(delta)
                         yield delta
-                except (json.JSONDecodeError, KeyError, IndexError):
-                    continue
-    except (TimeoutError, error.URLError, error.HTTPError) as exc:
-        raise RuntimeError(f"LLM streaming failed: {exc}") from exc
+        except (TimeoutError, error.URLError, error.HTTPError) as exc:
+            generation.update(level="ERROR", status_message=str(exc))
+            raise RuntimeError(f"LLM streaming failed: {exc}") from exc
+        finally:
+            # Runs on the [DONE] return, on error, and on client disconnect.
+            generation.update(
+                output="".join(chunks), usage_details=_usage_details(usage)
+            )
 
 
 def generate_chat_answer_stream(

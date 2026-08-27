@@ -2839,7 +2839,7 @@
             }
             if (msg.type === 'Turn') {
               if (msg.end_of_turn && msg.transcript && msg.transcript.trim()) {
-                handleVoiceTranscript(msg.transcript.trim());
+                handleVoiceTranscript(msg.transcript.trim(), msg.end_of_turn_confidence);
               }
             }
           };
@@ -2949,11 +2949,52 @@
 
     var sentenceBuffer = '';
 
-    function handleVoiceTranscript(text) {
+    /* One voice turn spans three requests (/chat, /voice/tts, /voice/turn) plus
+       a browser-to-AssemblyAI socket the backend never sees. This id is the
+       only thing tying them together in tracing. */
+    var voiceTurnId = null;
+    var voiceTurnStats = null;
+
+    function newTurnId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'turn-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function handleVoiceTranscript(text, confidence) {
       setVoiceState('processing');
       addUserMessage(text);
       sentenceBuffer = '';
-      sendToApi(text, null, null, { voice_mode: true });
+      voiceTurnId = newTurnId();
+      voiceTurnStats = {
+        transcript: text,
+        confidence: (typeof confidence === 'number' ? confidence : null),
+        sentences: 0,
+        chars: 0,
+      };
+      sendToApi(text, null, null, { voice_mode: true, turn_id: voiceTurnId });
+    }
+
+    /* Report the browser-side legs once the answer is fully segmented. Fire and
+       forget: tracing must never delay or break playback. */
+    function reportVoiceTurn() {
+      if (!voiceTurnId || !voiceTurnStats) return;
+      var body = {
+        turn_id: voiceTurnId,
+        session_id: SESSION_ID,
+        transcript: voiceTurnStats.transcript,
+        tts_sentences: voiceTurnStats.sentences,
+        tts_chars: voiceTurnStats.chars,
+      };
+      if (voiceTurnStats.confidence !== null) body.confidence = voiceTurnStats.confidence;
+      voiceTurnStats = null;
+      try {
+        fetch(BASE + '/voice/turn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          keepalive: true,
+        }).catch(function () {});
+      } catch (_) {}
     }
 
     function flushSentenceBuffer() {
@@ -2961,6 +3002,7 @@
         enqueueTTS(sentenceBuffer.trim());
         sentenceBuffer = '';
       }
+      reportVoiceTurn();
     }
 
     function trySplitSentence() {
@@ -2980,7 +3022,7 @@
       return fetch(BASE + '/voice/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text }),
+        body: JSON.stringify({ text: text, turn_id: voiceTurnId }),
         signal: signal,
       }).then(function(r) { return r.blob(); });
     }
@@ -2999,6 +3041,10 @@
 
     function enqueueTTS(text) {
       if (!text) return;
+      if (voiceTurnStats) {
+        voiceTurnStats.sentences += 1;
+        voiceTurnStats.chars += text.length;
+      }
       ttsQueue.push(text);
       if (!isPlayingTTS) playNextTTS();
       else maybePrefetchNext();

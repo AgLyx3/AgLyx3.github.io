@@ -21,6 +21,7 @@ from .retrieval import (
 from .media import mark_media_shown, pick_unshown_media
 from .safety import RateLimiter, enforce_request_size, estimate_tokens, sanitize_text, truncate_text_to_token_limit
 from .session import clear_ask_back_pending, ensure_session, record_ask_back, record_assistant_response_tokens, record_user_message, snooze_ask_back, touch_session
+from .tracing import flush as flush_tracing, observe, trace_id_for, tracing_enabled
 from .topic_ops import (
     create_topic_memory,
     ingest_memory,
@@ -78,4 +79,8 @@ __all__ = [
     "touch_session",
     "truncate_text_to_token_limit",
     "update_activation",
+    "flush_tracing",
+    "observe",
+    "trace_id_for",
+    "tracing_enabled",
 ]
