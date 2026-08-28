@@ -1144,3 +1144,48 @@ parsed as the JSON payload it is, and only `visitor_question` and
 prior turns, and the retrieved `profile_context` / `experience_context` all
 survive — none of that is visitor data, and it is the reason to read a prompt at
 all. A trace that redacted everything would be private and useless.
+
+## 26. Backend routing: drop the catch-all rewrite (2026-08-27)
+
+### Previous direction
+
+`backend/vercel.json` rewrote `/(.*)` to `/api/index`, because the deployed
+function was `api/index.py` (a two-line `from app.main import app`) and every
+path had to be funnelled into it.
+
+### What changed
+
+Vercel's Python builder now auto-detects `app/main.py` as the ASGI entrypoint
+and serves it at the root. With the app already at `/`, the rewrite stopped
+being a funnel and became a path mangler: every request reached FastAPI with
+its path literally replaced by `/api/index`, so `/health`, `/chat` and
+everything else returned FastAPI's own 404. The app was healthy — CORS
+middleware ran on the way out — it simply never saw the real path.
+
+The rewrite is gone; `vercel.json` is now `{}`.
+
+### Why it was confusing
+
+Nothing in the repo changed to trigger it. The last deployment built under the
+old builder kept working, so the break only appeared on the next deploy —
+which happened to be a feature deploy, making it look like the feature's fault.
+Rebuilding the *previous, known-good commit* reproduced the 404 and cleared the
+feature, which is the step that turned a wrong theory into the right one.
+
+The traceback that identified the entrypoint came from a preview deployment,
+and previews do not inherit Production environment variables: with no
+`DATABASE_URL`, `init_db()` at import time falls back to the SQLite default and
+dies on the read-only serverless filesystem. That crash is a preview-only
+artifact, not the production fault — but its stack trace named
+`app/main.py` as the entrypoint, which was the clue.
+
+### New intended direction
+
+Deploy to a preview URL and curl it before promoting to production. This break
+was invisible to the test suite and to local uvicorn, because it lives entirely
+in how the platform maps requests to the app — the only thing that catches it
+is an HTTP request against a real deployment.
+
+`init_db()` running at import time is a latent hazard worth revisiting: it
+makes a missing `DATABASE_URL` a hard import failure rather than a degraded
+start, which is what makes preview deployments unusable for smoke-testing.
