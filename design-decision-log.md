@@ -1226,3 +1226,52 @@ for someone who just wants to leave a note.
 `contact_info` is the canonical place a visitor's reply address lives. If
 follow-up ever becomes automated (a reply-to header, a CRM export), it reads
 that column and does not parse `message_body`.
+
+## 28. Shipping: `main` is the deploy trigger, so nothing goes to `main` directly (2026-09-02)
+
+### What the previous direction was
+
+`CLAUDE.md` treated `vercel deploy --prod` as the only thing that could move
+the live alias, and built its central safety rule around that: "never deploy
+straight to production — preview first", meaning always run `vercel deploy`
+without `--prod`, curl the preview, then promote. Recent commits were made
+directly on `main` and pushed, on the assumption that a push was just a
+backup of local work and that deploying was a separate, deliberate act.
+
+### What changed
+
+Both Vercel projects have git integration enabled. A push to `main` creates a
+**Production** deployment on the frontend and the backend within seconds, with
+no preview and no confirmation. Pushing to `main` *is* deploying.
+
+This was found on 2026-09-02 after pushing `a4aeeee..c4f2ecf`: `vercel ls`
+showed fresh deployments on both projects at Environment=Production, and
+`www.yixinli.me` was already serving the new `chat.html`. The change happened
+to be well tested and production came up healthy — the backend's
+`/openapi.json` carried the new field and `/health` answered 200, which also
+confirmed the `_migrate_outbound_messages` ALTER had run against Neon, since
+`init_db()` runs at import and a failed migration would have 502'd every route.
+
+### Why it changed
+
+The old rule was not merely incomplete, it was unenforceable. It asked for care
+at a step that happens *after* the code has already shipped. No amount of
+discipline around the `vercel` CLI protects a plan with no rollback if the
+push itself is the deploy.
+
+### New intended direction
+
+`main` is a deploy trigger, not a branch to work on. Nothing is committed or
+pushed to `main` directly. Every change goes on a branch, which builds a
+Preview and leaves production untouched; the preview is verified; then a PR is
+opened and merged, and the merge is the deploy. "Push" in this project means
+push a branch, open a PR, merge.
+
+This restores the preview-first intent at the point where it can actually be
+acted on, and matches the `Merge PR #NN` pattern the repo used before the
+recent run of direct commits.
+
+One gap remains: backend previews still crash on import because the Preview
+environment does not inherit `DATABASE_URL` and `OPENAI_API_KEY`. Until those
+are set, a branch preview verifies the frontend but proves nothing about the
+backend.
