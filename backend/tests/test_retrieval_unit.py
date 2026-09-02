@@ -56,3 +56,41 @@ def test_tell_me_about_her_returns_profile_and_work_context(test_db):
         "exp_memory_architecture",
         "exp_pm_delivery",
     } & returned_ids
+
+
+def test_every_seeded_profile_key_has_a_synonym_entry(tmp_path):
+    """_profile_key_boost matches on equality, so a rename silently kills it.
+
+    The seeds moved to Interest / Education_background while the synonym table
+    still said interests / education. Nothing failed — those two rows just
+    stopped earning a key boost forever. This pins the two together.
+
+    Seeds into its own database rather than the shared one: other tests insert
+    profile rows of their own, and those are not the seed's business.
+    """
+    import os
+
+    from app.services.db import get_conn, init_db
+    from app.services.retrieval import _PROFILE_KEY_SYNONYMS
+
+    previous = os.environ["DATABASE_URL"]
+    os.environ["DATABASE_URL"] = f"sqlite:///{tmp_path / 'seed.db'}"
+    try:
+        init_db()
+        with get_conn() as conn:
+            seeded = {row["key"].lower() for row in conn.execute("SELECT key FROM profile_memories")}
+    finally:
+        os.environ["DATABASE_URL"] = previous
+
+    assert seeded, "expected seeded profile memories"
+    orphans = seeded - set(_PROFILE_KEY_SYNONYMS)
+    assert not orphans, f"profile keys with no synonym entry: {sorted(orphans)}"
+
+
+def test_technical_stack_query_returns_the_stack_profile_block(test_db):
+    result = combined_memory_retrieve("what languages and frameworks does she use")
+
+    joined_profile = " ".join(result.profile.context_blocks).lower()
+
+    assert "technical stack" in joined_profile
+    assert "typescript" in joined_profile

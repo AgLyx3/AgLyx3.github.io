@@ -1275,3 +1275,59 @@ One gap remains: backend previews still crash on import because the Preview
 environment does not inherit `DATABASE_URL` and `OPENAI_API_KEY`. Until those
 are set, a branch preview verifies the frontend but proves nothing about the
 backend.
+
+## 29. Memory additions, and what adding a record actually costs (2026-09-01)
+
+### Previous direction
+
+The memory system carried 22 seeded experiences and 3 profile memories, all
+derived from `experience_raw.md` — which is a résumé, so every record reads as
+an accomplishment line. New experiences were assumed to be additive: write the
+record, tag it, done.
+
+### What changed
+
+Added two experiences (an internal social-media monitoring tool; ICP research
+for a cloud platform for AI coding agents, deliberately unnamed) plus a
+`Technical_stack` profile memory. Enriched the existing memory-architecture,
+issue-viewer, and Continua-engineering records rather than creating competing
+ones.
+
+Three findings worth keeping:
+
+**Adding a record is not additive — it is competitive.** Retrieval returns a
+3-slot window, so every new experience displaces an existing one somewhere.
+Two new records silently broke three `test_retrieval_e2e` cases by outranking
+`exp_issue_viewer` and `exp_eval_frameworks` on queries they had no business
+winning. A separate topic-clustering record was abandoned for this reason: its
+content already lived in `exp_continua_eng`, and the duplicate competed with
+the original. Fold into an existing record before creating a new one.
+
+**`base_weight` does not affect ranking the way it looks like it does.**
+`_score_experiences` computes `0.6*bm25(title) + 0.4*recall(raw_context) +
+0.35*topic_boost` and never reads `base_weight`. It is only consulted inside
+`_select_broad_topic_results`, as the second sort key after the edge weight to
+the dominant topic. The practical consequence: for broad queries, a record with
+`eng:1.0` outranks a better-matching record with `eng:0.3` regardless of score.
+Edge weights are the real ranking lever, and titles matter more than they look
+because bm25 is precision-style — a longer title scores strictly lower.
+
+**Seed edits do not reach a live deployment.** `_seed_defaults` only fires when
+a table is empty, so editing it changes nothing on a populated database, and
+`reset_postgres_seed.py` would truncate real session and analytics data to
+apply them. Added `backend/scripts/apply_experience_updates.py`, which seeds a
+throwaway SQLite database in a subprocess to obtain the canonical rows, diffs
+them against the target, and upserts only the difference. It is idempotent,
+supports `--dry-run`, and leaves `activation`, `created_at`, and all runtime
+tables untouched.
+
+Also fixed a dead lookup: `_PROFILE_KEY_SYNONYMS` keyed on `education` and
+`interests`, but the seeded keys are `Education_background` and `Interest`, so
+two of the three profile key boosts had never fired.
+
+### New intended direction
+
+Treat memory records as a ranked set, not a list. When adding one, run the
+retrieval suite — it is the only thing that catches displacement — and check
+whether the content belongs in an existing record first. Apply seed changes to
+deployed databases with the diff-and-upsert script, never by truncating.
