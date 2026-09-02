@@ -31,6 +31,7 @@ class ActionTrackResponse(BaseModel):
 class ContactMessageRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=128)
     message_body: str = Field(min_length=1, max_length=8000)
+    contact_info: str | None = Field(default=None, max_length=200)
     included_chat_history: bool = False
     conversation_history: list[ChatMessage] = Field(default_factory=list)
     message_count_before_send: int = Field(default=0, ge=0, le=1000)

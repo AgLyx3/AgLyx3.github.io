@@ -823,6 +823,21 @@
     }
     .modal-textarea:focus { border-color: var(--forest); }
     .modal-textarea::placeholder { color: var(--ink-4); }
+    .modal-input {
+      width: 100%;
+      margin-top: 10px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--paper-edge);
+      border-radius: 6px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 140ms;
+    }
+    .modal-input:focus { border-color: var(--forest); }
+    .modal-input::placeholder { color: var(--ink-4); }
     .modal-check-row {
       display: flex;
       align-items: flex-start;
@@ -1446,10 +1461,19 @@
         <textarea
           id="msgText"
           class="modal-textarea"
-          placeholder="If you'd like Yixin to reply, feel free to drop your contact info in the message."
+          placeholder="What would you like to say?"
           rows="5"
           aria-label="Message"
         ></textarea>
+        <input
+          id="msgContact"
+          class="modal-input"
+          type="text"
+          placeholder="Email or LinkedIn (optional, so Yixin can reply)"
+          autocomplete="email"
+          maxlength="200"
+          aria-label="Email or LinkedIn, optional"
+        >
         <label class="modal-check-row" for="includeHistory">
           <input type="checkbox" id="includeHistory">
           <span class="modal-check-label">Include this conversation with my message</span>
@@ -2615,6 +2639,7 @@
       if (!msgModal.classList.contains('is-open') || e.key !== 'Tab') return;
       var focusable = [
         document.getElementById('msgText'),
+        document.getElementById('msgContact'),
         document.getElementById('includeHistory'),
         document.getElementById('msgSubmit'),
         document.getElementById('msgModalClose'),
@@ -2632,6 +2657,7 @@
       e.preventDefault();
       var text = document.getElementById('msgText').value.trim();
       if (!text) return;
+      var contact = document.getElementById('msgContact').value.trim();
       var includeHist = document.getElementById('includeHistory').checked;
       var btn = document.getElementById('msgSubmit');
       btn.disabled = true;
@@ -2643,6 +2669,7 @@
           body: JSON.stringify({
             session_id: SESSION_ID,
             message_body: text,
+            contact_info: contact || null,
             included_chat_history: includeHist,
             conversation_history: includeHist ? history : [],
             message_count_before_send: messageCount,

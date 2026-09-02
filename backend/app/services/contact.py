@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 import json
 
 try:
@@ -19,6 +20,7 @@ def _send_via_resend(
     *,
     settings: Settings,
     message_body: str,
+    contact_info: str | None = None,
     conversation_history: list | None = None,
 ) -> None:
     if resend is None:
@@ -36,10 +38,18 @@ def _send_via_resend(
             f"<table style='border-collapse:collapse;width:100%'>{rows}</table>"
         )
 
+    contact_html = ""
+    if contact_info:
+        contact_html = (
+            "<p style='font-size:14px;color:#555'>Reply to: "
+            f"{escape(contact_info)}</p>"
+        )
+
     html = (
         "<div style='font-family:sans-serif;max-width:600px'>"
         "<h2>New message from your portfolio</h2>"
-        f"<p style='font-size:16px'>{message_body}</p>"
+        f"<p style='font-size:16px'>{escape(message_body)}</p>"
+        f"{contact_html}"
         f"{history_html}"
         "</div>"
     )
@@ -65,6 +75,7 @@ def create_contact_message(
 
     ensure_session(payload.session_id)
     created_at = utc_now_iso()
+    contact_info = (payload.contact_info or "").strip() or None
     conversation_json = None
     included_chat_history = payload.included_chat_history and bool(payload.conversation_history)
     history_dicts: list | None = None
@@ -76,13 +87,15 @@ def create_contact_message(
         cursor = conn.execute(
             """
             INSERT INTO outbound_messages(
-                session_id, message_body, included_chat_history, conversation_json, created_at, delivery_status
-            ) VALUES(?,?,?,?,?,?)
+                session_id, message_body, contact_info, included_chat_history,
+                conversation_json, created_at, delivery_status
+            ) VALUES(?,?,?,?,?,?,?)
             RETURNING message_id
             """,
             (
                 payload.session_id,
                 payload.message_body,
+                contact_info,
                 included_chat_history,
                 conversation_json,
                 created_at,
@@ -99,6 +112,7 @@ def create_contact_message(
             _send_via_resend(
                 settings=settings,
                 message_body=payload.message_body,
+                contact_info=contact_info,
                 conversation_history=history_dicts,
             )
             delivery_status = "sent"

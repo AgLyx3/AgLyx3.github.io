@@ -115,6 +115,7 @@ def send_contact_message(
             event_name="message_sent_to_yixin",
             payload={
                 "included_chat_history": payload.included_chat_history,
+                "has_contact_info": bool((payload.contact_info or "").strip()),
                 "message_length": len(payload.message_body),
                 "message_count_before_send": payload.message_count_before_send,
             },

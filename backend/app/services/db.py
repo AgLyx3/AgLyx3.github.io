@@ -151,11 +151,20 @@ def _update_topic_weights(conn) -> None:
     conn.commit()
 
 
+def _migrate_outbound_messages(conn, dialect: str) -> None:
+    current = _table_columns(conn, dialect, "outbound_messages")
+
+    if current and "contact_info" not in current:
+        conn.execute("ALTER TABLE outbound_messages ADD COLUMN contact_info TEXT")
+        conn.commit()
+
+
 def _migrate_runtime_schema(conn, dialect: str, now: str) -> None:
     _migrate_profile_memories(conn, dialect, now)
     _migrate_experiences(conn, dialect)
     _migrate_topics(conn, dialect)
     _migrate_sessions(conn, dialect)
+    _migrate_outbound_messages(conn, dialect)
     _migrate_media_tables(conn, dialect)
     _update_topic_weights(conn)
 
@@ -442,6 +451,7 @@ def _schema_script_for(dialect: str) -> str:
                 message_id BIGSERIAL PRIMARY KEY,
                 session_id TEXT NOT NULL,
                 message_body TEXT NOT NULL,
+                contact_info TEXT,
                 included_chat_history BOOLEAN NOT NULL DEFAULT FALSE,
                 conversation_json TEXT,
                 created_at TEXT NOT NULL,
@@ -571,6 +581,7 @@ def _schema_script_for(dialect: str) -> str:
                 message_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
                 message_body TEXT NOT NULL,
+                contact_info TEXT,
                 included_chat_history INTEGER NOT NULL DEFAULT 0,
                 conversation_json TEXT,
                 created_at TEXT NOT NULL,

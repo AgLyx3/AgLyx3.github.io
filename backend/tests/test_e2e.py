@@ -197,6 +197,32 @@ def test_contact_message_recorded(app_client):
     assert body["message_id"] > 0
 
 
+def test_contact_message_stores_contact_info(app_client):
+    """The optional contact field round-trips into the real schema."""
+    from app.services.db import get_conn
+
+    app_client.post("/chat", json={"message": "hi", "session_id": "e2e-contact-info"})
+    with patch("app.services.contact._send_via_resend"):
+        resp = app_client.post(
+            "/contact",
+            json={
+                "session_id": "e2e-contact-info",
+                "message_body": "Reach me anytime.",
+                "contact_info": "me@example.com",
+                "message_count_before_send": 1,
+            },
+        )
+    assert resp.status_code == 200
+    message_id = resp.json()["message_id"]
+
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT contact_info FROM outbound_messages WHERE message_id=?",
+            (message_id,),
+        ).fetchone()
+    assert (row["contact_info"] if hasattr(row, "keys") else row[0]) == "me@example.com"
+
+
 def test_contact_no_duplicate_analytics(app_client):
     """Each contact submission should produce exactly one analytics event."""
     from app.services.analytics import log_analytics_event as real_log

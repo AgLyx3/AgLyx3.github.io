@@ -1189,3 +1189,40 @@ is an HTTP request against a real deployment.
 `init_db()` running at import time is a latent hazard worth revisiting: it
 makes a missing `DATABASE_URL` a hard import failure rather than a degraded
 start, which is what makes preview deployments unusable for smoke-testing.
+
+## 27. Contact modal: a dedicated optional contact field (2026-09-01)
+
+### Previous direction
+
+The "Send Yixin a message" modal was a single textarea whose placeholder read
+*"If you'd like Yixin to reply, feel free to drop your contact info in the
+message."* Reply-ability depended on the visitor reading the placeholder and
+choosing to inline an address in their prose — and on Yixin then finding it
+inside the email body.
+
+### What changed
+
+An optional single-line field, *"Email or LinkedIn (optional, so Yixin can
+reply)"*, sits under the textarea. It is never required — an anonymous message
+still sends. The textarea placeholder is now just *"What would you like to
+say?"*.
+
+The value travels as `contact_info` on `POST /contact`, is stored in a new
+`outbound_messages.contact_info` column (added to both dialect DDLs plus a
+`_migrate_outbound_messages` ALTER for existing databases), and renders as a
+"Reply to:" line in the notification email. Blank or whitespace-only input is
+normalised to NULL rather than an empty string. Analytics logs only
+`has_contact_info` — the address itself is never sent to the events table.
+
+### Why it changed
+
+Contact details buried in free prose are easy to miss and impossible to query
+later. A named column makes "which visitors left a way to reach them" a lookup
+instead of a manual read. Keeping it optional preserves the low-friction path
+for someone who just wants to leave a note.
+
+### New intended direction
+
+`contact_info` is the canonical place a visitor's reply address lives. If
+follow-up ever becomes automated (a reply-to header, a CRM export), it reads
+that column and does not parse `message_body`.
