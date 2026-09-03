@@ -17,6 +17,9 @@
 - Added a per-user memory layer on top of channel memory, giving the agent finer-grained per-person memory that persists across conversations — fixing signal mixing inherent in channel-level summaries, improving retrieval precision, and enabling cross-channel personalization through a privacy gate that controls what carries over. {tags: memory:1.0, ai-agents:0.6, pm:0.3}
 - Navigated a speed-vs-quality tradeoff in memory architecture: chose to ship a faster first version when the ideal fine-grained design would have added 1–2 weeks, while setting explicit quality guardrails and a clear iteration path. {tags: pm:1.0, memory:0.6}
 - Built evaluation test cases and prompts before memory development finished to define success criteria up front; used pre-launch testing to identify gaps between implementation and production requirements, preventing an unqualified launch. {tags: eval:1.0, memory:0.6, pm:0.3}
+- Drafted the privacy framework behind the memory system — defining which kinds of memory could be reused across conversations, which had to stay where they were created, and which should not be stored at all, along with rules for how the assistant could draw on carried-over context in a group setting without exposing where it came from. {tags: memory:1.0, pm:0.6, ethics:0.3}
+- Monitored what the memory system was actually extracting in production, evaluated it against what was genuinely useful and appropriate to keep, and iterated on the extraction from there — narrowing categories too sensitive to store and breaking up ones too broad to act on. {tags: memory:1.0, eval:0.6, pm:0.3}
+- Designed the product metrics for memory quality, built to catch memory being used too often or in the wrong place, not just too rarely. {tags: memory:1.0, pm:0.6, eval:0.6}
 - Memory outcome: improved memory eval scores, passed local privacy test cases, and validated the path to the more fine-grained data architecture in a follow-on iteration. {tags: memory:1.0, eval:0.6}
 - Designed and shipped an agentic polling feature enabling users to create, vote on, and manage polls through natural language; resolved the core design challenge of distinguishing chat, poll creation, editing, and voting without conflicting with a concurrent agentic feature. {tags: ai-agents:1.0, pm:1.0}
 - Defined key polling product decisions up front — context-based vs. free input, single vs. multiple choice defaults, concurrent poll support, close authority, valid vote definition, and reporting format — specified in PRDs with annotated conversational examples. {tags: pm:1.0, ai-agents:0.6}
@@ -31,11 +34,13 @@
 - Evaluation outcome: results drove a shift from a prompt-driven memory approach to a more fine-grained architecture, and surfaced incorrect benchmark numbers circulating internally that were corrected before external communication. {tags: eval:1.0, memory:0.6}
 - Built and iterated on an internal observability tool (issue viewer) for PMs tracking product quality and engineers debugging failures; identified false positives inflating apparent error rates by ~25%, bringing the dashboard significantly closer to reality. {tags: eng:0.6, eval:0.6, pm:0.6}
 - Redesigned the issue bucketing system from daily LLM-generated buckets (which caused semantically similar errors to land in different buckets across days) to an inheritance-based update model, making grouping stable and comparable over time. {tags: eng:0.6, eval:0.6, ai-agents:0.3}
+- Worked through the distinct failure modes sitting behind the reported error rate, separating genuine product and model failures from message-delivery problems, overlapping issue categories, and cases where the automated judge was flagging a correct answer as wrong. {tags: eval:1.0, pm:0.6}
 - Issue viewer outcome: error rate dropped ~25% after false positive removal; engineers adopted the tool for daily debugging; issue grouping became consistent enough to track trends week over week. {tags: eng:0.3, eval:0.3, pm:0.3}
 - Conducted ~10 customer discovery interviews with startup employees, segmented by role — operators and coordinators (PMs, tech leads, ops) vs. engineers — to explore pain points around AI tool use and identify coordination and execution gaps; used findings to narrow the ICP. {tags: pm:1.0, research:0.3}
 - Defined and operationalized success metrics (activation rate, error rate, group conversion) across 3 initiatives; queried product data using BigQuery and Python to surface insights and guide iteration. {tags: pm:1.0, eval:0.3}
 - Shaped early go-to-market narrative by drafting the initial marketing brief, evaluating 10+ agencies and influencer partnerships, and aligning PR messaging across 3+ external announcements and press interviews. {tags: pm:0.6}
 - Built customer-facing onboarding flows and internal AI tooling using React, TypeScript, and Python; implemented frontend components and event tracking to measure user interaction patterns. {tags: eng:1.0, pm:0.3}
+- Built an internal social media monitoring tool giving the team visibility into relevant public conversations on X (formerly Twitter): it collects posts from customizable keyword sets and ranks them into a prioritized review queue — scoring relevance, exposure, author reach, and recency — while reviewer decisions (responded, skipped, irrelevant) feed back in as signal to sharpen future queries and ranking. Refreshes daily as a standing workflow rather than a one-off search. {tags: eng:0.6, pm:0.3}
 
 ---
 
@@ -47,6 +52,7 @@
 - Redesigned onboarding flows for the multi-user AI collaboration product through rapid prototyping and iteration with engineering, improving early user engagement by ~20%. {tags: pm:1.0, eng:0.3}
 - Built 3 interactive prototypes and authored 5+ frontend and prompt improvements to refine onboarding; developed 1 internal tool that reduced manual workflows, improving team efficiency by ~10%. {tags: eng:0.6, pm:0.6}
 - Extended an existing internal analytics tool into a topic clustering system — identified the opportunity, aligned with the original engineer on algorithms and approach, and implemented using AI-assisted development; reduced the effort to share user conversation trends with reporters from a multi-step manual process to a single click, and used it internally for product observability. {tags: eng:1.0, pm:0.6}
+- Designed that clustering tool around the analyst rather than the algorithm: topic exports ran to tens of thousands of rows and the same underlying topic appeared worded many different ways, so the tool groups labels by meaning rather than exact match, and exposes how tightly to cluster as an interface control since the right setting differs between exports and should not require editing code. Built as a single-screen app covering upload, filter, cluster, review, and export, with the export treated as part of the product because the clusters were always meant to be used elsewhere. {tags: eng:1.0, pm:0.3}
 - Identified that the team had tracked all work in Google Docs for two years, limiting visibility into status, ownership, and priority; built alignment through 1-on-1s, demonstrated value with a working prototype, and introduced Asana via its Google Docs plugin to reduce behavior change friction — team migrated fully within a week. {tags: pm:1.0}
 - Owned daily QA testing; triaged 20+ weekly customer feedback items, identified recurring usability issues, and partnered with engineering to reduce post-release bugs and improve product stability. {tags: pm:0.6, eng:0.3}
 
@@ -101,7 +107,22 @@
 
 ---
 
+## Product & User Research, Early-Stage AI Agent Platform
+
+- Worked on an early-stage platform giving AI coding agents a persistent cloud workspace — the core idea being that an agent working a long task needs somewhere durable to keep going rather than waking up on a blank machine each session. {tags: ai-agents:0.4, research:0.8}
+- Led the user research defining who the product was for, interviewing technical founders and indie hackers building their own products, and treating clear non-fit conversations as boundary evidence rather than pushing them into validation. {tags: research:0.8, ai-agents:0.4}
+- Reshaped the target user based on behavior rather than demographics: being technical and comfortable in a terminal proved necessary but not sufficient, and the real boundary was the shape of the work — whether someone was shipping a real product, how much autonomy they would hand an agent, and whether they would put code and secrets in the cloud at all. {tags: research:0.8, ai-agents:0.4}
+- Translated the research into MVP scope — which segments to build for, which to defer, and why the same product needed a different hook for users who wanted their environment lifted into the cloud versus users who had already solved that and cared about isolation and oversight. {tags: research:0.8, ai-agents:0.4}
+
+---
+
 ## Independent Research
 
 - Conducted an interdisciplinary analysis of moral-dilemma benchmarks in AI, mapping human moral decision factors (cognitive, emotional, socio-cultural) to technical alignment mechanisms (rule-based, RLHF, hybrid); produced a working paper evaluating benchmark validity for moral decision-making in LLMs. (2025) {tags: ethics:1.0, research:0.6, eval:0.3}
 - Analyzed the legal and ethical landscape of AI-generated art — copyright frameworks, training data ownership, deontological and utilitarian ethics — and developed governance proposals including updated IP definitions, ethical dataset standards, and a consent registry for artists. (2023) {tags: ethics:1.0, research:0.6}
+
+---
+
+## Technical Stack
+
+- Python, TypeScript/React, and SQL day to day. Builds on LLMs from OpenAI, Anthropic, and Google, routed through OpenRouter. Retrieval and memory on Postgres/pgvector and Redis, using hybrid BM25 plus vector search and graph-based expansion. Speech and image work through Whisper, AssemblyAI, Gemini, and OpenAI image generation. Evaluation through a custom harness combining deterministic checks, LLM-as-judge, and regression replay. Observability through in-house tracing on Google Cloud logs, Vertex AI replay, and Langfuse. Tool-calling integrations including SerpAPI, Google Places, the X API, and Playwright. Label Studio for data labeling, Docker and Streamlit for internal tools, and Claude Code and Codex for daily coding work. {profile: Technical_stack}

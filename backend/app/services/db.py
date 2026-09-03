@@ -666,6 +666,24 @@ def _seed_defaults(conn, now: str) -> None:
                     "B.A. with majors in Computer Science and Philosophy",
                     now,
                 ),
+                (
+                    "profile_technical_stack",
+                    "Technical_stack",
+                    (
+                        "Python, TypeScript/React, and SQL day to day. Builds on LLMs from OpenAI, "
+                        "Anthropic, and Google, routed through OpenRouter. Retrieval and memory on "
+                        "Postgres/pgvector and Redis, using hybrid BM25 plus vector search and "
+                        "graph-based expansion. Speech and image work through Whisper, AssemblyAI, "
+                        "Gemini, and OpenAI image generation. Evaluation through a custom harness "
+                        "combining deterministic checks, LLM-as-judge, and regression replay. "
+                        "Observability through in-house tracing on Google Cloud logs, Vertex AI "
+                        "replay, and Langfuse. Tool-calling integrations including SerpAPI, Google "
+                        "Places, the X API, and Playwright. Label Studio for data labeling, Docker "
+                        "and Streamlit for internal tools, and Claude Code and Codex for daily "
+                        "coding work."
+                    ),
+                    now,
+                ),
             ],
         )
 
@@ -730,6 +748,17 @@ def _seed_defaults(conn, now: str) -> None:
                     "Built evaluation test cases and prompts before memory development finished to define "
                     "success criteria up front; used pre-launch testing to identify gaps between implementation "
                     "and production requirements, preventing an unqualified launch. "
+                    "Drafted the privacy framework behind the memory system — defining which kinds of "
+                    "memory could be reused across conversations, which had to stay where they were "
+                    "created, and which should not be stored at all, along with rules for how the "
+                    "assistant could draw on carried-over context in a group setting without exposing "
+                    "where it came from. "
+                    "Monitored what the system was actually extracting in production, evaluated it "
+                    "against what was genuinely useful and appropriate to keep, and iterated on the "
+                    "extraction from there — narrowing categories that were too sensitive to store and "
+                    "breaking up ones too broad to act on. "
+                    "Designed the product metrics for memory quality, built to catch memory being used "
+                    "too often or in the wrong place, not just too rarely. "
                     "Memory outcome: improved memory eval scores, passed local privacy test cases, and "
                     "validated the path to the more fine-grained data architecture in a follow-on iteration."
                 ),
@@ -822,6 +851,10 @@ def _seed_defaults(conn, now: str) -> None:
                     "Redesigned the issue bucketing system from daily LLM-generated buckets (which caused "
                     "semantically similar errors to land in different buckets across days) to an "
                     "inheritance-based update model, making grouping stable and comparable over time. "
+                    "Worked through the distinct failure modes sitting behind the reported error rate, "
+                    "separating genuine product and model failures from message-delivery problems, "
+                    "overlapping issue categories, and cases where the automated judge was flagging a "
+                    "correct answer as wrong. "
                     "Issue viewer outcome: error rate dropped ~25% after false positive removal; engineers "
                     "adopted the tool for daily debugging; issue grouping became consistent enough to track "
                     "trends week over week."
@@ -866,7 +899,7 @@ def _seed_defaults(conn, now: str) -> None:
             ),
             (
                 "exp_continua_eng",
-                "building customer-facing onboarding and internal tooling at Continua",
+                "building onboarding flows and internal tooling for conversation topic clustering at Continua",
                 "",
                 "",
                 "2025-06",
@@ -878,7 +911,14 @@ def _seed_defaults(conn, now: str) -> None:
                     "the opportunity, aligned with the original engineer on algorithms and approach, and "
                     "implemented using AI-assisted development; reduced the effort to share user conversation "
                     "trends with reporters from a multi-step manual process to a single click, and used it "
-                    "internally for product observability."
+                    "internally for product observability. "
+                    "Designed that clustering tool around the analyst rather than the algorithm: exports "
+                    "ran to tens of thousands of rows and the same underlying topic appeared worded many "
+                    "different ways, so it groups labels by meaning rather than exact match, and exposes "
+                    "how tightly to cluster as an interface control, since the right setting differs "
+                    "between exports and should not require editing code. Built as a single screen "
+                    "covering upload, filter, cluster, review, and export, with the export treated as "
+                    "part of the product because the clusters were always meant to be used elsewhere."
                 ),
                 None,
                 5.0,
@@ -1112,6 +1152,59 @@ def _seed_defaults(conn, now: str) -> None:
                 now,
             ),
             (
+                "exp_agent_platform_icp",
+                "shaping the ICP for a cloud platform that keeps AI coding agents running",
+                "",
+                "",
+                "",
+                (
+                    "Worked on an early-stage platform that gives AI coding agents a persistent cloud "
+                    "workspace — the core idea being that an agent working on a long task needs somewhere "
+                    "durable to keep going, rather than waking up on a blank machine every session. "
+                    "Led the user research that defined who the product was actually for, interviewing "
+                    "technical founders and indie hackers building their own products, and treating the "
+                    "conversations that clearly were not a fit as boundary evidence rather than pushing "
+                    "them into validation. "
+                    "The main finding reshaped the target user. Being technical and comfortable in a "
+                    "terminal turned out to be necessary but not sufficient; what actually separated a "
+                    "fit from a non-fit was the shape of the work — whether someone was shipping a real "
+                    "product, how much autonomy they were willing to hand to an agent, and whether they "
+                    "were willing to put their code and secrets in the cloud at all. "
+                    "Turned that into MVP scope: which segments to build for now, which to defer, and "
+                    "why the same product needed a different hook depending on whether a user wanted "
+                    "their environment lifted into the cloud or had already solved that themselves and "
+                    "cared about isolation and oversight instead."
+                ),
+                None,
+                5.5,
+                "seed",
+                now,
+            ),
+            (
+                "exp_x_post_tool",
+                "monitoring high-value social media conversations on X/Twitter",
+                "",
+                "",
+                "2025-12",
+                (
+                    "Built an internal social media monitoring tool that gave the team visibility into "
+                    "relevant public conversations on X (formerly Twitter), without anyone manually "
+                    "searching across a pile of keywords and feeds. "
+                    "It collects posts from customizable keyword sets and ranks them, so what the team "
+                    "gets is a prioritized queue rather than a raw dump — scoring each post on how "
+                    "relevant it is, how much exposure it is getting, the author's reach, and how recent "
+                    "it is, since a post worth replying to loses most of its value if you find it late. "
+                    "Reviewers mark each post as responded, skipped, or irrelevant, and those decisions "
+                    "feed back in as signal to sharpen future queries and ranking. The queue refreshes "
+                    "daily, so it works as a standing part of the team's workflow instead of a one-off "
+                    "search."
+                ),
+                None,
+                4.0,
+                "seed",
+                now,
+            ),
+            (
                 "exp_photography",
                 "stage, event, and documentary photography",
                 "",
@@ -1218,6 +1311,12 @@ def _seed_defaults(conn, now: str) -> None:
                 ("exp_ethics_ai_art", "ethics", 1.0),
                 ("exp_ethics_ai_art", "research", 0.6),
                 # exp_photography
+                # exp_agent_platform_icp
+                ("exp_agent_platform_icp", "research", 0.8),
+                               ("exp_agent_platform_icp", "ai-agents", 0.4),
+                # exp_x_post_tool
+                ("exp_x_post_tool", "eng", 0.6),
+                ("exp_x_post_tool", "pm", 0.3),
                 ("exp_photography", "photo", 1.0),
             ],
         )

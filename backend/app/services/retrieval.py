@@ -75,8 +75,14 @@ _PROFILE_KEY_SYNONYMS: dict[str, frozenset[str]] = {
         "current", "role", "job", "title", "work", "works", "working", "company",
         "up", "doing", "now", "currently", "nowadays", "lately",
     }),
-    "education": frozenset({"education", "degree", "studied", "study", "major", "college", "colby", "university", "graduate", "graduated"}),
-    "interests": frozenset({"interest", "interests", "hobby", "hobbies", "outside", "personal", "free", "spare"}),
+    "education_background": frozenset({"education", "degree", "studied", "study", "major", "college", "colby", "university", "graduate", "graduated"}),
+    "interest": frozenset({"interest", "interests", "hobby", "hobbies", "outside", "personal", "free", "spare"}),
+    "technical_stack": frozenset({
+        "stack", "tech", "technical", "tools", "tool", "tooling", "technologies", "technology",
+        "languages", "language", "framework", "frameworks", "library", "libraries",
+        "python", "typescript", "react", "sql", "postgres", "database", "databases",
+        "llm", "llms", "model", "models", "use", "uses", "using", "familiar", "know", "knows",
+    }),
 }
 
 _BROAD_TOPIC_PATTERNS = (
